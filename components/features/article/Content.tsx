@@ -3,61 +3,61 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-// --- DATA DUMMY ---
+// --- DATA DUMMY (UPDATED) ---
 
 const articleData = [
   {
     author: "Dr. Clara",
-    avatar: "/avatars/clara.png",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     title: "Kelelahan Berlebihan Meski Sudah Tidur",
     excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    image: "/articles/image1.png", // Ganti dengan path gambar
+    thumbnail: "/assets/article/blog1.png", // Path diperbarui
   },
   {
     author: "Dr. Clara",
-    avatar: "/avatars/clara.png",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     title: "Kelelahan Berlebihan Meski Sudah Tidur",
     excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    image: "/articles/image2.png",
+    thumbnail: "/assets/article/blog2.png", // Path diperbarui
   },
-    {
+  {
     author: "Dr. Clara",
-    avatar: "/avatars/clara.png",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     title: "Kelelahan Berlebihan Meski Sudah Tidur",
     excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    image: "/articles/image3.png",
+    thumbnail: "/assets/article/blog3.png", // Path diperbarui
   },
-    {
+  {
     author: "Dr. Clara",
-    avatar: "/avatars/clara.png",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     title: "Kelelahan Berlebihan Meski Sudah Tidur",
     excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    image: "/articles/image4.png",
+    thumbnail: "/assets/article/blog4.png", // Path diperbarui
   },
 ];
 
 const trendingTopics = ["Kesehatan Digital", "Olahraga", "Kesehatan Mental", "Diet"];
 
 const popularAuthors = [
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
+  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/assets/article/user.png" }, // Path diperbarui
+  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/assets/article/user.png" }, // Path diperbarui
+  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/assets/article/user.png" }, // Path diperbarui
 ];
 
 // --- SUB-KOMPONEN ---
@@ -85,8 +85,15 @@ const ArticleItem = ({ article }: { article: (typeof articleData)[0] }) => (
         <button className="text-gray-500 hover:text-gray-800"><Bookmark className="w-4 h-4" /></button>
       </div>
     </div>
-    <div className="w-64 h-40 bg-gray-200 rounded-lg flex-shrink-0">
-      {/* Placeholder untuk gambar artikel */}
+    {/* GAMBAR THUMBNAIL DITAMPILKAN DI SINI */}
+    <div className="relative w-64 h-40 rounded-lg flex-shrink-0 overflow-hidden">
+      <Image 
+        src={article.thumbnail}
+        alt={article.title}
+        fill
+        className="object-cover"
+        sizes="(max-width: 1024px) 30vw, 20vw"
+      />
     </div>
   </div>
 );

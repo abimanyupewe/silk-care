@@ -2,8 +2,11 @@
 
 import { Star, AlertTriangle } from "lucide-react";
 import React from "react";
+import Image from "next/image"; // Import Image
 
 export const Hero = () => {
+  const mainImage = '/assets/apotek/alat1.png'; // Path gambar
+
   return (
     <section className="bg-white py-12">
       <div className="container mx-auto max-w-7xl px-4">
@@ -11,13 +14,27 @@ export const Hero = () => {
           {/* Kolom Kiri: Galeri Gambar */}
           <div className="flex gap-4">
             {/* Gambar Utama */}
-            <div className="w-full aspect-square bg-gray-200 rounded-2xl flex-grow"></div>
+            <div className="relative w-full aspect-square rounded-2xl flex-grow overflow-hidden">
+                <Image
+                    src={mainImage}
+                    alt="Amoxicillin 500mg"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 40vw"
+                />
+            </div>
             {/* Thumbnails */}
             <div className="flex flex-col gap-3">
-              <div className="w-16 h-16 bg-gray-200 rounded-lg cursor-pointer"></div>
-              <div className="w-16 h-16 bg-gray-200 rounded-lg cursor-pointer"></div>
-              <div className="w-16 h-16 bg-gray-200 rounded-lg cursor-pointer"></div>
-              <div className="w-16 h-16 bg-gray-200 rounded-lg cursor-pointer"></div>
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="relative w-16 h-16 rounded-lg cursor-pointer overflow-hidden">
+                    <Image
+                        src={mainImage}
+                        alt={`Thumbnail ${index + 1}`}
+                        fill
+                        className="object-cover"
+                    />
+                </div>
+              ))}
             </div>
           </div>
 

@@ -14,9 +14,9 @@ import React from "react";
 // --- DATA DUMMY ---
 
 const popularAuthors = [
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
-  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/avatars/clara.png" },
+  { name: "Dr. Clara", specialty: "Dokter Spesialis Anak", avatar: "/assets/article/clara.png" },
+  { name: "Dr. Indah", specialty: "Dokter Umum", avatar: "/assets/article/indah.png" },
+  { name: "Dr. Thomas", specialty: "Dokter Gizi", avatar: "/assets/article/thomas.png" },
 ];
 
 const trendingTopics = ["Kesehatan Digital", "Olahraga", "Kesehatan Mental", "Diet"];
@@ -71,7 +71,7 @@ export const Detail = () => {
               {/* Info Penulis & Interaksi */}
               <div className="flex justify-between items-center my-6 border-b border-gray-200 pb-6">
                  <div className="flex items-center gap-3">
-                    <Image src="/avatars/clara.png" alt="Dr. Clara" width={48} height={48} className="rounded-full" />
+                    <Image src="/assets/article/clara.png" alt="Dr. Clara" width={48} height={48} className="rounded-full" />
                     <div>
                         <p className="font-semibold text-gray-900">Dr. Clara</p>
                         <p className="text-sm text-gray-500">11 / 11 / 2025</p>
@@ -95,7 +95,14 @@ export const Detail = () => {
               </p>
               
               <figure className="my-8">
-                <div className="aspect-video w-full bg-gray-200 rounded-xl"></div>
+                <div className="relative aspect-video w-full rounded-xl overflow-hidden">
+                  <Image 
+                    src="/assets/article/blog1.png"
+                    alt="Kelelahan Berlebihan"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </figure>
               
               <p>
@@ -111,7 +118,7 @@ export const Detail = () => {
             <div className="mt-12 p-6">
               <div className="flex justify-between items-start gap-4">
                 <div className="flex items-start gap-4">
-                  <Image src="/avatars/clara.png" alt="Dr. Clara" width={64} height={64} className="rounded-full" />
+                  <Image src="/assets/article/clara.png" alt="Dr. Clara" width={64} height={64} className="rounded-full" />
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">Ditulis oleh Dr. Clara</h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -179,4 +186,3 @@ export const Detail = () => {
     </section>
   );
 };
-

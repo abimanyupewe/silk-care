@@ -2,22 +2,23 @@
 
 import { Search, Star } from "lucide-react";
 import React from "react";
+import Image from "next/image"; // Import Image
 
-// Data dummy untuk kategori
+// Data dummy untuk kategori (UPDATED)
 const categoryData = [
-  { name: "Vitamin & Suplemen" },
-  { name: "Perawatan Diri" },
-  { name: "Kesehatan Seksual" },
-  { name: "Susu" },
-  { name: "Ibu & Anak" },
-  { name: "Ibu" },
+  { name: "Vitamin & Suplemen", icon: "/assets/apotek/Drugs.png" },
+  { name: "Perawatan Diri", icon: "/assets/apotek/Self Love.png" },
+  { name: "Kesehatan Seksual", icon: "/assets/apotek/Sexual infection.png" },
+  { name: "Susu", icon: "/assets/apotek/Milk.png" },
+  { name: "Ibu & Anak", icon: "/assets/apotek/Mother.png" },
+  { name: "Ibu", icon: "/assets/apotek/Mother.png" }, // Menggunakan ikon yang sama sebagai contoh
 ];
 
-// Data dummy untuk produk
+// Data dummy untuk produk (UPDATED)
 const productData = [
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png", // Ganti dengan path gambar
+    image: "/assets/apotek/alat1.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -27,7 +28,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat2.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -37,7 +38,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat3.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -47,7 +48,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat4.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -57,7 +58,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat5.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -67,10 +68,18 @@ const productData = [
   },
 ];
 
-// Sub-komponen untuk Kartu Produk
+// Sub-komponen untuk Kartu Produk (UPDATED)
 const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
-    <div className="relative aspect-[1/1] w-full bg-gray-200">
+    <div className="relative aspect-[1/1] w-full">
+      {/* Gambar Produk Ditampilkan Di Sini */}
+      <Image
+        src={product.image}
+        alt={product.name}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+      />
       {/* Discount Badge */}
       <div className="absolute top-2 left-2 bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">
         {product.discount}%
@@ -123,13 +132,14 @@ export const Ecommerce = () => {
           </button>
         </div>
 
-        {/* Categories */}
+        {/* Categories (UPDATED) */}
         <section className="mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Kategori</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {categoryData.map((category) => (
               <button key={category.name} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
-                <div className="w-6 h-6 bg-red-200 rounded-full"></div> {/* Icon Placeholder */}
+                {/* Ikon Kategori Ditampilkan Di Sini */}
+                <Image src={category.icon} alt={category.name} width={24} height={24} />
                 {category.name}
               </button>
             ))}

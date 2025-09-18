@@ -2,55 +2,67 @@ import { ArrowRight, Bookmark, MessageCircle, ThumbsUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-// Data dummy untuk artikel
+// Data dummy untuk artikel (UPDATED)
 const articleData = [
   {
     author: "Dr. Clara",
-    avatar: "/assets/article/clara.png",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     title: "Kelelahan Berlebihan Meski Sudah Tidur",
     excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog2.png",
+    thumbnail: "/assets/article/blog1.png", // Thumbnail ditambahkan
   },
   {
-    author: "Dr. Steve",
-    avatar: "/assets/article/steve.png",
+    author: "Dr. Clara",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
-    title: "Pentingnya Olahraga Rutin untuk Jantung",
-    excerpt: "Olahraga teratur adalah salah satu kunci utama...",
+    title: "Kelelahan Berlebihan Meski Sudah Tidur",
+    excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog3.png",
+    thumbnail: "/assets/article/blog2.png", // Thumbnail ditambahkan
   },
   {
-    author: "Dr. Indah",
-    avatar: "/assets/article/indah.png",
+    author: "Dr. Clara",
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
-    title: "Diet Sehat Tanpa Menyiksa Diri",
-    excerpt: "Banyak orang berpikir diet itu sulit dan menyiksa...",
+    title: "Kelelahan Berlebihan Meski Sudah Tidur",
+    excerpt: "Merasa lelah terus-menerus meskipun sudah...",
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog4.png",
+    thumbnail: "/assets/article/blog3.png", // Thumbnail ditambahkan
+  },
+    // Menambahkan data ke-4 sebagai contoh dari aset yang diberikan
+  {
+    author: "Dr. Clara",
+    avatar: "/assets/article/user.png", // Path diperbarui
+    date: "11 / 11 / 2025",
+    title: "Pentingnya Menjaga Pola Tidur yang Baik",
+    excerpt: "Tidur yang cukup dan berkualitas adalah kunci...",
+    likes: 150,
+    comments: 35,
+    shares: 18,
+    thumbnail: "/assets/article/blog4.png", // Thumbnail ditambahkan
   },
 ];
 
-// Sub-komponen untuk setiap kartu artikel
+// Sub-komponen untuk setiap kartu artikel (UPDATED)
 const ArticleCard = ({ article }: { article: (typeof articleData)[0] }) => (
   <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col">
-    {/* Gambar Artikel */}
+    {/* Gambar Artikel Ditampilkan Di Sini */}
     <div className="relative aspect-video">
-        <Image 
-            src={article.thumbnail}
-            alt={article.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+      <Image
+        src={article.thumbnail}
+        alt={article.title}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      />
       {/* Tombol Bookmark */}
       <button className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-white transition">
         <Bookmark className="w-4 h-4" />
@@ -103,7 +115,7 @@ const ArticleCard = ({ article }: { article: (typeof articleData)[0] }) => (
   </div>
 );
 
-export const Other = () => {
+export const Article = () => {
   return (
     <section className="w-full py-16">
       <div className="container mx-auto max-w-7xl px-4">

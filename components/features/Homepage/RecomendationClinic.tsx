@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import Image from 'next/image';
 
 type Tag = {
   text: string;
@@ -25,6 +26,7 @@ type Clinic = {
   reviews: number;
   scheduleAvailable: boolean;
   operatingHours?: string;
+  image: string;
 };
 
 type SearchDropdownProps = {
@@ -45,7 +47,8 @@ const clinicData: Clinic[] = [
     address: 'Jl. Jaksa Agung Suprapto No.2, Klojen, Kec. Klojen, Kota Malang, Jawa Timur 65112',
     rating: 4.9,
     reviews: 96,
-    scheduleAvailable: true
+    scheduleAvailable: true,
+    image: '/assets/home/rumah-sakit/rs1.png'
   },
   {
     name: 'Dr. Subandi, M.KES, DHAK., PAK',
@@ -58,7 +61,8 @@ const clinicData: Clinic[] = [
     rating: 4.9,
     reviews: 96,
     scheduleAvailable: true,
-    operatingHours: '08.00 - 17.00'
+    operatingHours: '08.00 - 17.00',
+    image: '/assets/home/rumah-sakit/rs2.png'
   },
   {
     name: 'Kimia Farma',
@@ -70,7 +74,8 @@ const clinicData: Clinic[] = [
     address: 'Jl. Jaksa Agung Suprapto No.2, Klojen, Kec. Klojen, Kota Malang, Jawa Timur 65112',
     rating: 4.9,
     reviews: 96,
-    scheduleAvailable: false
+    scheduleAvailable: false,
+    image: '/assets/home/rumah-sakit/rs3.png'
   },
   {
     name: 'RSUD DR. Saiful anwar',
@@ -82,30 +87,8 @@ const clinicData: Clinic[] = [
     address: 'Jl. Jaksa Agung Suprapto No.2, Klojen, Kec. Klojen, Kota Malang, Jawa Timur 65112',
     rating: 4.9,
     reviews: 96,
-    scheduleAvailable: true
-  },
-  {
-    name: 'Kimia Farma',
-    tags: [
-      { text: 'Apotek', color: 'purple' },
-      { text: 'Dekat Anda', color: 'gray' },
-      { text: 'Buka', color: 'teal' }
-    ],
-    address: 'Jl. Jaksa Agung Suprapto No.2, Klojen, Kec. Klojen, Kota Malang, Jawa Timur 65112',
-    rating: 4.9,
-    reviews: 96,
-    scheduleAvailable: false
-  },
-  {
-    name: 'RSUD DR. Saiful anwar',
-    tags: [
-      { text: 'Umum', color: 'blue' },
-      { text: 'Dekat Anda', color: 'gray' }
-    ],
-    address: 'Jl. Jaksa Agung Suprapto No.2, Klojen, Kec. Klojen, Kota Malang, Jawa Timur 65112',
-    rating: 4.9,
-    reviews: 96,
-    scheduleAvailable: true
+    scheduleAvailable: true,
+    image: '/assets/home/rumah-sakit/rs4.png'
   }
 ];
 
@@ -150,7 +133,7 @@ export const ClinicSearch = () => {
         </div>
 
         <div className="bg-white p-4 mx-auto rounded-lg border-[1px] border-slate-200">
-          <div className='flex flex-row justify-between items-center'>
+          <div className="flex flex-row justify-between items-center">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-center">
               <div className="md:col-span-1">
                 <SearchDropdown
@@ -211,7 +194,9 @@ const ClinicCard = ({ clinic }: { clinic: (typeof clinicData)[0] }) => (
     {/* Bagian Atas: Gambar + Nama */}
     <div className="flex items-start gap-4">
       {/* Image Placeholder */}
-      <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0"></div>
+      <div className="relative w-20 h-20 rounded-lg flex-shrink-0 overflow-hidden">
+        <Image src={clinic.image} alt={clinic.name} className="object-cover" fill priority />
+      </div>
       <div className="flex flex-col justify-start gap-3">
         <div className="flex-grow">
           <h2 className="font-bold text-gray-900 text-base leading-tight">{clinic.name}</h2>
