@@ -13,6 +13,7 @@ import { useState } from 'react';
 
 export const Navbar = () => {
   const [location, setLocation] = useState('Malang');
+  const [service, setService] = useState('Layanan Kesehatan');
 
   return (
     <nav className="w-full">
@@ -24,10 +25,20 @@ export const Navbar = () => {
         <div className="flex justify-between items-center py-3">
           <div className="flex items-center gap-6">
             <Image src="/assets/icon/icon.svg" alt="SILK Logo" width={50} height={50} />
-            <button className="flex items-center gap-2 font-medium text-gray-700">
-              Layanan kesehatan
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-2 w-48 text-left outline-none">
+                  <span className="text-sm font-medium truncate">{service}</span>
+                  <ChevronDown className="h-4 w-4 text-gray-500 ml-auto" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuItem onSelect={() => setService('Layanan Kesehatan')}>Layanan Kesehatan</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setService('Psikologi')}>
+                  Psikologi
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center gap-2 rounded-lg border p-1">

@@ -3,12 +3,13 @@
 import { Star, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import Image from "next/image"; // Import Image
 
 // Data dummy untuk produk
 const productData = [
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png", // Ganti dengan path gambar
+    image: "/assets/apotek/alat1.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -18,7 +19,7 @@ const productData = [
   },
     {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat2.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -28,7 +29,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat3.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -38,7 +39,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat4.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -48,7 +49,7 @@ const productData = [
   },
   {
     name: "Amoxicillin 500mg",
-    image: "/products/amoxicillin.png",
+    image: "/assets/apotek/alat5.png", // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
@@ -60,9 +61,16 @@ const productData = [
 
 // Sub-komponen untuk Kartu Produk
 const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
-  <div className="bg-white rounded-xl overflow-hidden flex flex-col">
+  <div className="rounded-xl overflow-hidden flex flex-col">
     {/* Gambar Produk */}
-    <div className="relative aspect-square w-full bg-gray-200 rounded-xl">
+    <div className="relative aspect-square w-full rounded-xl overflow-hidden">
+      <Image 
+        src={product.image}
+        alt={product.name}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+      />
       <div className="absolute top-2 left-2 bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">
         {product.discount}%
       </div>

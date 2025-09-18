@@ -6,7 +6,7 @@ const reviewData = [
   {
     name: "Suryanto",
     service: "Layanan Apositik",
-    avatar: "/avatars/suryanto.png",
+    avatar: "/assets/home/review/user.png",
     rating: 4.9,
     date: "05 Agustus 2025",
     comment:
@@ -15,7 +15,7 @@ const reviewData = [
   {
     name: "Alya",
     service: "Layanan Apositik",
-    avatar: "/avatars/alya.png",
+    avatar: "/assets/home/review/user.png",
     rating: 4.9,
     date: "05 Agustus 2025",
     comment:
@@ -24,7 +24,7 @@ const reviewData = [
   {
     name: "Joko",
     service: "Layanan Apositik",
-    avatar: "/avatars/joko.png",
+    avatar: "/assets/home/review/user.png",
     rating: 4.9,
     date: "05 Agustus 2025",
     comment:

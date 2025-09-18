@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"; // Pastikan path ini benar
 const reviewListData = [
   {
     author: "Rizal Sadewa",
-    avatar: "/avatars/rizal.png", // Ganti dengan path avatar yang sesuai
+    avatar: "/assets/article/user.png", // Path diperbarui
     date: "11 / 11 / 2025",
     rating: 5.0,
     comment:
@@ -18,8 +18,8 @@ const reviewListData = [
     replies: 2,
   },
   {
-    author: "Rizal Sadewa",
-    avatar: "/avatars/rizal.png",
+    author: "Santika",
+    avatar: "/assets/article/santika.png", // Path diperbarui
     date: "11 / 11 / 2025",
     rating: 5.0,
     comment:
@@ -103,7 +103,7 @@ export const Review = () => {
         {/* Form Tulis Ulasan */}
         <div className="flex items-center gap-4 pb-6 border-b border-gray-200 max-w-4xl">
           <Image
-            src="/avatars/abimanyu.png" // Ganti dengan path avatar user
+            src="/assets/article/user.png" // Path diperbarui
             alt="Abimanyupw"
             width={40}
             height={40}
@@ -148,4 +148,3 @@ export const Review = () => {
     </section>
   );
 };
-
