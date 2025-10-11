@@ -184,3 +184,11 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
+
+.text-color {
+  color: #00A991;
+}
+
+.bg-color {
+  background: #00A991;
+}
