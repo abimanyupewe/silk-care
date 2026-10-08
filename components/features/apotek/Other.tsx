@@ -1,62 +1,62 @@
-"use client";
+'use client';
 
-import { Star, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import React from "react";
-import Image from "next/image"; // Import Image
+import { Star, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
+import Image from 'next/image'; // Import Image
 
 // Data dummy untuk produk
 const productData = [
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat1.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat1.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
-  },
-    {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat2.png", // Path diperbarui
-    discount: 50,
-    price_original: 12000,
-    price_discount: 6000,
-    rating: 4.9,
-    sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat3.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat2.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat4.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat3.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat5.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat4.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
+  {
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat5.png', // Path diperbarui
+    discount: 50,
+    price_original: 12000,
+    price_discount: 6000,
+    rating: 4.9,
+    sold: 112,
+    stock: 120
+  }
 ];
 
 // Sub-komponen untuk Kartu Produk
@@ -64,7 +64,7 @@ const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
   <div className="rounded-xl overflow-hidden flex flex-col">
     {/* Gambar Produk */}
     <div className="relative aspect-square w-full rounded-xl overflow-hidden">
-      <Image 
+      <Image
         src={product.image}
         alt={product.name}
         fill
@@ -75,7 +75,7 @@ const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
         {product.discount}%
       </div>
     </div>
-    
+
     {/* Konten Teks */}
     <div className="p-1 pt-2 flex flex-col flex-grow">
       <h3 className="font-semibold text-sm text-gray-800">{product.name}</h3>
@@ -89,18 +89,18 @@ const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
       </div>
       <div className="my-1 flex flex-row gap-3 justify-start items-center">
         <span className="text-xs text-gray-400 line-through">
-          Rp. {product.price_original.toLocaleString("id-ID")}
+          Rp. {product.price_original.toLocaleString('id-ID')}
         </span>
-        <p className="font-bold text-[#00A991]">
-          Rp. {product.price_discount.toLocaleString("id-ID")}
+        <p className="font-bold text-primary">
+          Rp. {product.price_discount.toLocaleString('id-ID')}
         </p>
       </div>
       {/* Tombol Aksi */}
       <div className="flex gap-2 mt-2">
-        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-white border border-border text-gray-700 rounded-lg hover:bg-gray-50 transition">
           Cart
         </button>
-        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-[#00A991] text-white rounded-lg hover:bg-opacity-90 transition">
+        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition">
           Beli
         </button>
       </div>
@@ -114,12 +114,10 @@ export const Other = () => {
       <div className="container mx-auto max-w-7xl px-4">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
-            Rekomendasi Produk Lain
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900">Rekomendasi Produk Lain</h2>
           <Link
             href="/produk"
-            className="flex items-center gap-1 text-sm font-medium text-[#00A991] hover:text-[#008774] transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
           >
             Lihat semua
             <ChevronRight className="h-4 w-4" />

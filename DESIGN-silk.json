@@ -1,0 +1,439 @@
+{
+  "meta": {
+    "name": "SILK Design System",
+    "version": "0.1.0",
+    "status": "draft",
+    "date": "2026-10-08",
+    "product": "SILK (Sistem Informasi Layanan Kesehatan)",
+    "platforms": ["web responsif (Next.js)", "mobile app tahap lanjutan (Flutter)"],
+    "style": "clean minimalist, flat, sharp-cornered, trustworthy, high-contrast",
+    "language_ui": "id",
+    "sources": ["SRS SILK v1.0", "home.png (desain beranda lama)", "SILK_LOGO_1.svg"],
+    "note_for_agent": "Ikuti hard_rules tanpa pengecualian. Jika desain lama (home.png) atau default library bertentangan dengan hard_rules, hard_rules yang menang. Item di 'assumptions' belum dikonfirmasi pengguna."
+  },
+
+  "design_intent": {
+    "summary": "SILK membantu masyarakat Malang dan sekitarnya mencari, membandingkan, dan membeli layanan kesehatan dengan harga transparan. Antarmuka harus terasa tepercaya, tenang, dan jelas, bukan ramai seperti marketplace biasa.",
+    "redesign_goal": "Memodernkan tampilan lama yang terasa jadul dan menyelaraskan warna dengan logo: teal sebagai identitas utama, amber sebagai aksen hangat.",
+    "principles": [
+      "Kepercayaan lebih penting dari keramaian: sedikit warna, hierarki jelas, informasi harga dan verifikasi mudah ditemukan.",
+      "Garis, bukan bayangan: struktur lewat border 1px dan jarak, bukan shadow dan sudut membulat.",
+      "Teal membawa identitas, amber membawa sorotan: amber hanya untuk promo, rating, dan CTA pada latar gelap.",
+      "Makna tidak pernah hanya lewat warna: status, verifikasi, dan promosi selalu disertai ikon dan label.",
+      "Satu pola per jenis konten: kartu dokter, fasilitas, produk, ulasan, dan artikel masing-masing punya satu bentuk baku.",
+      "Informasi keselamatan tidak boleh tersembunyi: disclaimer AI, penanda resep, dan peringatan darurat selalu terlihat."
+    ]
+  },
+
+  "brand": {
+    "logo": {
+      "file": "SILK_LOGO_1.svg",
+      "description": "bola lampu garis teal dengan salib medis dan stetoskop amber di dalamnya",
+      "source_colors": { "teal": "#00A991", "amber": "#FFA800" },
+      "usage": {
+        "header_height_px": 40,
+        "min_height_px": 32,
+        "clear_space_px": 8,
+        "background": "putih atau surface; jangan diletakkan di atas foto atau warna pekat",
+        "do_not": ["mengubah warna", "memberi bayangan atau efek", "meregangkan proporsi", "memutar"]
+      },
+      "technical_note": "File SVG yang diunggah adalah gambar raster (PNG 500x500) yang dibungkus tag SVG, bukan vektor murni. Disarankan membuat ulang sebagai SVG vektor agar tajam di semua ukuran. Wordmark 'SILK' belum tersedia sebagai aset."
+    }
+  },
+
+  "hard_rules": [
+    "border-radius selalu 0 pada semua elemen (tombol, input, kartu, badge, chip, avatar, foto, banner, modal, dropdown, indikator carousel).",
+    "Jangan memakai box-shadow, drop-shadow, glow, atau efek kaca. Fokus memakai outline.",
+    "Jangan memakai gradien, termasuk overlay gradien di atas foto. Teks di atas foto diletakkan pada blok solid.",
+    "Pisahkan elemen memakai border 1px dan perbedaan tint latar.",
+    "Warna logo mentah teal #00A991 dan amber #FFA800 TIDAK boleh dipakai untuk teks atau latar tombol dengan teks putih (kontras tidak cukup). Gunakan token primary dan amber sesuai aturan di bawah.",
+    "Teks di atas amber memakai ink. Amber tidak pernah dipakai sebagai warna teks di atas putih.",
+    "Teks di atas primary_tint memakai ink atau primary_hover, bukan primary.",
+    "Maksimal satu tombol primary per area; di atas latar primary_deep gunakan varian on_dark.",
+    "Maksimal tiga badge per kartu.",
+    "Status, verifikasi, resep, dan promosi harus selalu disertai ikon dan label teks, tidak hanya warna.",
+    "Ukuran teks minimum 14px; teks isi 16px.",
+    "Area sentuh minimum 44x44 px.",
+    "Harga ditulis dengan format Indonesia (Rp 25.000); harga coret memakai line-through dan warna ink_muted.",
+    "Foto selalu persegi atau rasio tetap (1:1, 4:3, 16:9) dengan border 1px; tanpa sudut membulat.",
+    "Label UI memakai sentence case; hindari huruf kapital semua.",
+    "Konten promosi berbayar wajib diberi label 'Dipromosikan' (lihat components.sponsored_label)."
+  ],
+
+  "tokens": {
+    "color": {
+      "primary": { "value": "#007F6E", "usage": "tombol primary, tautan, ring fokus, indikator aktif, ikon aksi", "contrast_on_white": "4.9:1", "derived_from": "teal logo #00A991, digelapkan agar lolos AA dengan teks putih" },
+      "primary_hover": { "value": "#006B5C", "usage": "hover/pressed; teks di atas primary_tint", "contrast_on_white": "6.5:1" },
+      "primary_deep": { "value": "#00594D", "usage": "band penuh (pencarian), hero, footer; teks putih di atasnya", "contrast_on_white": "8.3:1" },
+      "primary_tint": { "value": "#E6F6F3", "usage": "latar item terpilih, chip aktif, kartu sorot lembut" },
+      "brand_teal": { "value": "#00A991", "usage": "hanya untuk logo dan ikon/ilustrasi besar non-teks (kontras 3.0:1 dengan putih)" },
+      "amber": { "value": "#FFA800", "usage": "latar badge diskon, tombol CTA di atas primary_deep, bintang rating", "contrast_text": "teks ink di atasnya 8.9:1" },
+      "amber_tint": { "value": "#FFF4DC", "usage": "latar label 'Dipromosikan' dan sorotan promo" },
+      "amber_ink": { "value": "#8A4600", "usage": "teks/ikon di atas amber_tint dan warna status 'Menunggu'", "contrast_on_white": "7.1:1" },
+      "ink": { "value": "#111114", "usage": "teks utama, ikon, garis tombol sekunder", "contrast_on_white": "18.9:1" },
+      "ink_muted": { "value": "#4B4B55", "usage": "teks sekunder, metadata, harga coret", "contrast_on_white": "8.6:1" },
+      "ink_faint": { "value": "#6B6B75", "usage": "placeholder, teks nonkritis", "contrast_on_white": "5.3:1" },
+      "bg": { "value": "#FFFFFF", "usage": "latar halaman dan kartu" },
+      "surface": { "value": "#F3F7F6", "usage": "latar seksi selang-seling, sidebar dashboard, baris hover" },
+      "border": { "value": "#D8DEDD", "usage": "garis pemisah standar" },
+      "border_strong": { "value": "#8A9693", "usage": "border input, hover kartu, elemen melayang", "contrast_on_white": "~3.1:1 (non-teks)" },
+      "danger": { "value": "#B91C1C", "usage": "error, status Ditolak, peringatan darurat, aksi hapus", "contrast_on_white": "6.5:1" },
+      "warning": { "value": "#8A4600", "usage": "status Menunggu dan peringatan (sama dengan amber_ink)", "contrast_on_white": "7.1:1" },
+      "success": { "value": "#166534", "usage": "status Selesai/Disetujui, konfirmasi berhasil", "contrast_on_white": "7.1:1" },
+      "scrim": { "value": "rgba(17, 17, 20, 0.45)", "usage": "lapisan di belakang modal/drawer" }
+    },
+    "color_roles": {
+      "identity": "teal (primary, primary_deep, primary_tint)",
+      "highlight": "amber (promo, diskon, rating, CTA di atas latar gelap)",
+      "meaning": "danger, warning, success, hanya untuk status dan umpan balik",
+      "never": "gradien, warna dekoratif, warna lain di luar token"
+    },
+
+    "typography": {
+      "font_family": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "weights": [400, 600, 700],
+      "tabular_numbers": true,
+      "max_line_length_ch": 68,
+      "scale": {
+        "hero_title": { "size_px": { "desktop": 40, "mobile": 28 }, "weight": 700, "line_height": 1.2 },
+        "section_title": { "size_px": { "desktop": 28, "mobile": 22 }, "weight": 700, "line_height": 1.25 },
+        "card_title": { "size_px": { "desktop": 18, "mobile": 16 }, "weight": 600, "line_height": 1.35 },
+        "price": { "size_px": { "desktop": 20, "mobile": 18 }, "weight": 700, "line_height": 1.2 },
+        "body": { "size_px": { "desktop": 16, "mobile": 16 }, "weight": 400, "line_height": 1.55 },
+        "meta": { "size_px": { "desktop": 14, "mobile": 14 }, "weight": 400, "line_height": 1.4 }
+      }
+    },
+
+    "spacing_px": [4, 8, 12, 16, 24, 32, 48, 64, 96],
+
+    "shape": {
+      "radius_px": 0,
+      "shadow": "none",
+      "border_width_px": 1,
+      "border_width_strong_px": 2
+    },
+
+    "motion": {
+      "default_duration_ms": 120,
+      "easing": "linear",
+      "rules": [
+        "Animasi hanya untuk transisi state (fade, perubahan border).",
+        "Carousel tidak berputar otomatis lebih cepat dari 8 detik dan harus punya kontrol jeda serta tombol sebelumnya/berikutnya.",
+        "Nonaktifkan animasi bila prefers-reduced-motion aktif."
+      ]
+    },
+
+    "layout": {
+      "breakpoints_px": { "mobile": 360, "tablet": 768, "desktop": 1024, "wide": 1280 },
+      "container_max_width_px": 1200,
+      "grid": { "columns": { "desktop": 12, "tablet": 8, "mobile": 4 }, "gutter_px": 24, "mobile_gutter_px": 16 },
+      "section_spacing_px": { "desktop": 64, "mobile": 48 },
+      "header_height_px": { "desktop": 72, "mobile": 56 },
+      "alignment": "left",
+      "density": {
+        "consumer": { "input_height_px": 48, "row_height_px": 56, "use": "beranda, pencarian, profil, marketplace, artikel" },
+        "dashboard": { "input_height_px": 40, "row_height_px": 40, "use": "dashboard admin, apotek, tenaga medis" }
+      }
+    }
+  },
+
+  "elevation_substitutes": {
+    "separate_card_from_background": "border 1px {border}; di atas seksi {surface}, kartu berlatar putih",
+    "floating_elements": "border 1px {border_strong} + latar putih solid; modal diberi {scrim}",
+    "hover_card": "border berubah ke {ink}; tanpa efek terangkat",
+    "selected": "border 2px {primary} + latar {primary_tint}",
+    "focus": "outline 2px solid {primary}, outline-offset 2px",
+    "text_over_image": "blok solid {bg} atau {primary_deep} di samping/atas foto; jangan overlay gradien"
+  },
+
+  "existing_home_audit": {
+    "source": "home.png",
+    "observations": [
+      "Kartu dan tombol memakai sudut membulat dan bayangan.",
+      "Ubin layanan selang-seling berlatar teal penuh dan putih tanpa alasan yang jelas.",
+      "Teks meta pada kartu dokter, fasilitas, dan produk sangat kecil dan berkontras rendah.",
+      "Kartu dokter memuat banyak badge sekaligus (pengalaman, spesialis, 'Dekat Anda', 'Buka').",
+      "Kartu produk menampilkan diskon, rating, terjual, stok, harga coret, dan dua tombol dengan kepadatan tinggi.",
+      "Banner promo memakai materi pihak ketiga dengan gaya visual berbeda-beda.",
+      "Satu hijau-teal dipakai untuk hampir semua elemen sehingga tidak ada hierarki aksi.",
+      "Pagination dan indikator carousel berbentuk kapsul."
+    ],
+    "redesign_response": [
+      "Satu pola kartu per jenis konten, sudut tegas, border 1px.",
+      "Ubin layanan seragam: latar putih, ikon garis primary; aksi ditandai panah, bukan warna latar.",
+      "Teks minimal 14px, kontras tinggi.",
+      "Maksimal tiga badge per kartu; info lain jadi teks meta.",
+      "Teal gelap untuk aksi, amber hanya untuk promo dan sorotan.",
+      "Banner promo diberi bingkai seragam dan label 'Iklan' atau 'Dipromosikan' bila berbayar."
+    ]
+  },
+
+  "components": {
+    "button": {
+      "height_px": { "consumer": 48, "dashboard": 40 },
+      "variants": {
+        "primary": { "bg": "primary", "text": "#FFFFFF", "border": "none", "hover_bg": "primary_hover" },
+        "on_dark": { "bg": "amber", "text": "ink", "border": "none", "use": "CTA di atas latar primary_deep", "hover_bg": "#E69900" },
+        "secondary": { "bg": "bg", "text": "ink", "border": "1px ink" },
+        "ghost": { "bg": "transparent", "text": "primary_hover" },
+        "destructive": { "bg": "bg", "text": "danger", "border": "1px danger" }
+      },
+      "disabled": { "text": "ink_faint", "border": "border", "bg": "bg" },
+      "label_rule": "kata kerja spesifik: 'Cari', 'Lihat jadwal', 'Tambah ke keranjang', 'Beli sekarang'"
+    },
+
+    "input_and_select": {
+      "height_px": { "consumer": 48, "dashboard": 40 },
+      "bg": "bg",
+      "border": "1px border_strong",
+      "label": "selalu terlihat di atas field",
+      "focus": { "border": "primary", "outline": "2px primary, offset 2px" },
+      "error": { "border": "danger", "message": "teks danger di bawah field; sebut masalah dan cara memperbaiki" }
+    },
+
+    "chip": {
+      "shape": "persegi panjang",
+      "height_px": 40,
+      "default": "border 1px border_strong, teks ink",
+      "selected": "border 2px primary, latar primary_tint, teks ink, ikon centang kecil",
+      "use": "kategori Aposilk dan SilkShop, filter pencarian"
+    },
+
+    "badge": {
+      "height_px": 24,
+      "font_size_px": 14,
+      "variants": {
+        "verified": { "label": "Terverifikasi", "icon": "perisai dengan centang", "style": "border 1px primary_hover, teks primary_hover, latar bg" },
+        "open": { "label": "Buka", "icon": "titik persegi", "style": "border 1px success, teks success" },
+        "nearby": { "label": "Dekat Anda", "icon": "pin", "style": "border 1px border_strong, teks ink_muted" },
+        "discount": { "label": "-50%", "style": "latar amber, teks ink, tanpa border" },
+        "prescription": { "label": "Perlu resep", "icon": "Rx", "style": "border 1px ink, teks ink" }
+      }
+    },
+
+    "sponsored_label": {
+      "label": "Dipromosikan",
+      "style": "border 1px amber, latar amber_tint, teks amber_ink, ikon megafon garis",
+      "placement": "sudut kiri atas kartu atau banner",
+      "rule": "wajib pada hasil pencarian, rekomendasi AI, dan banner yang berbayar"
+    },
+
+    "rating": {
+      "display": "bintang persegi-tajam amber 16px + angka bold (mis. 4,9) + jumlah (mis. 102 ulasan) dalam ink_muted",
+      "note": "angka selalu ditampilkan; bintang hanya penguat visual."
+    },
+
+    "tile_service": {
+      "use": "Konsultasi Spesialis dan Layanan Kesehatan di beranda",
+      "size": "kisi 3 kolom desktop, 2 kolom mobile; tinggi 72px",
+      "style": "latar bg, border 1px border, ikon garis 32px primary di kiri, judul card_title, panah di kanan",
+      "hover": "border ink",
+      "never": "latar teal penuh pada sebagian ubin"
+    },
+
+    "doctor_card": {
+      "layout": "foto persegi 72px di kiri; kanan: nama (card_title), spesialis (meta), rating + jumlah pasien, jadwal praktik, jarak",
+      "badges_max": 2,
+      "price": "harga coret (ink_muted, line-through) di atas harga aktif (price); badge diskon bila ada",
+      "cta": "'Lihat jadwal' (secondary)",
+      "border": "1px border; hover ink"
+    },
+
+    "facility_card": {
+      "use": "rumah sakit, klinik, laboratorium, apotek, fisioterapi, rumah duka",
+      "layout": "foto 4:3 di atas atau 96px di kiri; nama, alamat satu baris, jarak, jam buka, rating",
+      "badges_max": 3,
+      "cta": "'Lihat profil'"
+    },
+
+    "product_card": {
+      "use": "Aposilk (obat) dan SilkShop (alat kesehatan)",
+      "image": "1:1 dengan border 1px, latar bg",
+      "body": ["nama produk (card_title, maks 2 baris)", "harga (price) + harga coret", "rating + terjual (meta)", "stok (meta)"],
+      "badges_max": 2,
+      "actions": "tombol ikon keranjang 44px (secondary) + tombol 'Beli' (primary) berdampingan",
+      "prescription_rule": "produk obat resep memakai badge 'Perlu resep' dan mengganti 'Beli' menjadi 'Unggah resep'."
+    },
+
+    "review_card": {
+      "layout": "bintang + angka di atas, kutipan ulasan (body, maks 4 baris), avatar persegi 32px, nama, peran/layanan, tanggal",
+      "border": "1px border",
+      "moderation_note": "ulasan hanya disembunyikan bila melanggar pedoman (ujaran kasar, spam); tampilkan label 'Ulasan disembunyikan' bagi admin."
+    },
+
+    "article_card": {
+      "image": "16:9 dengan border 1px",
+      "body": ["judul (card_title, maks 2 baris)", "ringkasan 2 baris (meta)", "penulis (avatar persegi 24px + nama), tanggal", "jumlah suka dan komentar"],
+      "cta": "seluruh kartu dapat diklik"
+    },
+
+    "promo_banner": {
+      "use": "banner beranda dan carousel promo",
+      "format": "bingkai 16:9, border 1px; gambar mitra di dalam bingkai tanpa efek tambahan",
+      "label": "'Iklan' atau 'Dipromosikan' bila berbayar",
+      "indicator": "batang persegi 24x4px; aktif primary, nonaktif border_strong",
+      "controls": "tombol sebelumnya/berikutnya persegi 44px + tombol jeda"
+    },
+
+    "hero_banner": {
+      "style": "blok primary_deep penuh, teks putih hero_title kiri, ilustrasi/foto persegi kanan, satu CTA on_dark",
+      "emergency_variant": "border-left 4px danger pada blok putih dengan label 'Darurat' dan nomor 119/ambulans; hanya untuk layanan darurat."
+    },
+
+    "search_band": {
+      "style": "band penuh primary_deep; judul putih; form putih dengan input persegi berdampingan; tombol 'Cari' varian on_dark",
+      "fields": ["Kategori", "Spesialis/Jenis", "Urutkan/Biaya", "Lokasi"]
+    },
+
+    "pagination": { "button_size_px": 44, "active": "latar primary, teks putih", "inactive": "border 1px border_strong" },
+
+    "comparison_table": {
+      "use": "perbandingan layanan/biaya (fitur 1.3 SRS; belum ada halaman di SRS 3.2)",
+      "layout": "maksimal 3 kolom layanan; kolom pertama sticky berisi label; baris sejajar (harga, jarak, rating, jadwal, fasilitas)",
+      "style": "border 1px, header berlatar surface, nilai terbaik diberi penanda teks 'Terendah' dengan ikon, bukan warna saja",
+      "mobile": "geser horizontal di dalam kontainer overflow-x"
+    },
+
+    "map_panel": {
+      "container": "border 1px border_strong",
+      "marker": "persegi 16px primary dengan border putih 2px; terpilih memakai amber dengan border ink 2px",
+      "layout": "hasil pencarian: daftar di kiri 5 kolom, peta di kanan 7 kolom (desktop); tab 'Daftar | Peta' (mobile)",
+      "map_style": "gaya peta netral/abu muda agar marker menonjol"
+    },
+
+    "ai_chat": {
+      "container": "panel dengan border 1px; pesan pengguna rata kanan berlatar primary_tint; pesan AI rata kiri berlatar bg dengan border 1px",
+      "disclaimer": "banner tetap di atas: 'SILK AI memberi informasi umum, bukan diagnosis. Dalam keadaan darurat hubungi 119 atau datangi IGD.' (border-left 4px amber)",
+      "recommendation_item": "kartu dokter/fasilitas mini di dalam percakapan, lengkap dengan label 'Dipromosikan' bila berbayar",
+      "consent": "persetujuan eksplisit sebelum pesan pertama bahwa teks keluhan diproses oleh layanan AI pihak ketiga (asumsi)"
+    },
+
+    "emergency_notice": {
+      "style": "blok putih, border 1px danger, border-left 4px danger, ikon dan label 'Darurat'",
+      "copy": "Jika Anda atau orang di sekitar mengalami gejala berat, hubungi 119 atau segera ke IGD terdekat."
+    },
+
+    "status_badges": {
+      "order": {
+        "waiting_payment": { "label": "Menunggu pembayaran", "color": "warning", "icon": "jam" },
+        "processing": { "label": "Diproses", "color": "ink", "icon": "kotak setengah terisi" },
+        "shipped": { "label": "Dikirim", "color": "ink", "icon": "truk garis" },
+        "done": { "label": "Selesai", "color": "success", "icon": "centang" },
+        "cancelled": { "label": "Dibatalkan", "color": "danger", "icon": "silang" }
+      },
+      "partner_verification": {
+        "pending": { "label": "Menunggu verifikasi", "color": "warning", "icon": "jam" },
+        "verified": { "label": "Terverifikasi", "color": "primary_hover", "icon": "perisai centang" },
+        "rejected": { "label": "Ditolak", "color": "danger", "icon": "silang" }
+      },
+      "style": "badge persegi panjang, border 1px berwarna sama dengan teks, latar bg; ikon dan label wajib"
+    },
+
+    "navigation": {
+      "header": {
+        "desktop": ["logo", "menu 'Layanan kesehatan' (dropdown)", "kolom pencarian", "pemilih lokasi", "tautan Artikel, Langganan, Tentang SILK", "tombol 'Masuk' (secondary) dan 'Daftar' (primary)"],
+        "mobile": ["logo", "ikon cari", "ikon keranjang", "menu hamburger -> drawer layar penuh"],
+        "style": "latar bg, border-bottom 1px border, sticky"
+      },
+      "footer": { "bg": "primary_deep", "text": "#FFFFFF", "columns": ["SILK", "Kolaborasi", "Hubungi Kami"], "newsletter": "input persegi + tombol on_dark 'Kirim'", "link_style": "teks putih, garis bawah saat hover/fokus" },
+      "bottom_tab_mobile_optional": ["Beranda", "Cari", "Apotek", "Akun"]
+    },
+
+    "modal": { "bg": "bg", "border": "1px border_strong", "scrim": "scrim", "close_on": ["esc", "outside_click"] },
+    "dropdown": { "bg": "bg", "border": "1px border_strong", "close_on": ["esc", "outside_click"] },
+    "avatar": { "shape": "square", "sizes_px": [24, 32, 48, 72], "fallback": "inisial di atas surface dengan border 1px" },
+    "empty_state": { "alignment": "center", "contents": "satu kalimat + satu tombol primary", "example": { "text": "Belum ada hasil untuk pencarian ini.", "cta": "Ubah filter" } }
+  },
+
+  "page_specs": {
+    "beranda": {
+      "order": [
+        { "section": "Header", "spec": "components.navigation.header" },
+        { "section": "Hero & promo", "spec": "hero_banner di kiri 8 kolom + promo_banner 4 kolom; carousel dengan kontrol", "bg": "bg" },
+        { "section": "Konsultasi spesialis", "spec": "tile_service kisi 3 kolom (6 spesialis) + tautan 'Lihat semua konsultasi'", "bg": "bg" },
+        { "section": "Layanan kesehatan", "spec": "tile_service kisi 3 kolom (Dokter, Ahli Gizi, Catering Sehat, Rumah Sakit, Klinik & Puskesmas, Laboratorium); judul dan deskripsi di atas, bukan di sisi", "bg": "surface" },
+        { "section": "Dokter terbaik", "spec": "doctor_card kisi 3 kolom (6 kartu) + pagination", "bg": "bg" },
+        { "section": "Promo hari ini", "spec": "promo_banner 2 kolom + indikator", "bg": "bg" },
+        { "section": "Cari klinik, rumah sakit, apotek, dokter", "spec": "search_band", "bg": "primary_deep" },
+        { "section": "Rekomendasi terdekat", "spec": "facility_card dan doctor_card campuran kisi 3 kolom + pagination", "bg": "bg" },
+        { "section": "Aposilk", "spec": "chip kategori (scroll horizontal) + product_card kisi 5 kolom desktop / 2 kolom mobile + 'Lihat Aposilk'", "bg": "surface" },
+        { "section": "SilkShop", "spec": "sama dengan Aposilk", "bg": "bg" },
+        { "section": "Ulasan SILK", "spec": "ringkasan rating besar + review_card kisi 3 kolom", "bg": "surface" },
+        { "section": "Artikel", "spec": "article_card kisi 3 kolom + 'Lihat semua artikel'", "bg": "bg" },
+        { "section": "Footer", "spec": "components.navigation.footer", "bg": "primary_deep" }
+      ],
+      "section_header": "judul section_title kiri, tautan ghost 'Lihat semua' kanan; deskripsi satu baris di bawah judul dalam ink_muted",
+      "floating_cta": "tombol 'Cari solusi kesehatan' (AI chat) tetap di kanan bawah: persegi 56px, latar primary, ikon putih, border putih 2px; tanpa shadow"
+    },
+    "hasil_pencarian": { "note": "Belum ada di SRS 3.2; asumsi: filter di kiri (desktop) / drawer (mobile), daftar kartu, peta, urutan, dan akses ke comparison_table." },
+    "profil_layanan": { "note": "Header profil (foto, nama, badge, rating, harga), video profil dalam bingkai 16:9, tab Informasi | Jadwal | Ulasan, peta lokasi, tombol primary tunggal." },
+    "marketplace_apotek": { "note": "Keranjang dan checkout Midtrans; tampilkan peringatan resep dan status pesanan. Detail alur pesanan/pengiriman belum ada di SRS." },
+    "riwayat_pasien": { "note": "Daftar kronologis dengan status_badges; data rekam medis diberi indikator kunci dan keterangan siapa yang dapat mengakses." },
+    "dashboard_mitra_dan_admin": { "note": "Mode kepadatan 'dashboard': tabel baris 40px, filter di atas, antrean verifikasi mitra dengan status_badges." }
+  },
+
+  "copywriting": {
+    "voice": "jelas, tenang, bersahabat tanpa berlebihan; menyapa pengguna dengan 'Anda'",
+    "rules": [
+      "Tombol memakai kata kerja spesifik dan konsisten.",
+      "Jangan memberi kesan diagnosis: gunakan 'rekomendasi', 'informasi', bukan 'Anda menderita'.",
+      "Harga selalu dengan 'Rp' dan titik ribuan; sebutkan jika harga dapat berubah.",
+      "Hindari klaim berlebihan ('terbaik', 'termurah') kecuali ada dasar data yang dijelaskan.",
+      "Error tidak menyalahkan; jelaskan masalah dan langkah berikutnya.",
+      "Konten berbayar selalu berlabel."
+    ]
+  },
+
+  "accessibility": {
+    "min_text_contrast": "4.5:1 (AA); teks isi dibidik 7:1",
+    "focus_visible": "wajib, outline 2px primary",
+    "never_color_only": ["status pesanan", "verifikasi mitra", "diskon", "promosi", "resep", "rating"],
+    "carousel": "kontrol jeda dan navigasi keyboard wajib",
+    "images": "setiap foto dokter/produk punya alt teks bermakna",
+    "note": "Nilai kontras dihitung dari hex; verifikasi ulang di lingkungan akhir."
+  },
+
+  "framework_enforcement": {
+    "css_global": "*, *::before, *::after { border-radius: 0 !important; box-shadow: none !important; }",
+    "css_focus": ":focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }",
+    "css_variables_hint": "petakan seluruh tokens.color ke CSS custom properties (--primary, --primary-hover, --primary-deep, --amber, dst.).",
+    "tailwind_if_used": "override borderRadius dan boxShadow ke 0/none; lint untuk melarang rounded-* dan shadow-* selain rounded-none/shadow-none.",
+    "flutter_later": {
+      "shape": "RoundedRectangleBorder(borderRadius: BorderRadius.zero) pada semua widget",
+      "elevation": 0,
+      "surfaceTintColor": "transparent",
+      "token_sharing": "gunakan satu sumber token (JSON ini) untuk web dan Flutter."
+    }
+  },
+
+  "assumptions": [
+    "Gaya tanpa rounded dan tanpa shadow berlaku untuk SILK (dikonfirmasi pengguna).",
+    "Warna primary diturunkan dari teal logo (#00A991) menjadi #007F6E agar lolos kontras; aksen amber (#FFA800) dari logo. Belum dikonfirmasi pengguna.",
+    "Font Plus Jakarta Sans adalah pilihan awal; belum dicek ketersediaan/lisensi.",
+    "Aturan label 'Dipromosikan' mengasumsikan ada mitra berbayar; model bisnis belum dijelaskan di SRS.",
+    "Status pesanan (Menunggu pembayaran, Diproses, Dikirim, Selesai, Dibatalkan) adalah usulan; SRS belum menjelaskan alur pesanan.",
+    "Halaman hasil pencarian dan perbandingan layanan adalah usulan karena tidak ada di SRS 3.2.",
+    "Alur 'Unggah resep' untuk obat resep adalah usulan; belum ada di SRS.",
+    "Persetujuan eksplisit sebelum AI chat adalah usulan terkait privasi data keluhan.",
+    "Wordmark 'SILK' belum tersedia sehingga header memakai logo mark saja.",
+    "Jumlah kolom dan jumlah kartu per seksi beranda adalah usulan dari desain lama, belum diuji.",
+    "Nilai kontras dihitung dari hex; belum diuji pada layar nyata."
+  ],
+
+  "open_questions": [
+    "Apakah mitra membayar untuk promosi/urutan tampil? Ini menentukan penggunaan label 'Dipromosikan'.",
+    "Apakah logo tersedia dalam versi vektor murni dan dengan wordmark?",
+    "Apakah front-end akan memakai Tailwind/DaisyUI atau library lain?",
+    "Apakah perlu dark mode di MVP?",
+    "Bagaimana alur rekam medis (siapa yang menulis, siapa yang dapat melihat) agar UI riwayat pasien bisa dirinci?",
+    "Apakah banner promo mitra memiliki pedoman ukuran dan gaya dari SILK?"
+  ],
+
+  "alternatives_primary": [
+    { "name": "Teal gelap (turunan logo)", "hex": "#007F6E", "chosen": true, "reason": "setia pada identitas logo, kontras 4.9:1 dengan teks putih, cocok untuk kesan kesehatan yang tenang dan tepercaya" },
+    { "name": "Teal logo mentah", "hex": "#00A991", "chosen": false, "reason": "kontras hanya 3.0:1 dengan putih sehingga tidak layak untuk teks atau tombol bertulisan putih" },
+    { "name": "Teal sangat gelap", "hex": "#00594D", "chosen": false, "reason": "kontras tinggi (8.3:1), dipakai sebagai primary_deep untuk band dan footer; terlalu berat jika dipakai pada setiap tombol" },
+    { "name": "Amber logo sebagai primary", "hex": "#FFA800", "chosen": false, "reason": "kontras rendah dengan putih dan memberi kesan peringatan; tepat sebagai aksen saja" },
+    { "name": "Biru klinis", "hex": "#1D4ED8", "chosen": false, "reason": "lazim di sektor kesehatan tetapi tidak berhubungan dengan logo SILK" }
+  ]
+}

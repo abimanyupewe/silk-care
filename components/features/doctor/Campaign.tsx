@@ -66,7 +66,7 @@ export const Campaign = () => {
                 key={index}
                 onClick={() => handlePageChange(index)}
                 className={cn('rounded-full transition-all duration-300', {
-                  'w-5 h-2 bg-[#00A991]': activePage === index,
+                  'w-5 h-2 bg-primary': activePage === index,
                   'w-2 h-2 bg-[#99d9d1] hover:bg-[#5cc4b5]': activePage !== index
                 })}
                 aria-label={`Go to slide ${index + 1}`}

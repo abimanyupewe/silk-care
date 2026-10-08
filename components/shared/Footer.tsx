@@ -1,14 +1,21 @@
-import Link from "next/link";
-import { Input } from "../ui/input";
+import Link from 'next/link';
 
-// Sub-komponen untuk setiap kolom link agar kode lebih rapi
-const FooterLinkColumn = ({ title, links }: { title: string; links: { href: string; label: string }[] }) => (
+const FooterLinkColumn = ({
+  title,
+  links
+}: {
+  title: string;
+  links: { href: string; label: string }[];
+}) => (
   <div>
-    <h3 className="font-bold text-white text-lg mb-4">{title}</h3>
+    <h3 className="mb-4 text-lg font-bold text-white">{title}</h3>
     <ul className="space-y-3">
       {links.map((link) => (
         <li key={link.label}>
-          <Link href={link.href} className="text-white/80 hover:text-white transition-colors">
+          <Link
+            href={link.href}
+            className="text-sm text-white/80 underline-offset-4 hover:text-white hover:underline"
+          >
             {link.label}
           </Link>
         </li>
@@ -18,65 +25,58 @@ const FooterLinkColumn = ({ title, links }: { title: string; links: { href: stri
 );
 
 export const Footer = () => {
-  // Data untuk link di footer
   const silkLinks = [
-    { href: "#", label: "Blog kesehatan" },
-    { href: "#", label: "Dokter" },
-    { href: "#", label: "Promo" },
-    { href: "#", label: "Tentang Kami" },
-    { href: "#", label: "Layanan" },
+    { href: '/article', label: 'Artikel kesehatan' },
+    { href: '/doctor', label: 'Dokter' },
+    { href: '/apotek', label: 'Apotek' },
+    { href: '#tentang', label: 'Tentang SILK' }
   ];
-
   const collaborationLinks = [
-    { href: "#", label: "Daftar ambulance" },
-    { href: "#", label: "Daftar Dokter" },
-    { href: "#", label: "Daftar Klinik" },
+    { href: '#mitra', label: 'Daftar sebagai dokter' },
+    { href: '#mitra', label: 'Daftar sebagai klinik' },
+    { href: '#mitra', label: 'Daftar sebagai apotek' }
   ];
 
   return (
-    <footer className="bg-[#00A991]">
-      <div className="container mx-auto max-w-7xl px-4 py-12 text-sm">
-        {/* Konten Utama Footer */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Kolom 1: Newsletter */}
-          <div className="md:col-span-2 lg:col-span-1">
-            <h3 className="text-white/90 mb-2">
-              Dapatkan update artikel kesehatan, promo, dan fitur terbaru SILK langsung ke email Anda!
-            </h3>
-            <div className="mt-4 flex items-center bg-white p-1 rounded-lg">
-              <Input
+    <footer className="bg-primary-deep text-white">
+      <div className="container mx-auto max-w-[1200px] px-4 py-12 md:py-16">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <h2 className="text-2xl font-bold">SILK</h2>
+            <p className="mt-3 max-w-xs text-sm text-white/80">
+              Sistem Informasi Layanan Kesehatan untuk masyarakat Malang dan sekitarnya.
+            </p>
+            <form className="mt-6 flex rounded-lg border border-white/50 bg-white p-1">
+              <label className="sr-only" htmlFor="newsletter-email">
+                Email Anda
+              </label>
+              <input
+                id="newsletter-email"
                 type="email"
-                placeholder="Email"
-                className="bg-transparent border-none text-gray-800 placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 h-auto"
+                placeholder="Email Anda"
+                className="min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none placeholder:text-ink-muted"
               />
-              <button className="bg-[#00A991] text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-opacity-90 transition flex-shrink-0">
+              <button
+                type="submit"
+                className="h-11 shrink-0 rounded-md bg-amber px-4 text-sm font-semibold text-ink hover:bg-[#e69900]"
+              >
                 Kirim
               </button>
-            </div>
+            </form>
           </div>
-
-          {/* Kolom 2: Silk */}
-          <FooterLinkColumn title="Silk" links={silkLinks} />
-
-          {/* Kolom 3: Kolaborasi */}
+          <FooterLinkColumn title="SILK" links={silkLinks} />
           <FooterLinkColumn title="Kolaborasi" links={collaborationLinks} />
-
-          {/* Kolom 4: Hubungi Kami */}
           <div>
-            <h3 className="font-bold text-white text-lg mb-4">Hubungi Kami</h3>
-            <div className="space-y-3 text-white/80">
-              <p>Jl. Sehat Selalu No. 10, Jakarta</p>
+            <h3 className="mb-4 text-lg font-bold">Hubungi kami</h3>
+            <div className="space-y-3 text-sm text-white/80">
+              <p>Malang, Jawa Timur</p>
               <p>info@silkhealth.id</p>
-              <p>(021) 1234-5678</p>
+              <p>(0341) 1234-5678</p>
             </div>
           </div>
         </div>
-
-        {/* Garis Pemisah & Copyright */}
-        <div className="mt-12 border-t border-white/20 pt-6 text-center">
-          <p className="text-white/70 text-xs">
-            © 2025 SILK Health. All rights reserved.
-          </p>
+        <div className="mt-12 border-t border-white/30 pt-6 text-sm text-white/70">
+          <p>© 2026 SILK. Seluruh hak cipta dilindungi.</p>
         </div>
       </div>
     </footer>

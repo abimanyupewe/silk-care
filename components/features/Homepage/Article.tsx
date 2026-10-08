@@ -60,12 +60,25 @@ const articleData: ArticleType[] = [
 // Komponen untuk menampilkan seluruh seksi artikel
 export const Article = () => {
   return (
-    <section className="bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Artikel Terbaru</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articleData.map((article, index) => (
-            <ArticleCard key={index} article={article} />
+    <section className="bg-white py-12 md:py-16">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-ink md:text-[28px]">Artikel kesehatan</h2>
+            <p className="mt-1 text-ink-muted">
+              Informasi umum untuk membantu Anda mengambil keputusan.
+            </p>
+          </div>
+          <Link
+            href="/article"
+            className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-hover underline underline-offset-4"
+          >
+            Lihat semua <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {articleData.map((article) => (
+            <ArticleCard key={article.title} article={article} />
           ))}
         </div>
       </div>
@@ -77,9 +90,9 @@ export const Article = () => {
 // PERUBAHAN UTAMA DI SINI vvvv
 export const ArticleCard = ({ article }: ArticleCardProps) => {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col">
+    <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-white hover:border-border-strong">
       {/* Gambar Artikel */}
-      <div className="relative aspect-[4/2] bg-gray-100">
+      <div className="relative aspect-video bg-surface">
         <Image
           src={article.thumbnail}
           alt={article.title}
@@ -88,15 +101,18 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={false}
         />
-        <button className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-white hover:text-red-500 transition">
+        <button
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-md border border-border bg-white text-ink hover:border-border-strong"
+          aria-label={`Simpan artikel ${article.title}`}
+        >
           <Bookmark className="w-5 h-5" />
         </button>
       </div>
 
       {/* Konten Artikel */}
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="flex flex-grow flex-col p-4">
         {/* Info Penulis */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+        <div className="mb-3 flex items-center justify-between text-sm text-ink-muted">
           <div className="flex items-center gap-2">
             <Image
               src={article.avatar}
@@ -112,14 +128,14 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
 
         {/* Judul & Kutipan */}
         <Link href="#" className="group">
-          <h3 className="font-bold text-gray-900 leading-tight group-hover:text-[#00A991] transition-colors">
+          <h3 className="font-semibold leading-tight text-ink group-hover:text-primary-hover">
             {article.title}
           </h3>
         </Link>
-        <p className="text-sm text-gray-600 mt-1 mb-4 flex-grow">{article.excerpt}</p>
+        <p className="mt-1 mb-4 flex-grow text-sm text-ink-muted">{article.excerpt}</p>
 
         {/* Interaksi (Likes, Comments, Shares) */}
-        <div className="flex items-center gap-4 text-sm text-gray-600 border-t border-gray-100 pt-3">
+        <div className="flex items-center gap-4 border-t border-border pt-3 text-sm text-ink-muted">
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="w-4 h-4" />
             <span>{article.likes}</span>
@@ -134,6 +150,6 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };

@@ -1,20 +1,19 @@
-
-import Link from "next/link";
+import Link from 'next/link';
 
 const navLinks = [
-  { href: "/artikel", label: "Artikel" },
-  { href: "/langganan", label: "Langganan" },
-  { href: "/tentang", label: "Tentang Silk" },
+  { href: '/artikel', label: 'Artikel' },
+  { href: '/langganan', label: 'Langganan' },
+  { href: '/tentang', label: 'Tentang Silk' }
 ];
 
 export const NavbarLinks = () => {
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-5">
       {navLinks.map((link) => (
         <Link
           key={link.label}
           href={link.href}
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          className="text-sm font-semibold text-muted-foreground hover:text-primary-hover"
         >
           {link.label}
         </Link>

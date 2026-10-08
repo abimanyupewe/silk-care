@@ -1,76 +1,76 @@
-"use client";
+'use client';
 
-import { Search, Star } from "lucide-react";
-import React from "react";
-import Image from "next/image"; // Import Image
+import { Search, Star } from 'lucide-react';
+import React from 'react';
+import Image from 'next/image'; // Import Image
 
 // Data dummy untuk kategori (UPDATED)
 const categoryData = [
-  { name: "Vitamin & Suplemen", icon: "/assets/apotek/Drugs.png" },
-  { name: "Perawatan Diri", icon: "/assets/apotek/Self Love.png" },
-  { name: "Kesehatan Seksual", icon: "/assets/apotek/Sexual infection.png" },
-  { name: "Susu", icon: "/assets/apotek/Milk.png" },
-  { name: "Ibu & Anak", icon: "/assets/apotek/Mother.png" },
-  { name: "Ibu", icon: "/assets/apotek/Mother.png" }, // Menggunakan ikon yang sama sebagai contoh
+  { name: 'Vitamin & Suplemen', icon: '/assets/apotek/Drugs.png' },
+  { name: 'Perawatan Diri', icon: '/assets/apotek/Self Love.png' },
+  { name: 'Kesehatan Seksual', icon: '/assets/apotek/Sexual infection.png' },
+  { name: 'Susu', icon: '/assets/apotek/Milk.png' },
+  { name: 'Ibu & Anak', icon: '/assets/apotek/Mother.png' },
+  { name: 'Ibu', icon: '/assets/apotek/Mother.png' } // Menggunakan ikon yang sama sebagai contoh
 ];
 
 // Data dummy untuk produk (UPDATED)
 const productData = [
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat1.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat1.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat2.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat2.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat3.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat3.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat4.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat4.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
+    stock: 120
   },
   {
-    name: "Amoxicillin 500mg",
-    image: "/assets/apotek/alat5.png", // Path diperbarui
+    name: 'Amoxicillin 500mg',
+    image: '/assets/apotek/alat5.png', // Path diperbarui
     discount: 50,
     price_original: 12000,
     price_discount: 6000,
     rating: 4.9,
     sold: 112,
-    stock: 120,
-  },
+    stock: 120
+  }
 ];
 
 // Sub-komponen untuk Kartu Produk (UPDATED)
 const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
-  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+  <div className="bg-white rounded-lg border border-border overflow-hidden flex flex-col">
     <div className="relative aspect-[1/1] w-full">
       {/* Gambar Produk Ditampilkan Di Sini */}
       <Image
@@ -97,17 +97,17 @@ const ProductCard = ({ product }: { product: (typeof productData)[0] }) => (
       </div>
       <div className="my-1 flex flex-row gap-3 justify-start items-center">
         <span className="text-xs text-gray-400 line-through">
-          Rp. {product.price_original.toLocaleString("id-ID")}
+          Rp. {product.price_original.toLocaleString('id-ID')}
         </span>
         <p className="font-bold text-gray-900">
-          Rp. {product.price_discount.toLocaleString("id-ID")}
+          Rp. {product.price_discount.toLocaleString('id-ID')}
         </p>
       </div>
       <div className="flex gap-2 mt-2">
-        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-white border border-border text-gray-700 rounded-lg hover:bg-gray-50 transition">
           Cart
         </button>
-        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-[#00A991] text-white rounded-lg hover:bg-opacity-90 transition">
+        <button className="flex-1 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition">
           Beli
         </button>
       </div>
@@ -125,9 +125,9 @@ export const Ecommerce = () => {
           <input
             type="text"
             placeholder="Cari kebutuhan Anda seperti obat, rumah sakit terdekat dan lainnya"
-            className="w-full pl-12 pr-24 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#00A991] focus:outline-none"
+            className="w-full pl-12 pr-24 py-3 border border-border rounded-full focus:ring-2 focus:ring-primary focus:outline-none"
           />
-          <button className="absolute right-2 px-8 py-2 text-sm font-semibold bg-[#00A991] text-white rounded-full hover:bg-opacity-90 transition">
+          <button className="absolute right-2 px-8 py-2 text-sm font-semibold bg-primary text-white rounded-full hover:bg-primary-hover transition">
             Cari
           </button>
         </div>
@@ -137,7 +137,10 @@ export const Ecommerce = () => {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Kategori</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {categoryData.map((category) => (
-              <button key={category.name} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+              <button
+                key={category.name}
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition"
+              >
                 {/* Ikon Kategori Ditampilkan Di Sini */}
                 <Image src={category.icon} alt={category.name} width={24} height={24} />
                 {category.name}
@@ -145,16 +148,16 @@ export const Ecommerce = () => {
             ))}
           </div>
         </section>
-        
+
         {/* Prescription Upload */}
         <section className="mb-8 p-4 bg-gray-50 rounded-lg flex justify-between items-center">
-            <div>
-                <h3 className="font-bold text-gray-900">Punya Resep Obat?</h3>
-                <p className="text-sm text-gray-600">Upload resep dan Temukan obat anda sekarang</p>
-            </div>
-            <button className="px-6 py-2 text-sm font-semibold bg-[#00A991] text-white rounded-lg hover:bg-opacity-90 transition">
-                Upload Resep
-            </button>
+          <div>
+            <h3 className="font-bold text-gray-900">Punya Resep Obat?</h3>
+            <p className="text-sm text-gray-600">Upload resep dan Temukan obat anda sekarang</p>
+          </div>
+          <button className="px-6 py-2 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition">
+            Upload Resep
+          </button>
         </section>
 
         {/* Product Grid */}
