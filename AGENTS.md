@@ -11,7 +11,7 @@ docs, and code comments are Indonesian; the root layout sets `lang="id"`.
 - `npm run typecheck` — `tsc --noEmit`; `npm run build` also typechecks
 - `npm run build` — production build (`prebuild` regenerates Prisma Client)
 - `npm run format` — Prettier across the repo
-- `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` — Prisma
+- `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` / `db:seed:demo` — Prisma
 
 Use npm (`package-lock.json`). There is no test framework, test script, or CI workflow;
 verify changes with `npm run lint`, `npm run typecheck`, and `npm run build`.
@@ -29,9 +29,12 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 - `components/features/<domain>/` holds page sections; `components/shared/` holds app-wide
   widgets; `components/ui/` holds shadcn-style primitives. Note the directory is
   `components/features/Homepage/` (capital H), unlike the lowercase domain folders.
-- No API routes yet. Content is still hard-coded in feature components. Searchable records
-  live in `lib/search-index.ts` and feed both the client `SearchModal` and the server
-  `/search` page — add new searchable items there.
+- API routes: `/api/auth/[...nextauth]`, `/api/v1/auth/*`, `/api/v1/health`, and public
+  catalog endpoints under `/api/v1/{doctors,facilities,articles,products,search}`. Use
+  `lib/api.ts` for response/pagination helpers and `lib/catalog.ts` for shared public
+  filters/selects. Frontend content is still hard-coded; wire it to these endpoints later.
+  Searchable records in `lib/search-index.ts` still feed the client `SearchModal` and
+  `/search`; replace them with `/api/v1/search` when wiring the UI.
 - Database layer: Prisma 7 + Neon in `prisma/schema.prisma`; the client singleton is
   `lib/prisma.ts`, re-exported through the `server-only` guard in `lib/db.ts`. Model names
   and enums are Indonesian-domain-oriented but code identifiers are English. Copy
@@ -46,12 +49,17 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   seeds use the direct `DATABASE_URL_UNPOOLED` (see `prisma.config.ts`).
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
-- The `init` migration has been applied. Do not run `db:push` against production; use
-  `db:migrate` locally and `db:deploy` in deployment.
+- The `init` migration and `add_catalog_slugs` have been applied. Do not run `db:push`
+  against production; use `db:migrate` locally and `db:deploy` in deployment. Public
+  detail endpoints use the required unique `DoctorProfile.slug` and `Facility.slug`.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when
   outbound WebSocket/HTTP is blocked.
+- `db:seed:demo` is optional and demo-only. It adds 2 doctors, 2 facilities, 4 articles,
+  4 products, and 5 reviews, plus the demo users `clara@`, `santika@`, `klinik@`,
+  `aposilk@`, and `pasien@silk.local`. All demo accounts use `SEED_DEMO_PASSWORD`; running
+  it repeatedly is safe (upserts by unique keys).
 
 ## Gotchas
 

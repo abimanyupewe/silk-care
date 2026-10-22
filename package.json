@@ -16,6 +16,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx prisma/seed-demo.ts",
     "postinstall": "prisma generate",
     "prepare": "husky install"
   },

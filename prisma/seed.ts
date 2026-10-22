@@ -1,10 +1,6 @@
 import 'dotenv/config';
-import { spawnSync } from 'node:child_process';
 import bcrypt from 'bcryptjs';
-
-function sqlString(value: string) {
-  return `'${value.replace(/'/g, "''")}'`;
-}
+import { runSql, sqlString } from './run-sql';
 
 async function main() {
   const email = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
@@ -37,14 +33,7 @@ ON CONFLICT ("email") DO UPDATE SET
   "updatedAt" = NOW();
 `;
 
-  const result = spawnSync('npx', ['prisma', 'db', 'execute', '--stdin'], {
-    input: sql,
-    stdio: ['pipe', 'inherit', 'inherit']
-  });
-
-  if (result.status !== 0) {
-    throw new Error('Seed gagal dijalankan.');
-  }
+  runSql(sql);
 
   console.log(`Admin siap: ${email}`);
 }
