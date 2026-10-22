@@ -38,7 +38,7 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="bg-primary-deep text-white">
+    <footer id="tentang" className="bg-primary-deep text-white">
       <div className="container mx-auto max-w-[1200px] px-4 py-12 md:py-16">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div>
