@@ -5,14 +5,6 @@ export const metadata: Metadata = {
   description: 'Sistem Informasi Layanan Kesehatan'
 };
 
-export default function RootLayout({
-  children
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="id">
-      <body>{children}</body>
-    </html>
-  );
+export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return children;
 }

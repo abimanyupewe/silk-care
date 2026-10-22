@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  FACILITY
+  PHARMACY
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum FacilityType {
+  HOSPITAL
+  CLINIC
+  LABORATORY
+  PHARMACY
+  PHYSIOTHERAPY
+  RADIOLOGY
+  FUNERAL_HOME
+  WELLNESS
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  phone         String?
+  image         String?
+  role          UserRole  @default(PATIENT)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  doctorProfile DoctorProfile?
+  facility      Facility?
+  articles      Article[]
+  orders        Order[]
+  reviews       Review[]
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model DoctorProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty          String
+  bio                String?
+  experienceYears    Int?
+  consultationFee    Int?
+  city               String?
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  verificationStatus VerificationStatus @default(PENDING)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  reviews Review[]
+
+  @@index([specialty])
+  @@index([city])
+  @@index([verificationStatus])
+}
+
+model Facility {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  type               FacilityType
+  description        String?
+  address            String?
+  city               String?
+  phone              String?
+  latitude           Float?
+  longitude          Float?
+  verificationStatus VerificationStatus @default(PENDING)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  products Product[]
+  reviews  Review[]
+
+  @@index([type])
+  @@index([city])
+  @@index([verificationStatus])
+}
+
+model Article {
+  id         String    @id @default(cuid())
+  slug       String    @unique
+  title      String
+  excerpt    String?
+  content    String
+  coverImage String?
+  published  Boolean   @default(false)
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([authorId])
+  @@index([published, createdAt])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  price       Int
+  stock       Int       @default(0)
+  image       String?
+  category    String?
+  active      Boolean   @default(true)
+  facilityId  String
+  facility    Facility  @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([facilityId])
+  @@index([category])
+  @@index([active])
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  userId                String
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status                OrderStatus   @default(PENDING)
+  paymentStatus         PaymentStatus @default(UNPAID)
+  total                 Int
+  midtransOrderId       String?       @unique
+  midtransTransactionId String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  price     Int
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id              String         @id @default(cuid())
+  rating          Int
+  comment         String?
+  authorId        String
+  author          User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  doctorProfileId String?
+  doctorProfile   DoctorProfile? @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  facilityId      String?
+  facility        Facility?      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([authorId])
+  @@index([doctorProfileId])
+  @@index([facilityId])
+  @@index([productId])
+}
