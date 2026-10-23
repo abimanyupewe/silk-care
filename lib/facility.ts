@@ -35,6 +35,10 @@ export const facilityProfileSelect = {
   phone: true,
   latitude: true,
   longitude: true,
+  photoUrl: true,
+  photoPublicId: true,
+  videoUrl: true,
+  videoPublicId: true,
   verificationStatus: true,
   createdAt: true,
   updatedAt: true,
@@ -43,6 +47,18 @@ export const facilityProfileSelect = {
       name: true,
       email: true,
       image: true
+    }
+  },
+  operatingHours: {
+    orderBy: {
+      dayOfWeek: 'asc'
+    },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      openTime: true,
+      closeTime: true,
+      isClosed: true
     }
   }
 } satisfies Prisma.FacilitySelect;

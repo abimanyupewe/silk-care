@@ -30,27 +30,35 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   widgets; `components/ui/` holds shadcn-style primitives. Note the directory is
   `components/features/Homepage/` (capital H), unlike the lowercase domain folders.
 - API routes: `/api/auth/[...nextauth]`, `/api/v1/auth/*` (including register,
-  verify-email, forgot-password, reset-password), `/api/v1/health`, public catalog
+  verify-email, forgot-password, reset-password), `/api/v1/health`, AI scaffold under
+  `/api/v1/ai/{chat,status}`, public catalog
   endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
   at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
   (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`, partner
-  onboarding under `/api/v1/partner/{doctor,facility}`, doctor profile at
-  `/api/v1/doctor/profile`, facility profile and order management under
-  `/api/v1/facility/{profile,orders,products}*`, admin user/doctor/facility/order/article
-  management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*`, the Midtrans webhook at
+  onboarding under `/api/v1/partner/{doctor,facility}`, doctor profile and schedule at
+  `/api/v1/doctor/{profile,schedule}`, facility profile, operating hours, order, and
+  product management under `/api/v1/facility/{profile,operating-hours,orders,products}*`,
+  Cloudinary upload signatures at `/api/v1/uploads/signature`, admin
+  user/doctor/facility/order/article
+  management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*`, dashboard
+  stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
-  `/api/v1/admin/reviews/[id]/moderate`. Use `lib/api.ts` for response/pagination helpers,
+  `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers,
   `lib/catalog.ts` for shared public filters/selects, `lib/auth-guard.ts` for session/role
   guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
   facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile
   guards, `lib/doctor.ts` for doctor profile select/slug helpers, `lib/product.ts` for
   partner product selects/slug helpers, `lib/article.ts` for admin article selects/slug
   helpers, `lib/slug.ts` for shared slug generation, `lib/admin.ts` for admin
-  user/doctor/facility selects, `lib/auth-token.ts` for
+  user/doctor/facility selects, `lib/cloudinary.ts` for signed uploads and media
+  validation, `lib/schedule.ts` for doctor/facility schedule schemas and selects,
+  `lib/auth-token.ts` for
   hashed email/reset tokens, `lib/auth-email.ts` for
   verification/reset emails, `lib/cart.ts` for cart projections, `lib/order.ts` for order
   selects/errors/status values, `lib/order-status.ts` for shared order status transitions,
-  `lib/midtrans.ts` for Snap/signature helpers, and `lib/reviews.ts` for review target
+  `lib/payments/` for the payment-provider abstraction (`lib/midtrans.ts` stays the
+  low-level Snap/signature adapter), `lib/ai/` for the AI provider contract and prompt
+  scaffold, and `lib/reviews.ts` for review target
   helpers. Frontend content
   is still hard-coded; wire it to these endpoints later. Searchable records in
   `lib/search-index.ts` still feed the client `SearchModal` and `/search`; replace them
@@ -73,28 +81,46 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   seeds use the direct `DATABASE_URL_UNPOOLED` (see `prisma.config.ts`).
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
-- The `init`, `add_catalog_slugs`, and `marketplace_account_review_models` migrations have
+- The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, and
+  `schedule_media` migrations have
   been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
 - Account profile/password, email verification, password reset, cart, customer checkout,
   order cancellation, Midtrans Snap payment creation, webhook processing, notification
   read endpoints, facility profile/product/order management, admin user/doctor/facility/
-  order/article management, and review write/moderation endpoints are implemented. Admins
+  order/article management, admin dashboard stats, and review write/moderation endpoints
+  are implemented. Admins
   can create, edit, publish/unpublish, soft-delete, and restore articles; public article
-  endpoints only expose published, non-deleted rows. Authenticated
+  endpoints only expose published, non-deleted rows. Admins can list and inspect all
+  reviews with filters for status, target, rating, and negative flag, then moderate or
+  delete them. Authenticated
   non-admin users can apply once as a doctor or facility; onboarding creates a pending
   profile, updates the user role, and writes an account notification. Partners can update
-  their doctor profile, facility profile, and own products; public catalog endpoints still
+  their doctor profile, weekly doctor schedule, facility profile, weekly operating hours,
+  profile photo/video, and own products; public catalog endpoints still
   require verification and, for products, an active non-deleted product from a verified
-  facility. Admins can approve or reject doctor/facility verification and soft-delete or
-  restore users; `requireUser` rechecks the user row so deactivation takes effect for
-  existing JWT sessions. Checkout snapshots product prices into
+  facility. Admins can edit doctor/facility profile fields, approve or reject
+  verification, and soft-delete or restore users; changing a facility type to/from
+  `PHARMACY` also syncs the owner role, and slugs stay stable. `requireUser` rechecks the
+  user row so deactivation takes effect for existing JWT sessions. Checkout snapshots
+  product prices into
   `OrderItem`, decrements stock conditionally inside a transaction, writes
   `OrderStatusHistory` and a `Notification`, then clears the cart. Cancelling an unpaid
   pending order restores stock. Payment creation returns `503` until
   `MIDTRANS_SERVER_KEY` is set; the webhook verifies the SHA-512 signature before
-  updating `Payment`/`Order`. Orders start `PENDING`/`UNPAID`; a successful settlement
+  updating `Payment`/`Order`. Payment routes now go through the provider abstraction in
+  `lib/payments/`, while Midtrans remains the only provider. The AI chat endpoint is
+  scaffolded but returns `503` until an actual provider is implemented; `AI_PROVIDER`,
+  `OPENAI_API_KEY`, `OPENAI_MODEL`, and `AI_TIMEOUT_MS` are reserved for that integration.
+  Cloudinary upload signatures go through `lib/cloudinary.ts`; browsers upload directly to
+  Cloudinary, then profile updates store the returned URL/publicId. Without
+  `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`, the signature
+  endpoint returns `503`. `CLOUDINARY_IMAGE_PRESET` and `CLOUDINARY_VIDEO_PRESET` are
+  optional but recommended for format/size enforcement. Public doctor/facility details
+  expose active schedules and operating hours; admin detail selects include schedules and
+  media but admins do not edit them.
+  Orders start `PENDING`/`UNPAID`; a successful settlement
   moves them to `PAID`/`PAID` and writes history plus customer/facility notifications.
   Facility/admin order management only allows `PAID -> PROCESSING -> SHIPPED -> COMPLETED`
   and cancellation before payment; cancelling an unpaid order restores stock. Public

@@ -119,15 +119,35 @@ model DoctorProfile {
   address            String?
   latitude           Float?
   longitude          Float?
+  photoUrl           String?
+  photoPublicId      String?
+  videoUrl           String?
+  videoPublicId      String?
   verificationStatus VerificationStatus @default(PENDING)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  reviews Review[]
+  reviews   Review[]
+  schedules DoctorSchedule[]
 
   @@index([specialty])
   @@index([city])
   @@index([verificationStatus])
+}
+
+model DoctorSchedule {
+  id              String        @id @default(cuid())
+  doctorProfileId String
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([doctorProfileId, dayOfWeek, startTime])
+  @@index([doctorProfileId, dayOfWeek])
 }
 
 model Facility {
@@ -143,18 +163,38 @@ model Facility {
   phone              String?
   latitude           Float?
   longitude          Float?
+  photoUrl           String?
+  photoPublicId      String?
+  videoUrl           String?
+  videoPublicId      String?
   verificationStatus VerificationStatus @default(PENDING)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  products Product[]
-  reviews  Review[]
-  carts    Cart[]
-  orders   Order[]
+  products        Product[]
+  reviews         Review[]
+  carts           Cart[]
+  orders          Order[]
+  operatingHours  FacilityOperatingHour[]
 
   @@index([type])
   @@index([city])
   @@index([verificationStatus])
+}
+
+model FacilityOperatingHour {
+  id         String   @id @default(cuid())
+  facilityId String
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int
+  openTime   String?
+  closeTime  String?
+  isClosed   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([facilityId, dayOfWeek])
+  @@index([facilityId, dayOfWeek])
 }
 
 model Article {

@@ -1,8 +1,7 @@
-import type { PaymentAttemptStatus } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
-import { isMidtransConfigured, verifyMidtransSignature } from '@/lib/midtrans';
+import { getPaymentProvider } from '@/lib/payments';
 
 const notificationSchema = z
   .object({
@@ -17,37 +16,11 @@ const notificationSchema = z
   })
   .passthrough();
 
-function mapPaymentStatus(transactionStatus: string, fraudStatus?: string): PaymentAttemptStatus {
-  if (transactionStatus === 'capture') {
-    return fraudStatus === 'accept' ? 'PAID' : 'PENDING';
-  }
-
-  if (transactionStatus === 'settlement') {
-    return 'PAID';
-  }
-
-  if (transactionStatus === 'pending') {
-    return 'PENDING';
-  }
-
-  if (transactionStatus === 'deny' || transactionStatus === 'cancel') {
-    return 'FAILED';
-  }
-
-  if (transactionStatus === 'expire') {
-    return 'EXPIRED';
-  }
-
-  if (transactionStatus === 'refund' || transactionStatus === 'partial_refund') {
-    return 'REFUNDED';
-  }
-
-  return 'PENDING';
-}
-
 export async function POST(request: Request) {
   try {
-    if (!isMidtransConfigured()) {
+    const provider = getPaymentProvider();
+
+    if (!provider.isConfigured()) {
       return jsonError('Pembayaran belum dikonfigurasi.', 503);
     }
 
@@ -70,11 +43,13 @@ export async function POST(request: Request) {
     };
 
     if (
-      !verifyMidtransSignature({
+      !provider.verifyWebhook({
         orderId: data.order_id,
         statusCode: data.status_code,
         grossAmount: data.gross_amount,
-        signatureKey: data.signature_key
+        signatureKey: data.signature_key,
+        transactionStatus: data.transaction_status,
+        fraudStatus: data.fraud_status
       })
     ) {
       return jsonError('Signature Midtrans tidak valid.', 401);
@@ -116,7 +91,7 @@ export async function POST(request: Request) {
       return jsonError('Nominal pembayaran tidak sesuai.', 400);
     }
 
-    const nextStatus = mapPaymentStatus(data.transaction_status, data.fraud_status);
+    const nextStatus = provider.mapStatus(data.transaction_status, data.fraud_status);
 
     if (payment.status === nextStatus) {
       await prisma.payment.update({

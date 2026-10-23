@@ -1,4 +1,5 @@
 import type { Prisma } from '@/lib/generated/prisma';
+import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
 
 export const verificationStatuses = ['PENDING', 'VERIFIED', 'REJECTED'] as const;
 
@@ -60,6 +61,18 @@ export const adminDoctorSelect = {
   }
 } satisfies Prisma.DoctorProfileSelect;
 
+export const adminDoctorDetailSelect = {
+  ...adminDoctorSelect,
+  photoUrl: true,
+  photoPublicId: true,
+  videoUrl: true,
+  videoPublicId: true,
+  schedules: {
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    select: doctorScheduleSelect
+  }
+} satisfies Prisma.DoctorProfileSelect;
+
 export const adminFacilitySelect = {
   id: true,
   slug: true,
@@ -88,5 +101,19 @@ export const adminFacilitySelect = {
     select: {
       products: true
     }
+  }
+} satisfies Prisma.FacilitySelect;
+
+export const adminFacilityDetailSelect = {
+  ...adminFacilitySelect,
+  photoUrl: true,
+  photoPublicId: true,
+  videoUrl: true,
+  videoPublicId: true,
+  operatingHours: {
+    orderBy: {
+      dayOfWeek: 'asc'
+    },
+    select: facilityOperatingHourSelect
   }
 } satisfies Prisma.FacilitySelect;

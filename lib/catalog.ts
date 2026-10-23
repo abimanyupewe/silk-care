@@ -1,5 +1,6 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
+import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
 
 export const publicDoctorWhere = {
   verificationStatus: 'VERIFIED',
@@ -35,6 +36,7 @@ export const doctorListSelect = {
   city: true,
   address: true,
   createdAt: true,
+  photoUrl: true,
   user: {
     select: {
       name: true,
@@ -47,7 +49,15 @@ export const doctorDetailSelect = {
   ...doctorListSelect,
   latitude: true,
   longitude: true,
+  videoUrl: true,
   updatedAt: true,
+  schedules: {
+    where: {
+      isActive: true
+    },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    select: doctorScheduleSelect
+  },
   _count: {
     select: {
       reviews: true
@@ -65,6 +75,7 @@ export const facilityListSelect = {
   address: true,
   phone: true,
   createdAt: true,
+  photoUrl: true,
   user: {
     select: {
       image: true
@@ -81,7 +92,14 @@ export const facilityDetailSelect = {
   ...facilityListSelect,
   latitude: true,
   longitude: true,
-  updatedAt: true
+  videoUrl: true,
+  updatedAt: true,
+  operatingHours: {
+    orderBy: {
+      dayOfWeek: 'asc'
+    },
+    select: facilityOperatingHourSelect
+  }
 } satisfies Prisma.FacilitySelect;
 
 export const articleListSelect = {

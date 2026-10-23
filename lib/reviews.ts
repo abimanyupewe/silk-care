@@ -6,6 +6,8 @@ export const reviewTargetTypes = ['doctor', 'facility', 'product'] as const;
 
 export type ReviewTargetType = (typeof reviewTargetTypes)[number];
 
+export const reviewStatuses = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+
 export const publicReviewSelect = {
   id: true,
   rating: true,
@@ -19,6 +21,90 @@ export const publicReviewSelect = {
     }
   }
 } satisfies Prisma.ReviewSelect;
+
+export const adminReviewSelect = {
+  id: true,
+  rating: true,
+  comment: true,
+  status: true,
+  isNegative: true,
+  moderationNote: true,
+  moderatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  doctorProfileId: true,
+  facilityId: true,
+  productId: true,
+  author: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      deletedAt: true
+    }
+  },
+  doctorProfile: {
+    select: {
+      id: true,
+      slug: true,
+      specialty: true,
+      verificationStatus: true,
+      user: {
+        select: {
+          name: true,
+          email: true
+        }
+      }
+    }
+  },
+  facility: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      verificationStatus: true
+    }
+  },
+  product: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      facility: {
+        select: {
+          id: true,
+          slug: true,
+          name: true
+        }
+      }
+    }
+  },
+  moderatedBy: {
+    select: {
+      id: true,
+      name: true,
+      email: true
+    }
+  }
+} satisfies Prisma.ReviewSelect;
+
+export function reviewTargetType(review: {
+  doctorProfileId: string | null;
+  facilityId: string | null;
+  productId: string | null;
+}): ReviewTargetType {
+  if (review.doctorProfileId) {
+    return 'doctor';
+  }
+
+  if (review.facilityId) {
+    return 'facility';
+  }
+
+  return 'product';
+}
 
 export function reviewTargetWhere(
   type: ReviewTargetType,

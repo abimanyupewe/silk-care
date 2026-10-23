@@ -13,6 +13,10 @@ export const doctorProfileSelect = {
   address: true,
   latitude: true,
   longitude: true,
+  photoUrl: true,
+  photoPublicId: true,
+  videoUrl: true,
+  videoPublicId: true,
   verificationStatus: true,
   createdAt: true,
   updatedAt: true,
@@ -22,6 +26,16 @@ export const doctorProfileSelect = {
       email: true,
       phone: true,
       image: true
+    }
+  },
+  schedules: {
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    select: {
+      id: true,
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+      isActive: true
     }
   }
 } satisfies Prisma.DoctorProfileSelect;
