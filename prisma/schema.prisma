@@ -48,6 +48,36 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentProvider {
+  MIDTRANS
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum NotificationType {
+  ACCOUNT
+  ORDER
+  REVIEW
+  SYSTEM
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -61,11 +91,16 @@ model User {
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  doctorProfile DoctorProfile?
-  facility      Facility?
-  articles      Article[]
-  orders        Order[]
-  reviews       Review[]
+  doctorProfile      DoctorProfile?
+  facility           Facility?
+  articles           Article[]
+  orders             Order[]
+  reviews            Review[]
+  authTokens         AuthToken[]
+  cart               Cart?
+  moderatedReviews   Review[]             @relation("ReviewModerator")
+  orderStatusChanges OrderStatusHistory[] @relation("OrderStatusChanger")
+  notifications      Notification[]
 
   @@index([role])
   @@index([deletedAt])
@@ -114,6 +149,8 @@ model Facility {
 
   products Product[]
   reviews  Review[]
+  carts    Cart[]
+  orders   Order[]
 
   @@index([type])
   @@index([city])
@@ -156,6 +193,7 @@ model Product {
 
   orderItems OrderItem[]
   reviews    Review[]
+  cartItems  CartItem[]
 
   @@index([facilityId])
   @@index([category])
@@ -163,32 +201,47 @@ model Product {
 }
 
 model Order {
-  id                    String        @id @default(cuid())
-  userId                String
-  user                  User          @relation(fields: [userId], references: [id], onDelete: Restrict)
-  status                OrderStatus   @default(PENDING)
-  paymentStatus         PaymentStatus @default(UNPAID)
-  total                 Int
-  midtransOrderId       String?       @unique
-  midtransTransactionId String?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  facilityId         String
+  facility           Facility      @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  status             OrderStatus   @default(PENDING)
+  paymentStatus      PaymentStatus @default(UNPAID)
+  total              Int
+  recipientName      String
+  recipientPhone     String
+  shippingAddress    String
+  shippingCity       String
+  shippingPostalCode String?
+  notes              String?
+  paidAt             DateTime?
+  expiresAt          DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  items OrderItem[]
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
 
   @@index([userId])
+  @@index([facilityId])
   @@index([status])
   @@index([paymentStatus])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  quantity  Int
-  price     Int
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName  String
+  productSlug  String?
+  productImage String?
+  quantity     Int
+  price        Int
 
   @@index([orderId])
   @@index([productId])
@@ -206,11 +259,114 @@ model Review {
   facility        Facility?      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
   productId       String?
   product         Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
 
+  status         ReviewStatus @default(PENDING)
+  isNegative     Boolean      @default(false)
+  moderatedAt    DateTime?
+  moderatedById  String?
+  moderatedBy    User?        @relation("ReviewModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderationNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([authorId, doctorProfileId])
+  @@unique([authorId, facilityId])
+  @@unique([authorId, productId])
   @@index([authorId])
   @@index([doctorProfileId])
   @@index([facilityId])
   @@index([productId])
+  @@index([status])
+  @@index([moderatedById])
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  tokenHash String        @unique
+  type      AuthTokenType
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  userId     String     @unique
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facilityId String?
+  facility   Facility?  @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  items      CartItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([facilityId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+model Payment {
+  id          String               @id @default(cuid())
+  orderId     String
+  order       Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider    PaymentProvider      @default(MIDTRANS)
+  externalId  String?              @unique
+  status      PaymentAttemptStatus @default(PENDING)
+  amount      Int
+  snapToken   String?
+  redirectUrl String?
+  rawPayload  Json?
+  paidAt      DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  note        String?
+  changedById String?
+  changedBy   User?       @relation("OrderStatusChanger", fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId])
+  @@index([changedById])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@index([createdAt])
 }

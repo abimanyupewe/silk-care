@@ -18,11 +18,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     }
 
     const ratings = await getFacilityRatings([facility.id]);
+    const summary = ratings.get(facility.id) ?? { rating: null, reviewCount: 0 };
 
     return jsonOk({
       ...facility,
-      rating: ratings.get(facility.id)?.rating ?? null,
-      reviewCount: facility._count.reviews
+      ...summary
     });
   } catch (error) {
     return handleRouteError(error);

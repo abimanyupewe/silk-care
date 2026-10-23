@@ -74,7 +74,8 @@ export async function GET(request: Request) {
     const ratings = await getFacilityRatings(items.map((item) => item.id));
     const data = items.map((item) => ({
       ...item,
-      rating: ratings.get(item.id)?.rating ?? null
+      rating: ratings.get(item.id)?.rating ?? null,
+      reviewCount: ratings.get(item.id)?.reviewCount ?? 0
     }));
 
     return jsonOk(data, paginationMeta(total, pagination));

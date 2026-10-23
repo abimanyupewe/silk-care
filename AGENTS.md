@@ -29,19 +29,31 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 - `components/features/<domain>/` holds page sections; `components/shared/` holds app-wide
   widgets; `components/ui/` holds shadcn-style primitives. Note the directory is
   `components/features/Homepage/` (capital H), unlike the lowercase domain folders.
-- API routes: `/api/auth/[...nextauth]`, `/api/v1/auth/*`, `/api/v1/health`, and public
-  catalog endpoints under `/api/v1/{doctors,facilities,articles,products,search}`. Use
-  `lib/api.ts` for response/pagination helpers and `lib/catalog.ts` for shared public
-  filters/selects. Frontend content is still hard-coded; wire it to these endpoints later.
-  Searchable records in `lib/search-index.ts` still feed the client `SearchModal` and
-  `/search`; replace them with `/api/v1/search` when wiring the UI.
+- API routes: `/api/auth/[...nextauth]`, `/api/v1/auth/*` (including register,
+  verify-email, forgot-password, reset-password), `/api/v1/health`, public catalog
+  endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
+  at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
+  (including `orders/[id]/payment`), the Midtrans webhook at
+  `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
+  `/api/v1/admin/reviews/[id]/moderate`. Use `lib/api.ts` for response/pagination helpers,
+  `lib/catalog.ts` for shared public filters/selects, `lib/auth-guard.ts` for session/role
+  guards, `lib/auth-token.ts` for hashed email/reset tokens, `lib/auth-email.ts` for
+  verification/reset emails, `lib/cart.ts` for cart projections, `lib/order.ts` for order
+  selects/errors, `lib/midtrans.ts` for Snap/signature helpers, and `lib/reviews.ts` for
+  review target helpers. Frontend content is still hard-coded; wire it to these endpoints
+  later. Searchable records in `lib/search-index.ts` still feed the client `SearchModal`
+  and `/search`; replace them with `/api/v1/search` when wiring the UI.
 - Database layer: Prisma 7 + Neon in `prisma/schema.prisma`; the client singleton is
   `lib/prisma.ts`, re-exported through the `server-only` guard in `lib/db.ts`. Model names
   and enums are Indonesian-domain-oriented but code identifiers are English. Copy
   `.env.example` to `.env` and fill both Neon URLs before running migrations.
 - Auth: Auth.js v5 beta in `auth.ts`, credentials + JWT sessions. Route handlers live in
   `app/api/auth/[...nextauth]` and `app/api/v1/auth/*`. Roles are in the `UserRole` enum.
-  There is no login UI yet; use the Auth.js default pages or the API directly.
+  There is no login UI yet; use the Auth.js default pages or the API directly. Email
+  verification and password reset use hashed `AuthToken` rows. Without
+  `RESEND_API_KEY`/`EMAIL_FROM`, `lib/email.ts` prints the email (including token) to the
+  server console in development and throws in production. `/verify-email` and
+  `/reset-password` are minimal pages that call the corresponding API routes.
 
 ## Database
 
@@ -49,9 +61,21 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   seeds use the direct `DATABASE_URL_UNPOOLED` (see `prisma.config.ts`).
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
-- The `init` migration and `add_catalog_slugs` have been applied. Do not run `db:push`
-  against production; use `db:migrate` locally and `db:deploy` in deployment. Public
-  detail endpoints use the required unique `DoctorProfile.slug` and `Facility.slug`.
+- The `init`, `add_catalog_slugs`, and `marketplace_account_review_models` migrations have
+  been applied. Do not run `db:push` against production; use `db:migrate` locally and
+  `db:deploy` in deployment. Public detail endpoints use the required unique
+  `DoctorProfile.slug` and `Facility.slug`.
+- Account profile/password, email verification, password reset, cart, customer checkout,
+  order cancellation, Midtrans Snap payment creation, webhook processing, and review
+  write/moderation endpoints are implemented. Checkout snapshots product prices into
+  `OrderItem`, decrements stock conditionally inside a transaction, writes
+  `OrderStatusHistory` and a `Notification`, then clears the cart. Cancelling an unpaid
+  pending order restores stock. Payment creation returns `503` until
+  `MIDTRANS_SERVER_KEY` is set; the webhook verifies the SHA-512 signature before
+  updating `Payment`/`Order`. Orders start `PENDING`/`UNPAID`; a successful settlement
+  moves them to `PAID`/`PAID` and writes history/notification. Public catalog rating
+  aggregates and public review lists only count `Review.status = 'APPROVED'`; new or
+  edited reviews return to `PENDING` until an admin moderates them.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when

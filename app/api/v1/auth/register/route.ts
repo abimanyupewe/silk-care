@@ -3,10 +3,15 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@/lib/generated/prisma';
+import { sendVerificationEmail } from '@/lib/auth-email';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
-  email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  email: z
+    .string()
+    .trim()
+    .email()
+    .transform((value) => value.toLowerCase()),
   password: z.string().min(8).max(72),
   phone: z.string().trim().min(8).max(20).optional()
 });
@@ -50,6 +55,12 @@ export async function POST(request: Request) {
         createdAt: true
       }
     });
+
+    try {
+      await sendVerificationEmail(user);
+    } catch (error) {
+      console.error('[register] gagal mengirim email verifikasi', error);
+    }
 
     return NextResponse.json({ data: user }, { status: 201 });
   } catch (error) {

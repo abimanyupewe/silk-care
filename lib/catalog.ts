@@ -72,8 +72,7 @@ export const facilityListSelect = {
   },
   _count: {
     select: {
-      products: true,
-      reviews: true
+      products: true
     }
   }
 } satisfies Prisma.FacilitySelect;
@@ -149,7 +148,8 @@ export async function getDoctorRatings(doctorIds: string[]) {
     where: {
       doctorProfileId: {
         in: doctorIds
-      }
+      },
+      status: 'APPROVED'
     },
     _avg: {
       rating: true
@@ -179,7 +179,8 @@ export async function getFacilityRatings(facilityIds: string[]) {
     where: {
       facilityId: {
         in: facilityIds
-      }
+      },
+      status: 'APPROVED'
     },
     _avg: {
       rating: true

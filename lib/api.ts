@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { ZodType } from 'zod';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -9,8 +10,14 @@ export type Pagination = {
   skip: number;
 };
 
+export type JsonParseResult<T> = { data: T; error?: never } | { data?: never; error: NextResponse };
+
 export function jsonOk<T>(data: T, meta?: Record<string, unknown>) {
   return NextResponse.json(meta ? { data, meta } : { data });
+}
+
+export function jsonCreated<T>(data: T) {
+  return NextResponse.json({ data }, { status: 201 });
 }
 
 export function jsonError(message: string, status = 400, details?: unknown) {
@@ -20,6 +27,43 @@ export function jsonError(message: string, status = 400, details?: unknown) {
       status
     }
   );
+}
+
+export function jsonTooManyRequests(resetAt: number) {
+  const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+
+  return NextResponse.json(
+    { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(retryAfter)
+      }
+    }
+  );
+}
+
+export async function parseJson<T>(
+  request: Request,
+  schema: ZodType<T>
+): Promise<JsonParseResult<T>> {
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return { error: jsonError('Body harus berupa JSON.', 400) };
+  }
+
+  const parsed = schema.safeParse(body);
+
+  if (!parsed.success) {
+    return {
+      error: jsonError('Data tidak valid.', 422, parsed.error.flatten().fieldErrors)
+    };
+  }
+
+  return { data: parsed.data };
 }
 
 export function getPagination(
@@ -62,6 +106,16 @@ export function getString(
   }
 
   return value.slice(0, maxLength);
+}
+
+export function getClientIp(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || 'unknown';
+  }
+
+  return request.headers.get('x-real-ip')?.trim() || 'unknown';
 }
 
 export function getInt(searchParams: URLSearchParams, key: string): number | undefined {

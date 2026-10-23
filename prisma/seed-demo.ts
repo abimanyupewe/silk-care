@@ -472,7 +472,7 @@ function buildReviewSql() {
         : 'NULL';
 
       return `
-INSERT INTO "Review" ("id", "rating", "comment", "authorId", "doctorProfileId", "facilityId", "productId", "createdAt", "updatedAt")
+INSERT INTO "Review" ("id", "rating", "comment", "authorId", "doctorProfileId", "facilityId", "productId", "status", "createdAt", "updatedAt")
 VALUES (
   ${sqlString(review.id)},
   ${review.rating},
@@ -481,6 +481,7 @@ VALUES (
   ${doctorId},
   ${facilityId},
   ${productId},
+  'APPROVED',
   NOW(),
   NOW()
 )
@@ -491,6 +492,7 @@ ON CONFLICT ("id") DO UPDATE SET
   "doctorProfileId" = EXCLUDED."doctorProfileId",
   "facilityId" = EXCLUDED."facilityId",
   "productId" = EXCLUDED."productId",
+  "status" = 'APPROVED',
   "updatedAt" = NOW();`;
     })
     .join('\n');
