@@ -59,6 +59,25 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum ConsultationType {
+  ONLINE
+  IN_PERSON
+}
+
+enum ConsultationStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 enum PaymentProvider {
   MIDTRANS
 }
@@ -75,6 +94,8 @@ enum NotificationType {
   ACCOUNT
   ORDER
   REVIEW
+  ARTICLE
+  CONSULTATION
   SYSTEM
 }
 
@@ -101,6 +122,8 @@ model User {
   moderatedReviews   Review[]             @relation("ReviewModerator")
   orderStatusChanges OrderStatusHistory[] @relation("OrderStatusChanger")
   notifications      Notification[]
+  patientConsultations Consultation[]     @relation("PatientConsultations")
+  medicalRecords       MedicalRecord[]    @relation("PatientMedicalRecords")
 
   @@index([role])
   @@index([deletedAt])
@@ -129,6 +152,8 @@ model DoctorProfile {
 
   reviews   Review[]
   schedules DoctorSchedule[]
+  consultations Consultation[]
+  medicalRecords MedicalRecord[]
 
   @@index([specialty])
   @@index([city])
@@ -198,21 +223,70 @@ model FacilityOperatingHour {
 }
 
 model Article {
-  id         String    @id @default(cuid())
-  slug       String    @unique
-  title      String
-  excerpt    String?
-  content    String
-  coverImage String?
-  published  Boolean   @default(false)
-  authorId   String
-  author     User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  excerpt       String?
+  content       String
+  coverImage    String?
+  coverPublicId String?
+  status        ArticleStatus @default(DRAFT)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
 
   @@index([authorId])
-  @@index([published, createdAt])
+  @@index([status, createdAt])
+}
+
+model Consultation {
+  id              String             @id @default(cuid())
+  patientId       String
+  patient         User               @relation("PatientConsultations", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorProfileId String
+  doctorProfile   DoctorProfile      @relation(fields: [doctorProfileId], references: [id], onDelete: Restrict)
+  type            ConsultationType   @default(ONLINE)
+  status          ConsultationStatus @default(REQUESTED)
+  scheduledAt     DateTime
+  endsAt          DateTime
+  durationMinutes Int                @default(30)
+  fee             Int?
+  complaint       String
+  cancelReason    String?
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  medicalRecord MedicalRecord?
+
+  @@index([patientId, scheduledAt])
+  @@index([doctorProfileId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model MedicalRecord {
+  id              String        @id @default(cuid())
+  consultationId  String        @unique
+  consultation    Consultation  @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         User          @relation("PatientMedicalRecords", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorProfileId String
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Restrict)
+  diagnosis       String
+  notes           String?
+  prescription    String?
+  followUpAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([patientId, createdAt])
+  @@index([doctorProfileId, createdAt])
 }
 
 model Product {

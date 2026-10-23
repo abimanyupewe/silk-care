@@ -33,7 +33,9 @@ export async function GET() {
       facilitiesByStatus,
       articlesTotal,
       articlesPublished,
+      articlesPending,
       articlesDraft,
+      articlesRejected,
       articlesDeleted,
       productsTotal,
       productsActive,
@@ -89,13 +91,25 @@ export async function GET() {
       prisma.article.count(),
       prisma.article.count({
         where: {
-          published: true,
+          status: 'PUBLISHED',
           deletedAt: null
         }
       }),
       prisma.article.count({
         where: {
-          published: false,
+          status: 'PENDING',
+          deletedAt: null
+        }
+      }),
+      prisma.article.count({
+        where: {
+          status: 'DRAFT',
+          deletedAt: null
+        }
+      }),
+      prisma.article.count({
+        where: {
+          status: 'REJECTED',
           deletedAt: null
         }
       }),
@@ -259,7 +273,9 @@ export async function GET() {
         articles: {
           total: articlesTotal,
           published: articlesPublished,
+          pending: articlesPending,
           draft: articlesDraft,
+          rejected: articlesRejected,
           deleted: articlesDeleted
         },
         products: {

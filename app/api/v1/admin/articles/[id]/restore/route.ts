@@ -37,7 +37,7 @@ export async function POST(_request: Request, context: RouteContext) {
       },
       data: {
         deletedAt: null,
-        published: false
+        status: 'DRAFT'
       },
       select: adminArticleSelect
     });

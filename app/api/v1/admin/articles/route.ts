@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import {
   getBoolean,
+  getEnum,
   getPagination,
   getString,
   handleRouteError,
@@ -12,14 +13,15 @@ import {
   paginationMeta,
   parseJson
 } from '@/lib/api';
-import { adminArticleSelect, createUniqueArticleSlug } from '@/lib/article';
+import { adminArticleSelect, articleStatuses, createUniqueArticleSlug } from '@/lib/article';
 
 const createSchema = z.object({
   title: z.string().trim().min(2).max(200),
   excerpt: z.string().trim().max(500).nullable().optional(),
   content: z.string().trim().min(20).max(50_000),
   coverImage: z.string().trim().max(500).nullable().optional(),
-  published: z.boolean().default(false)
+  coverPublicId: z.string().trim().max(500).nullable().optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT')
 });
 
 export async function GET(request: Request) {
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
 
     const searchParams = new URL(request.url).searchParams;
     const q = getString(searchParams, 'q', 100);
-    const published = getBoolean(searchParams, 'published');
+    const status = getEnum(searchParams, 'status', articleStatuses);
     const deleted = getBoolean(searchParams, 'deleted');
     const pagination = getPagination(searchParams, 20);
 
@@ -40,8 +42,8 @@ export async function GET(request: Request) {
       deletedAt: deleted ? { not: null } : null
     };
 
-    if (published !== undefined) {
-      where.published = published;
+    if (status) {
+      where.status = status;
     }
 
     if (q) {
@@ -85,10 +87,13 @@ export async function POST(request: Request) {
       return parsed.error;
     }
 
+    const { status, ...articleData } = parsed.data;
     const slug = await createUniqueArticleSlug(parsed.data.title);
     const article = await prisma.article.create({
       data: {
-        ...parsed.data,
+        ...articleData,
+        status,
+        reviewedAt: status === 'PUBLISHED' ? new Date() : null,
         slug,
         authorId: auth.user.id
       },

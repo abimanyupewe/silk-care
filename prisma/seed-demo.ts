@@ -398,7 +398,7 @@ function buildArticleSql() {
   return articles
     .map(
       (article) => `
-INSERT INTO "Article" ("id", "slug", "title", "excerpt", "content", "coverImage", "published", "authorId", "createdAt", "updatedAt")
+INSERT INTO "Article" ("id", "slug", "title", "excerpt", "content", "coverImage", "status", "authorId", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
   ${sqlString(article.slug)},
@@ -406,7 +406,7 @@ VALUES (
   ${sqlString(article.excerpt)},
   ${sqlString(article.content)},
   ${sqlString(article.coverImage)},
-  TRUE,
+  'PUBLISHED',
   (SELECT "id" FROM "User" WHERE "email" = 'clara@silk.local'),
   NOW(),
   NOW()
@@ -416,7 +416,7 @@ ON CONFLICT ("slug") DO UPDATE SET
   "excerpt" = EXCLUDED."excerpt",
   "content" = EXCLUDED."content",
   "coverImage" = EXCLUDED."coverImage",
-  "published" = TRUE,
+  "status" = 'PUBLISHED',
   "authorId" = EXCLUDED."authorId",
   "deletedAt" = NULL,
   "updatedAt" = NOW();`

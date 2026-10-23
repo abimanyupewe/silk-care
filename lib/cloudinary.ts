@@ -6,7 +6,8 @@ export const cloudinaryUploadPurposes = [
   'doctor-profile-photo',
   'doctor-profile-video',
   'facility-profile-photo',
-  'facility-profile-video'
+  'facility-profile-video',
+  'article-cover'
 ] as const;
 
 export type CloudinaryUploadPurpose = (typeof cloudinaryUploadPurposes)[number];
@@ -43,6 +44,12 @@ const uploadPurposeConfig: Record<CloudinaryUploadPurpose, UploadPurposeConfig> 
     allowedFormats: 'mp4,webm',
     presetEnv: 'CLOUDINARY_VIDEO_PRESET',
     roles: ['FACILITY', 'PHARMACY']
+  },
+  'article-cover': {
+    resourceType: 'image',
+    allowedFormats: 'jpg,png,webp',
+    presetEnv: 'CLOUDINARY_IMAGE_PRESET',
+    roles: ['DOCTOR', 'FACILITY', 'PHARMACY']
   }
 };
 

@@ -13,7 +13,7 @@ export const publicFacilityWhere = {
 } satisfies Prisma.FacilityWhereInput;
 
 export const publicArticleWhere = {
-  published: true,
+  status: 'PUBLISHED',
   deletedAt: null
 } satisfies Prisma.ArticleWhereInput;
 

@@ -2,6 +2,8 @@ import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { slugify, uniqueSlug } from '@/lib/slug';
 
+export const articleStatuses = ['DRAFT', 'PENDING', 'PUBLISHED', 'REJECTED'] as const;
+
 export const adminArticleSelect = {
   id: true,
   slug: true,
@@ -9,7 +11,10 @@ export const adminArticleSelect = {
   excerpt: true,
   content: true,
   coverImage: true,
-  published: true,
+  coverPublicId: true,
+  status: true,
+  reviewNote: true,
+  reviewedAt: true,
   authorId: true,
   createdAt: true,
   updatedAt: true,
@@ -21,6 +26,22 @@ export const adminArticleSelect = {
       email: true
     }
   }
+} satisfies Prisma.ArticleSelect;
+
+export const partnerArticleSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  excerpt: true,
+  content: true,
+  coverImage: true,
+  coverPublicId: true,
+  status: true,
+  reviewNote: true,
+  reviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true
 } satisfies Prisma.ArticleSelect;
 
 export async function createUniqueArticleSlug(title: string) {

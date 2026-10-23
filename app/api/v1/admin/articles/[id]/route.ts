@@ -10,7 +10,8 @@ const updateSchema = z
     excerpt: z.string().trim().max(500).nullable().optional(),
     content: z.string().trim().min(20).max(50_000).optional(),
     coverImage: z.string().trim().max(500).nullable().optional(),
-    published: z.boolean().optional()
+    coverPublicId: z.string().trim().max(500).nullable().optional(),
+    status: z.enum(['DRAFT', 'PUBLISHED']).optional()
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Minimal satu field harus diisi.'
@@ -81,11 +82,20 @@ export async function PATCH(request: Request, context: RouteContext) {
       return parsed.error;
     }
 
+    const { status, ...articleData } = parsed.data;
     const article = await prisma.article.update({
       where: {
         id: existing.id
       },
-      data: parsed.data,
+      data: {
+        ...articleData,
+        ...(status !== undefined
+          ? {
+              status,
+              reviewedAt: status === 'PUBLISHED' ? new Date() : null
+            }
+          : {})
+      },
       select: adminArticleSelect
     });
 
@@ -112,7 +122,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
       },
       data: {
         deletedAt,
-        published: false
+        status: 'DRAFT'
       }
     });
 

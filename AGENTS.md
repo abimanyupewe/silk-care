@@ -34,13 +34,18 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `/api/v1/ai/{chat,status}`, public catalog
   endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
   at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
-  (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`, partner
-  onboarding under `/api/v1/partner/{doctor,facility}`, doctor profile and schedule at
-  `/api/v1/doctor/{profile,schedule}`, facility profile, operating hours, order, and
+  (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`,
+  patient consultations under `/api/v1/consultations*`, patient medical records under
+  `/api/v1/medical-records*`, partner
+  onboarding under `/api/v1/partner/{doctor,facility}`, partner article CRUD/submission
+  under `/api/v1/partner/articles*`, doctor profile and schedule at
+  `/api/v1/doctor/{profile,schedule}`, doctor consultation management under
+  `/api/v1/doctor/consultations*`, facility profile, operating hours, order, and
   product management under `/api/v1/facility/{profile,operating-hours,orders,products}*`,
   Cloudinary upload signatures at `/api/v1/uploads/signature`, admin
   user/doctor/facility/order/article
-  management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*`, dashboard
+  management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*` (including
+  article moderation at `articles/[id]/moderate`), dashboard
   stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
   `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers,
@@ -48,8 +53,10 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
   facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile
   guards, `lib/doctor.ts` for doctor profile select/slug helpers, `lib/product.ts` for
-  partner product selects/slug helpers, `lib/article.ts` for admin article selects/slug
-  helpers, `lib/slug.ts` for shared slug generation, `lib/admin.ts` for admin
+  partner product selects/slug helpers, `lib/article.ts` for article statuses and
+  admin/partner select/slug helpers, `lib/consultation.ts` for consultation/medical
+  record selects, statuses, and Jakarta schedule validation, `lib/slug.ts` for shared slug
+  generation, `lib/admin.ts` for admin
   user/doctor/facility selects, `lib/cloudinary.ts` for signed uploads and media
   validation, `lib/schedule.ts` for doctor/facility schedule schemas and selects,
   `lib/auth-token.ts` for
@@ -81,8 +88,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   seeds use the direct `DATABASE_URL_UNPOOLED` (see `prisma.config.ts`).
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
-- The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, and
-  `schedule_media` migrations have
+- The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
+  `article_moderation`, and `consultation_records` migrations have
   been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
@@ -91,8 +98,19 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   read endpoints, facility profile/product/order management, admin user/doctor/facility/
   order/article management, admin dashboard stats, and review write/moderation endpoints
   are implemented. Admins
-  can create, edit, publish/unpublish, soft-delete, and restore articles; public article
-  endpoints only expose published, non-deleted rows. Admins can list and inspect all
+  can create, edit, publish/unpublish, soft-delete, and restore articles. Partners with
+  the `DOCTOR`, `FACILITY`, or `PHARMACY` role can create their own articles, edit
+  `DRAFT`/`REJECTED` rows, submit them for review, and soft-delete them. Submitted articles
+  move to `PENDING`; admins approve or reject them through
+  `articles/[id]/moderate`, which writes an `ARTICLE` notification to the author. Public
+  article endpoints only expose `PUBLISHED`, non-deleted rows. Patients can book a
+  consultation at an active doctor schedule slot; the API validates the Jakarta day/time,
+  duration, and overlapping doctor/patient bookings, then snapshots the doctor fee. The
+  workflow is `REQUESTED -> CONFIRMED -> COMPLETED`, with cancellation before completion.
+  Doctors manage their own consultations, complete them, and create the medical record
+  (`diagnosis`, `notes`, `prescription`, optional `followUpAt`) only after completion.
+  Patients can read only their own consultations and medical records, doctors only their
+  own, and every status/record change writes a `CONSULTATION` notification. Admins can list and inspect all
   reviews with filters for status, target, rating, and negative flag, then moderate or
   delete them. Authenticated
   non-admin users can apply once as a doctor or facility; onboarding creates a pending
@@ -117,7 +135,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   Cloudinary, then profile updates store the returned URL/publicId. Without
   `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`, the signature
   endpoint returns `503`. `CLOUDINARY_IMAGE_PRESET` and `CLOUDINARY_VIDEO_PRESET` are
-  optional but recommended for format/size enforcement. Public doctor/facility details
+  optional but recommended for format/size enforcement. Article cover uploads use the
+  `article-cover` purpose. Public doctor/facility details
   expose active schedules and operating hours; admin detail selects include schedules and
   media but admins do not edit them.
   Orders start `PENDING`/`UNPAID`; a successful settlement

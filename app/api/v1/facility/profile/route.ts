@@ -8,6 +8,7 @@ import {
   isCloudinaryConfigured,
   isValidCloudinaryAsset
 } from '@/lib/cloudinary';
+import { mediaPairError } from '@/lib/media';
 
 const profileSchema = z
   .object({
@@ -27,18 +28,6 @@ const profileSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Minimal satu field harus diisi.'
   });
-
-function mediaPairError(url?: string | null, publicId?: string | null) {
-  if ((url === undefined) !== (publicId === undefined)) {
-    return 'URL dan publicId media harus dikirim bersamaan.';
-  }
-
-  if ((url === null) !== (publicId === null)) {
-    return 'URL dan publicId media harus dihapus bersamaan.';
-  }
-
-  return null;
-}
 
 export async function GET() {
   try {
