@@ -1,59 +1,59 @@
-import { ArrowRight, Bookmark, MessageCircle, ThumbsUp } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { ArrowRight, Bookmark, MessageCircle, ThumbsUp } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Data dummy untuk artikel (UPDATED)
 const articleData = [
   {
-    author: "Dr. Clara",
-    avatar: "/assets/article/user.png", // Path diperbarui
-    date: "11 / 11 / 2025",
-    title: "Kelelahan Berlebihan Meski Sudah Tidur",
-    excerpt: "Merasa lelah terus-menerus meskipun sudah...",
+    author: 'Dr. Clara',
+    avatar: '/assets/article/user.png', // Path diperbarui
+    date: '11 / 11 / 2025',
+    title: 'Kelelahan Berlebihan Meski Sudah Tidur',
+    excerpt: 'Merasa lelah terus-menerus meskipun sudah...',
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog1.png", // Thumbnail ditambahkan
+    thumbnail: '/assets/article/blog1.png' // Thumbnail ditambahkan
   },
   {
-    author: "Dr. Clara",
-    avatar: "/assets/article/user.png", // Path diperbarui
-    date: "11 / 11 / 2025",
-    title: "Kelelahan Berlebihan Meski Sudah Tidur",
-    excerpt: "Merasa lelah terus-menerus meskipun sudah...",
+    author: 'Dr. Clara',
+    avatar: '/assets/article/user.png', // Path diperbarui
+    date: '11 / 11 / 2025',
+    title: 'Kelelahan Berlebihan Meski Sudah Tidur',
+    excerpt: 'Merasa lelah terus-menerus meskipun sudah...',
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog2.png", // Thumbnail ditambahkan
+    thumbnail: '/assets/article/blog2.png' // Thumbnail ditambahkan
   },
   {
-    author: "Dr. Clara",
-    avatar: "/assets/article/user.png", // Path diperbarui
-    date: "11 / 11 / 2025",
-    title: "Kelelahan Berlebihan Meski Sudah Tidur",
-    excerpt: "Merasa lelah terus-menerus meskipun sudah...",
+    author: 'Dr. Clara',
+    avatar: '/assets/article/user.png', // Path diperbarui
+    date: '11 / 11 / 2025',
+    title: 'Kelelahan Berlebihan Meski Sudah Tidur',
+    excerpt: 'Merasa lelah terus-menerus meskipun sudah...',
     likes: 102,
     comments: 20,
     shares: 10,
-    thumbnail: "/assets/article/blog3.png", // Thumbnail ditambahkan
+    thumbnail: '/assets/article/blog3.png' // Thumbnail ditambahkan
   },
-    // Menambahkan data ke-4 sebagai contoh dari aset yang diberikan
+  // Menambahkan data ke-4 sebagai contoh dari aset yang diberikan
   {
-    author: "Dr. Clara",
-    avatar: "/assets/article/user.png", // Path diperbarui
-    date: "11 / 11 / 2025",
-    title: "Pentingnya Menjaga Pola Tidur yang Baik",
-    excerpt: "Tidur yang cukup dan berkualitas adalah kunci...",
+    author: 'Dr. Clara',
+    avatar: '/assets/article/user.png', // Path diperbarui
+    date: '11 / 11 / 2025',
+    title: 'Pentingnya Menjaga Pola Tidur yang Baik',
+    excerpt: 'Tidur yang cukup dan berkualitas adalah kunci...',
     likes: 150,
     comments: 35,
     shares: 18,
-    thumbnail: "/assets/article/blog4.png", // Thumbnail ditambahkan
-  },
+    thumbnail: '/assets/article/blog4.png' // Thumbnail ditambahkan
+  }
 ];
 
 // Sub-komponen untuk setiap kartu artikel (UPDATED)
 const ArticleCard = ({ article }: { article: (typeof articleData)[0] }) => (
-  <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col">
+  <div className="bg-white rounded-2xl overflow-hidden border border-border shadow-sm flex flex-col">
     {/* Gambar Artikel Ditampilkan Di Sini */}
     <div className="relative aspect-video">
       <Image
@@ -88,16 +88,14 @@ const ArticleCard = ({ article }: { article: (typeof articleData)[0] }) => (
 
       {/* Judul & Kutipan */}
       <Link href="#" className="group">
-        <h3 className="font-bold text-gray-900 leading-tight group-hover:text-[#00A991] transition-colors">
+        <h3 className="font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors">
           {article.title}
         </h3>
       </Link>
-      <p className="text-sm text-gray-600 mt-1 mb-4 flex-grow">
-        {article.excerpt}
-      </p>
+      <p className="text-sm text-gray-600 mt-1 mb-4 flex-grow">{article.excerpt}</p>
 
       {/* Interaksi (Likes, Comments, Shares) */}
-      <div className="flex items-center gap-4 text-sm text-gray-600 border-t border-gray-100 pt-3">
+      <div className="flex items-center gap-4 text-sm text-gray-600 border-t border-border pt-3">
         <div className="flex items-center gap-1.5">
           <ThumbsUp className="w-4 h-4" />
           <span>{article.likes}</span>
@@ -124,7 +122,7 @@ export const Article = () => {
           <h2 className="text-3xl font-bold text-gray-900">Artikel</h2>
           <Link
             href="/artikel"
-            className="flex items-center gap-1 text-sm font-medium text-[#00A991] hover:text-[#008774] transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
           >
             Lihat semua artikel
             <ArrowRight className="h-4 w-4" />

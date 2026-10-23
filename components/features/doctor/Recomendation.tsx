@@ -90,7 +90,7 @@ const DoctorCard = ({ doctor }: { doctor: (typeof doctorData)[0] }) => (
           <span className="text-xs text-gray-400 line-through">
             Rp. {doctor.price_original.toLocaleString('id-ID')}
           </span>
-          <span className="font-bold text-sm text-[#00A991] ml-1">
+          <span className="font-bold text-sm text-primary ml-1">
             Rp. {doctor.price_discount.toLocaleString('id-ID')}
           </span>
           <span className="ml-2 bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">
@@ -137,7 +137,7 @@ export const Recomendation = () => {
           <h2 className="text-lg font-bold text-gray-900">3 Terdekat dengan Anda</h2>
           <Link
             href="/terdekat"
-            className="flex items-center gap-1 text-sm font-medium text-[#00A991] hover:text-[#008774] transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
           >
             Lihat semua
             <ChevronRight className="h-4 w-4" />
@@ -158,7 +158,7 @@ export const Recomendation = () => {
               key={index}
               onClick={() => setCurrentPage(index + 1)}
               className={cn('w-8 h-8 rounded-md text-sm font-medium transition-colors', {
-                'bg-[#00A991] text-white': currentPage === index + 1,
+                'bg-primary text-white': currentPage === index + 1,
                 'bg-gray-100 text-gray-700 hover:bg-gray-200': currentPage !== index + 1
               })}
             >
