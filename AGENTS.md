@@ -33,16 +33,28 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   verify-email, forgot-password, reset-password), `/api/v1/health`, public catalog
   endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
   at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
-  (including `orders/[id]/payment`), the Midtrans webhook at
+  (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`, partner
+  onboarding under `/api/v1/partner/{doctor,facility}`, doctor profile at
+  `/api/v1/doctor/profile`, facility profile and order management under
+  `/api/v1/facility/{profile,orders,products}*`, admin user/doctor/facility/order/article
+  management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
   `/api/v1/admin/reviews/[id]/moderate`. Use `lib/api.ts` for response/pagination helpers,
   `lib/catalog.ts` for shared public filters/selects, `lib/auth-guard.ts` for session/role
-  guards, `lib/auth-token.ts` for hashed email/reset tokens, `lib/auth-email.ts` for
+  guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
+  facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile
+  guards, `lib/doctor.ts` for doctor profile select/slug helpers, `lib/product.ts` for
+  partner product selects/slug helpers, `lib/article.ts` for admin article selects/slug
+  helpers, `lib/slug.ts` for shared slug generation, `lib/admin.ts` for admin
+  user/doctor/facility selects, `lib/auth-token.ts` for
+  hashed email/reset tokens, `lib/auth-email.ts` for
   verification/reset emails, `lib/cart.ts` for cart projections, `lib/order.ts` for order
-  selects/errors, `lib/midtrans.ts` for Snap/signature helpers, and `lib/reviews.ts` for
-  review target helpers. Frontend content is still hard-coded; wire it to these endpoints
-  later. Searchable records in `lib/search-index.ts` still feed the client `SearchModal`
-  and `/search`; replace them with `/api/v1/search` when wiring the UI.
+  selects/errors/status values, `lib/order-status.ts` for shared order status transitions,
+  `lib/midtrans.ts` for Snap/signature helpers, and `lib/reviews.ts` for review target
+  helpers. Frontend content
+  is still hard-coded; wire it to these endpoints later. Searchable records in
+  `lib/search-index.ts` still feed the client `SearchModal` and `/search`; replace them
+  with `/api/v1/search` when wiring the UI.
 - Database layer: Prisma 7 + Neon in `prisma/schema.prisma`; the client singleton is
   `lib/prisma.ts`, re-exported through the `server-only` guard in `lib/db.ts`. Model names
   and enums are Indonesian-domain-oriented but code identifiers are English. Copy
@@ -66,16 +78,29 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
 - Account profile/password, email verification, password reset, cart, customer checkout,
-  order cancellation, Midtrans Snap payment creation, webhook processing, and review
-  write/moderation endpoints are implemented. Checkout snapshots product prices into
+  order cancellation, Midtrans Snap payment creation, webhook processing, notification
+  read endpoints, facility profile/product/order management, admin user/doctor/facility/
+  order/article management, and review write/moderation endpoints are implemented. Admins
+  can create, edit, publish/unpublish, soft-delete, and restore articles; public article
+  endpoints only expose published, non-deleted rows. Authenticated
+  non-admin users can apply once as a doctor or facility; onboarding creates a pending
+  profile, updates the user role, and writes an account notification. Partners can update
+  their doctor profile, facility profile, and own products; public catalog endpoints still
+  require verification and, for products, an active non-deleted product from a verified
+  facility. Admins can approve or reject doctor/facility verification and soft-delete or
+  restore users; `requireUser` rechecks the user row so deactivation takes effect for
+  existing JWT sessions. Checkout snapshots product prices into
   `OrderItem`, decrements stock conditionally inside a transaction, writes
   `OrderStatusHistory` and a `Notification`, then clears the cart. Cancelling an unpaid
   pending order restores stock. Payment creation returns `503` until
   `MIDTRANS_SERVER_KEY` is set; the webhook verifies the SHA-512 signature before
   updating `Payment`/`Order`. Orders start `PENDING`/`UNPAID`; a successful settlement
-  moves them to `PAID`/`PAID` and writes history/notification. Public catalog rating
-  aggregates and public review lists only count `Review.status = 'APPROVED'`; new or
-  edited reviews return to `PENDING` until an admin moderates them.
+  moves them to `PAID`/`PAID` and writes history plus customer/facility notifications.
+  Facility/admin order management only allows `PAID -> PROCESSING -> SHIPPED -> COMPLETED`
+  and cancellation before payment; cancelling an unpaid order restores stock. Public
+  catalog rating aggregates and public review lists only count approved reviews
+  (`Review.status = 'APPROVED'`); new or edited reviews return to `PENDING` until an admin
+  moderates them.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when

@@ -125,6 +125,20 @@ export function getInt(searchParams: URLSearchParams, key: string): number | und
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+export function getBoolean(searchParams: URLSearchParams, key: string): boolean | undefined {
+  const value = searchParams.get(key)?.trim().toLowerCase();
+
+  if (value === 'true' || value === '1') {
+    return true;
+  }
+
+  if (value === 'false' || value === '0') {
+    return false;
+  }
+
+  return undefined;
+}
+
 export function getEnum<T extends string>(
   searchParams: URLSearchParams,
   key: string,

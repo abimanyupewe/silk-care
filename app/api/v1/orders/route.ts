@@ -13,18 +13,13 @@ import {
   paginationMeta,
   parseJson
 } from '@/lib/api';
-import { OrderActionError, orderDetailSelect, orderListSelect } from '@/lib/order';
-
-const orderStatuses = [
-  'PENDING',
-  'PAID',
-  'PROCESSING',
-  'SHIPPED',
-  'COMPLETED',
-  'CANCELLED'
-] as const;
-
-const paymentStatuses = ['UNPAID', 'PAID', 'FAILED', 'REFUNDED'] as const;
+import {
+  OrderActionError,
+  orderDetailSelect,
+  orderListSelect,
+  orderStatuses,
+  paymentStatuses
+} from '@/lib/order';
 
 const checkoutSchema = z.object({
   recipientName: z.string().trim().min(2).max(100),

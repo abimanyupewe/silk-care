@@ -95,7 +95,12 @@ export async function POST(request: Request) {
             id: true,
             userId: true,
             status: true,
-            paymentStatus: true
+            paymentStatus: true,
+            facility: {
+              select: {
+                userId: true
+              }
+            }
           }
         }
       }
@@ -176,6 +181,22 @@ export async function POST(request: Request) {
               }
             }
           });
+
+          if (payment.order.facility.userId !== payment.order.userId) {
+            await tx.notification.create({
+              data: {
+                userId: payment.order.facility.userId,
+                type: 'ORDER',
+                title: 'Pesanan baru telah dibayar',
+                body: `Pesanan #${payment.orderId
+                  .slice(-8)
+                  .toUpperCase()} telah dibayar dan siap diproses.`,
+                data: {
+                  orderId: payment.orderId
+                }
+              }
+            });
+          }
         }
 
         return;

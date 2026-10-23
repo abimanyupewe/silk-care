@@ -1,6 +1,7 @@
 import type { NextResponse } from 'next/server';
 import type { UserRole } from '@/lib/generated/prisma';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/db';
 import { jsonError } from '@/lib/api';
 
 export type SessionUser = {
@@ -20,7 +21,34 @@ export async function requireUser(): Promise<AuthResult> {
     return { ok: false, error: jsonError('Belum login.', 401) };
   }
 
-  return { ok: true, user: session.user };
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id
+    },
+    select: {
+      id: true,
+      role: true,
+      name: true,
+      email: true,
+      image: true,
+      deletedAt: true
+    }
+  });
+
+  if (!user || user.deletedAt) {
+    return { ok: false, error: jsonError('Akun tidak aktif.', 401) };
+  }
+
+  return {
+    ok: true,
+    user: {
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      image: user.image
+    }
+  };
 }
 
 export async function requireRole(roles: readonly UserRole[]): Promise<AuthResult> {
