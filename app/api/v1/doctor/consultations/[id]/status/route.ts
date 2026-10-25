@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireDoctorProfile } from '@/lib/doctor-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { consultationDetailSelect } from '@/lib/consultation';
+import { sendConsultationStatusEmail } from '@/lib/transaction-email';
 
 const statusSchema = z.object({
   status: z.enum(['CONFIRMED', 'COMPLETED', 'CANCELLED']),
@@ -33,7 +34,13 @@ export async function PATCH(request: Request, context: RouteContext) {
         id: true,
         status: true,
         patientId: true,
-        scheduledAt: true
+        scheduledAt: true,
+        patient: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -115,6 +122,17 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       return updated;
     });
+
+    if (existing.patient.email) {
+      await sendConsultationStatusEmail({
+        to: existing.patient.email,
+        name: existing.patient.name,
+        doctorName: auth.user.name || 'Dokter',
+        scheduledAt: existing.scheduledAt,
+        status: target,
+        note: target === 'CANCELLED' ? reason : null
+      });
+    }
 
     return jsonOk(consultation);
   } catch (error) {

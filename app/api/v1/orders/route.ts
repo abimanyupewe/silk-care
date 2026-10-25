@@ -20,6 +20,8 @@ import {
   orderStatuses,
   paymentStatuses
 } from '@/lib/order';
+import { expireDueOrders, ORDER_PAYMENT_WINDOW_MS } from '@/lib/order-expiry';
+import { sendOrderCreatedEmail } from '@/lib/transaction-email';
 
 const checkoutSchema = z.object({
   recipientName: z.string().trim().min(2).max(100),
@@ -37,6 +39,8 @@ export async function GET(request: Request) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    await expireDueOrders();
 
     const searchParams = new URL(request.url).searchParams;
     const status = getEnum(searchParams, 'status', orderStatuses);
@@ -124,6 +128,7 @@ export async function POST(request: Request) {
     }
 
     const total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const expiresAt = new Date(Date.now() + ORDER_PAYMENT_WINDOW_MS);
 
     const order = await prisma.$transaction(async (tx) => {
       for (const item of cart.items) {
@@ -159,6 +164,7 @@ export async function POST(request: Request) {
           shippingCity: parsed.data.shippingCity,
           shippingPostalCode: parsed.data.shippingPostalCode || null,
           notes: parsed.data.notes || null,
+          expiresAt,
           items: {
             create: cart.items.map((item) => ({
               productId: item.product.id,
@@ -218,6 +224,16 @@ export async function POST(request: Request) {
         select: orderDetailSelect
       });
     });
+
+    if (auth.user.email) {
+      await sendOrderCreatedEmail({
+        to: auth.user.email,
+        name: auth.user.name || order.recipientName,
+        orderId: order.id,
+        total: order.total,
+        facilityName: order.facility.name
+      });
+    }
 
     return jsonCreated(order);
   } catch (error) {

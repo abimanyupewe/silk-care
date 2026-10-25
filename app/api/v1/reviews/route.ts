@@ -15,12 +15,14 @@ import {
 } from '@/lib/api';
 import { rateLimit } from '@/lib/rate-limit';
 import {
+  getReviewTargetOwner,
   publicReviewSelect,
   reviewTargetExists,
   reviewTargetIds,
   reviewTargetTypes,
   reviewTargetWhere
 } from '@/lib/reviews';
+import { sendReviewReceivedEmail } from '@/lib/transaction-email';
 
 const createReviewSchema = z.object({
   targetType: z.enum(reviewTargetTypes),
@@ -125,17 +127,46 @@ export async function POST(request: Request) {
       return jsonError('Anda sudah memberi ulasan untuk target ini.', 409);
     }
 
-    const review = await prisma.review.create({
-      data: {
-        authorId: auth.user.id,
-        rating,
-        comment: comment || null,
-        status: 'PENDING',
-        isNegative: rating <= 2,
-        ...reviewTargetIds(targetType, targetId)
-      },
-      select: publicReviewSelect
+    const owner = await getReviewTargetOwner(targetType, targetId);
+    const review = await prisma.$transaction(async (tx) => {
+      const created = await tx.review.create({
+        data: {
+          authorId: auth.user.id,
+          rating,
+          comment: comment || null,
+          status: 'PENDING',
+          isNegative: rating <= 2,
+          ...reviewTargetIds(targetType, targetId)
+        },
+        select: publicReviewSelect
+      });
+
+      if (owner && owner.userId !== auth.user.id) {
+        await tx.notification.create({
+          data: {
+            userId: owner.userId,
+            type: 'REVIEW',
+            title: 'Ulasan baru',
+            body: `${auth.user.name || 'Pengguna'} memberi rating ${rating}/5 untuk ${owner.label}.`,
+            data: {
+              reviewId: created.id,
+              targetType,
+              targetId
+            }
+          }
+        });
+      }
+
+      return created;
     });
+
+    if (owner && owner.email && owner.userId !== auth.user.id) {
+      await sendReviewReceivedEmail({
+        to: owner.email,
+        name: owner.name,
+        rating
+      });
+    }
 
     return jsonCreated(review);
   } catch (error) {

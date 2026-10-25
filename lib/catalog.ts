@@ -1,5 +1,4 @@
 import type { Prisma } from '@/lib/generated/prisma';
-import { prisma } from '@/lib/db';
 import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
 
 export const publicDoctorWhere = {
@@ -35,6 +34,10 @@ export const doctorListSelect = {
   consultationFee: true,
   city: true,
   address: true,
+  latitude: true,
+  longitude: true,
+  ratingAverage: true,
+  reviewCount: true,
   createdAt: true,
   photoUrl: true,
   user: {
@@ -47,8 +50,6 @@ export const doctorListSelect = {
 
 export const doctorDetailSelect = {
   ...doctorListSelect,
-  latitude: true,
-  longitude: true,
   videoUrl: true,
   updatedAt: true,
   schedules: {
@@ -60,7 +61,11 @@ export const doctorDetailSelect = {
   },
   _count: {
     select: {
-      reviews: true
+      reviews: {
+        where: {
+          status: 'APPROVED'
+        }
+      }
     }
   }
 } satisfies Prisma.DoctorProfileSelect;
@@ -74,6 +79,10 @@ export const facilityListSelect = {
   city: true,
   address: true,
   phone: true,
+  latitude: true,
+  longitude: true,
+  ratingAverage: true,
+  reviewCount: true,
   createdAt: true,
   photoUrl: true,
   user: {
@@ -90,8 +99,6 @@ export const facilityListSelect = {
 
 export const facilityDetailSelect = {
   ...facilityListSelect,
-  latitude: true,
-  longitude: true,
   videoUrl: true,
   updatedAt: true,
   operatingHours: {
@@ -143,74 +150,3 @@ export const productSelect = {
     }
   }
 } satisfies Prisma.ProductSelect;
-
-export type RatingSummary = {
-  rating: number | null;
-  reviewCount: number;
-};
-
-function summarizeRating(average: number | null, reviewCount: number): RatingSummary {
-  return {
-    rating: average === null ? null : Number(average.toFixed(1)),
-    reviewCount
-  };
-}
-
-export async function getDoctorRatings(doctorIds: string[]) {
-  if (doctorIds.length === 0) {
-    return new Map<string, RatingSummary>();
-  }
-
-  const rows = await prisma.review.groupBy({
-    by: ['doctorProfileId'],
-    where: {
-      doctorProfileId: {
-        in: doctorIds
-      },
-      status: 'APPROVED'
-    },
-    _avg: {
-      rating: true
-    },
-    _count: {
-      _all: true
-    }
-  });
-
-  return new Map(
-    rows
-      .filter((row) => row.doctorProfileId !== null)
-      .map((row) => [
-        row.doctorProfileId as string,
-        summarizeRating(row._avg.rating, row._count._all)
-      ])
-  );
-}
-
-export async function getFacilityRatings(facilityIds: string[]) {
-  if (facilityIds.length === 0) {
-    return new Map<string, RatingSummary>();
-  }
-
-  const rows = await prisma.review.groupBy({
-    by: ['facilityId'],
-    where: {
-      facilityId: {
-        in: facilityIds
-      },
-      status: 'APPROVED'
-    },
-    _avg: {
-      rating: true
-    },
-    _count: {
-      _all: true
-    }
-  });
-
-  return new Map(
-    rows
-      .filter((row) => row.facilityId !== null)
-      .map((row) => [row.facilityId as string, summarizeRating(row._avg.rating, row._count._all)])
-  );
-}

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
-import { doctorDetailSelect, getDoctorRatings, publicDoctorWhere } from '@/lib/catalog';
+import { doctorDetailSelect, publicDoctorWhere } from '@/lib/catalog';
+import { formatRating } from '@/lib/rating';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -17,12 +18,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       return jsonError('Dokter tidak ditemukan.', 404);
     }
 
-    const ratings = await getDoctorRatings([doctor.id]);
-    const summary = ratings.get(doctor.id) ?? { rating: null, reviewCount: 0 };
+    const { ratingAverage, ...data } = doctor;
 
     return jsonOk({
-      ...doctor,
-      ...summary
+      ...data,
+      rating: formatRating(ratingAverage)
     });
   } catch (error) {
     return handleRouteError(error);

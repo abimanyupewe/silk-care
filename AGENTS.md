@@ -34,7 +34,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `/api/v1/ai/{chat,status}`, public catalog
   endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
   at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
-  (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`,
+  (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`, the
+  order-expiry cron endpoint at `/api/v1/cron/orders/expire`,
   patient consultations under `/api/v1/consultations*`, patient medical records under
   `/api/v1/medical-records*`, partner
   onboarding under `/api/v1/partner/{doctor,facility}`, partner article CRUD/submission
@@ -49,7 +50,10 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
   `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers,
-  `lib/catalog.ts` for shared public filters/selects, `lib/auth-guard.ts` for session/role
+  `lib/catalog.ts` for shared public filters/selects, `lib/availability.ts` for day/time
+  availability filters, `lib/geo.ts` for coordinate parsing, Haversine distance, and
+  bounding boxes, `lib/rating.ts` for rating filters and denormalized review aggregates,
+  `lib/auth-guard.ts` for session/role
   guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
   facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile
   guards, `lib/doctor.ts` for doctor profile select/slug helpers, `lib/product.ts` for
@@ -63,6 +67,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   hashed email/reset tokens, `lib/auth-email.ts` for
   verification/reset emails, `lib/cart.ts` for cart projections, `lib/order.ts` for order
   selects/errors/status values, `lib/order-status.ts` for shared order status transitions,
+  `lib/order-expiry.ts` for the unpaid-order expiry sweep, `lib/transaction-email.ts` for
+  best-effort transactional email copy,
   `lib/payments/` for the payment-provider abstraction (`lib/midtrans.ts` stays the
   low-level Snap/signature adapter), `lib/ai/` for the AI provider contract and prompt
   scaffold, and `lib/reviews.ts` for review target
@@ -89,8 +95,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
-  `article_moderation`, and `consultation_records` migrations have
-  been applied. Do not run `db:push` against production; use `db:migrate` locally and
+  `article_moderation`, `consultation_records`, `catalog_discovery_filters`, and
+  `catalog_rating_backfill` migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
 - Account profile/password, email verification, password reset, cart, customer checkout,
@@ -118,16 +124,27 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   their doctor profile, weekly doctor schedule, facility profile, weekly operating hours,
   profile photo/video, and own products; public catalog endpoints still
   require verification and, for products, an active non-deleted product from a verified
-  facility. Admins can edit doctor/facility profile fields, approve or reject
+  facility. Public doctor/facility lists support `minRating`, rating/review sorting,
+  `lat`/`lng`/`radiusKm` distance filters, and `day`/`time` or `availableNow` availability
+  filters; responses expose `rating`, `reviewCount`, and `distanceKm` when applicable.
+  `/api/v1/search` applies the same rating, distance, and availability filters to
+  doctors/facilities. `DoctorProfile` and `Facility` keep denormalized `ratingAverage` and
+  `reviewCount` fields, refreshed whenever an approved review is moderated, edited back to
+  pending, or deleted. Admins can edit doctor/facility profile fields, approve or reject
   verification, and soft-delete or restore users; changing a facility type to/from
   `PHARMACY` also syncs the owner role, and slugs stay stable. `requireUser` rechecks the
   user row so deactivation takes effect for existing JWT sessions. Checkout snapshots
   product prices into
   `OrderItem`, decrements stock conditionally inside a transaction, writes
-  `OrderStatusHistory` and a `Notification`, then clears the cart. Cancelling an unpaid
-  pending order restores stock. Payment creation returns `503` until
-  `MIDTRANS_SERVER_KEY` is set; the webhook verifies the SHA-512 signature before
-  updating `Payment`/`Order`. Payment routes now go through the provider abstraction in
+  `OrderStatusHistory` and a `Notification`, then clears the cart. Checkout sets
+  `expiresAt` to 24 hours ahead. `expireDueOrders` cancels due unpaid/failed orders,
+  restores stock, writes history plus notification, and sends a payment-expired email; it
+  runs from the order list/payment paths and from `/api/v1/cron/orders/expire`, which
+  requires `CRON_SECRET`. The Midtrans webhook also cancels and restores stock on
+  `EXPIRED`. A payment that settles after cancellation is recorded as paid on the
+  cancelled order, writes a refund-needed history entry plus notification, and emails the
+  customer. Payment creation returns `503` until `MIDTRANS_SERVER_KEY` is set; the webhook
+  verifies the SHA-512 signature before updating `Payment`/`Order`. Payment routes now go through the provider abstraction in
   `lib/payments/`, while Midtrans remains the only provider. The AI chat endpoint is
   scaffolded but returns `503` until an actual provider is implemented; `AI_PROVIDER`,
   `OPENAI_API_KEY`, `OPENAI_MODEL`, and `AI_TIMEOUT_MS` are reserved for that integration.
@@ -145,7 +162,11 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   and cancellation before payment; cancelling an unpaid order restores stock. Public
   catalog rating aggregates and public review lists only count approved reviews
   (`Review.status = 'APPROVED'`); new or edited reviews return to `PENDING` until an admin
-  moderates them.
+  moderates them. Review creation writes a `REVIEW` notification to the target owner, and
+  moderation writes one to the author. Transactional email is best-effort and covers
+  order created/status/payment, consultation request/status/record, article moderation,
+  review received/moderation, and partner verification; failures are logged, not surfaced
+  to the API caller.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when

@@ -129,6 +129,97 @@ export function reviewTargetIds(type: ReviewTargetType, targetId: string) {
   };
 }
 
+export async function getReviewTargetOwner(type: ReviewTargetType, targetId: string) {
+  if (type === 'doctor') {
+    const doctor = await prisma.doctorProfile.findUnique({
+      where: {
+        id: targetId
+      },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!doctor) {
+      return null;
+    }
+
+    return {
+      userId: doctor.userId,
+      name: doctor.user.name,
+      email: doctor.user.email,
+      label: `Dokter ${doctor.user.name}`
+    };
+  }
+
+  if (type === 'facility') {
+    const facility = await prisma.facility.findUnique({
+      where: {
+        id: targetId
+      },
+      select: {
+        userId: true,
+        name: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!facility) {
+      return null;
+    }
+
+    return {
+      userId: facility.userId,
+      name: facility.user.name,
+      email: facility.user.email,
+      label: facility.name
+    };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: {
+      id: targetId
+    },
+    select: {
+      name: true,
+      facility: {
+        select: {
+          userId: true,
+          name: true,
+          user: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!product) {
+    return null;
+  }
+
+  return {
+    userId: product.facility.userId,
+    name: product.facility.user.name,
+    email: product.facility.user.email,
+    label: `${product.name} (${product.facility.name})`
+  };
+}
+
 export async function reviewTargetExists(type: ReviewTargetType, targetId: string) {
   if (type === 'doctor') {
     const target = await prisma.doctorProfile.findFirst({

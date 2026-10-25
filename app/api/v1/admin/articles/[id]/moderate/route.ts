@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminArticleSelect } from '@/lib/article';
+import { sendArticleModerationEmail } from '@/lib/transaction-email';
 
 const moderationSchema = z.object({
   status: z.enum(['PUBLISHED', 'REJECTED']),
@@ -34,7 +35,13 @@ export async function POST(request: Request, context: RouteContext) {
         authorId: true,
         slug: true,
         title: true,
-        status: true
+        status: true,
+        author: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -85,6 +92,17 @@ export async function POST(request: Request, context: RouteContext) {
 
       return updated;
     });
+
+    if (existing.author.email) {
+      await sendArticleModerationEmail({
+        to: existing.author.email,
+        name: existing.author.name,
+        articleTitle: existing.title,
+        status: parsed.data.status,
+        note,
+        slug: existing.slug
+      });
+    }
 
     return jsonOk(article);
   } catch (error) {

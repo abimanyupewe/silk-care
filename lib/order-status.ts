@@ -1,6 +1,7 @@
 import type { OrderStatus, Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { OrderActionError, orderDetailSelect } from '@/lib/order';
+import { sendOrderStatusEmail } from '@/lib/transaction-email';
 
 const transitions: Record<OrderStatus, readonly OrderStatus[]> = {
   PENDING: ['CANCELLED'],
@@ -101,7 +102,7 @@ export async function changeOrderStatus({
     };
   }
 
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const updated = await tx.order.updateMany({
       where,
       data: {
@@ -157,4 +158,26 @@ export async function changeOrderStatus({
       select: orderDetailSelect
     });
   });
+
+  const recipient = await prisma.user.findUnique({
+    where: {
+      id: order.userId
+    },
+    select: {
+      name: true,
+      email: true
+    }
+  });
+
+  if (recipient?.email) {
+    await sendOrderStatusEmail({
+      to: recipient.email,
+      name: recipient.name,
+      orderId: order.id,
+      status: nextStatus,
+      note: statusNote
+    });
+  }
+
+  return updated;
 }

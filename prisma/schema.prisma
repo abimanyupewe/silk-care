@@ -112,18 +112,18 @@ model User {
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  doctorProfile      DoctorProfile?
-  facility           Facility?
-  articles           Article[]
-  orders             Order[]
-  reviews            Review[]
-  authTokens         AuthToken[]
-  cart               Cart?
-  moderatedReviews   Review[]             @relation("ReviewModerator")
-  orderStatusChanges OrderStatusHistory[] @relation("OrderStatusChanger")
-  notifications      Notification[]
-  patientConsultations Consultation[]     @relation("PatientConsultations")
-  medicalRecords       MedicalRecord[]    @relation("PatientMedicalRecords")
+  doctorProfile        DoctorProfile?
+  facility             Facility?
+  articles             Article[]
+  orders               Order[]
+  reviews              Review[]
+  authTokens           AuthToken[]
+  cart                 Cart?
+  moderatedReviews     Review[]             @relation("ReviewModerator")
+  orderStatusChanges   OrderStatusHistory[] @relation("OrderStatusChanger")
+  notifications        Notification[]
+  patientConsultations Consultation[]       @relation("PatientConsultations")
+  medicalRecords       MedicalRecord[]      @relation("PatientMedicalRecords")
 
   @@index([role])
   @@index([deletedAt])
@@ -147,17 +147,21 @@ model DoctorProfile {
   videoUrl           String?
   videoPublicId      String?
   verificationStatus VerificationStatus @default(PENDING)
+  ratingAverage      Float?
+  reviewCount        Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  reviews   Review[]
-  schedules DoctorSchedule[]
-  consultations Consultation[]
+  reviews        Review[]
+  schedules      DoctorSchedule[]
+  consultations  Consultation[]
   medicalRecords MedicalRecord[]
 
   @@index([specialty])
   @@index([city])
   @@index([verificationStatus])
+  @@index([ratingAverage])
+  @@index([reviewCount])
 }
 
 model DoctorSchedule {
@@ -193,18 +197,22 @@ model Facility {
   videoUrl           String?
   videoPublicId      String?
   verificationStatus VerificationStatus @default(PENDING)
+  ratingAverage      Float?
+  reviewCount        Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  products        Product[]
-  reviews         Review[]
-  carts           Cart[]
-  orders          Order[]
-  operatingHours  FacilityOperatingHour[]
+  products       Product[]
+  reviews        Review[]
+  carts          Cart[]
+  orders         Order[]
+  operatingHours FacilityOperatingHour[]
 
   @@index([type])
   @@index([city])
   @@index([verificationStatus])
+  @@index([ratingAverage])
+  @@index([reviewCount])
 }
 
 model FacilityOperatingHour {

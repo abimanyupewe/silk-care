@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireFacility } from '@/lib/facility-guard';
 import { getEnum, getPagination, handleRouteError, jsonOk, paginationMeta } from '@/lib/api';
 import { orderManagementListSelect, orderStatuses, paymentStatuses } from '@/lib/order';
+import { expireDueOrders } from '@/lib/order-expiry';
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +12,8 @@ export async function GET(request: Request) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    await expireDueOrders();
 
     const searchParams = new URL(request.url).searchParams;
     const status = getEnum(searchParams, 'status', orderStatuses);

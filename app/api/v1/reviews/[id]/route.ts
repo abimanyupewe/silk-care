@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { refreshReviewTargetRatings } from '@/lib/rating';
 import { publicReviewSelect } from '@/lib/reviews';
 
 const updateReviewSchema = z.object({
@@ -42,7 +43,11 @@ export async function PATCH(request: Request, context: RouteContext) {
       },
       select: {
         id: true,
-        authorId: true
+        authorId: true,
+        status: true,
+        doctorProfileId: true,
+        facilityId: true,
+        productId: true
       }
     });
 
@@ -54,19 +59,27 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError('Akses ditolak.', 403);
     }
 
-    const review = await prisma.review.update({
-      where: {
-        id
-      },
-      data: {
-        ...(rating !== undefined ? { rating, isNegative: rating <= 2 } : {}),
-        ...(comment !== undefined ? { comment: comment || null } : {}),
-        status: 'PENDING',
-        moderatedAt: null,
-        moderatedById: null,
-        moderationNote: null
-      },
-      select: publicReviewSelect
+    const review = await prisma.$transaction(async (tx) => {
+      const updated = await tx.review.update({
+        where: {
+          id
+        },
+        data: {
+          ...(rating !== undefined ? { rating, isNegative: rating <= 2 } : {}),
+          ...(comment !== undefined ? { comment: comment || null } : {}),
+          status: 'PENDING',
+          moderatedAt: null,
+          moderatedById: null,
+          moderationNote: null
+        },
+        select: publicReviewSelect
+      });
+
+      if (existing.status === 'APPROVED') {
+        await refreshReviewTargetRatings(tx, existing);
+      }
+
+      return updated;
     });
 
     return jsonOk(review);
@@ -90,7 +103,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
       },
       select: {
         id: true,
-        authorId: true
+        authorId: true,
+        status: true,
+        doctorProfileId: true,
+        facilityId: true,
+        productId: true
       }
     });
 
@@ -102,9 +119,15 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return jsonError('Akses ditolak.', 403);
     }
 
-    await prisma.review.delete({
-      where: {
-        id
+    await prisma.$transaction(async (tx) => {
+      await tx.review.delete({
+        where: {
+          id
+        }
+      });
+
+      if (existing.status === 'APPROVED') {
+        await refreshReviewTargetRatings(tx, existing);
       }
     });
 

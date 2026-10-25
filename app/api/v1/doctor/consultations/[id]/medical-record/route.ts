@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireDoctorProfile } from '@/lib/doctor-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { medicalRecordSelect } from '@/lib/consultation';
+import { sendMedicalRecordEmail } from '@/lib/transaction-email';
 
 const recordSchema = z.object({
   diagnosis: z.string().trim().min(3).max(2000),
@@ -34,7 +35,13 @@ export async function PUT(request: Request, context: RouteContext) {
       select: {
         id: true,
         status: true,
-        patientId: true
+        patientId: true,
+        patient: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -105,6 +112,14 @@ export async function PUT(request: Request, context: RouteContext) {
 
       return saved;
     });
+
+    if (!existing && consultation.patient.email) {
+      await sendMedicalRecordEmail({
+        to: consultation.patient.email,
+        name: consultation.patient.name,
+        doctorName: auth.user.name || 'Dokter'
+      });
+    }
 
     return jsonOk(record);
   } catch (error) {

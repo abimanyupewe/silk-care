@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { jsonCreated, jsonError, jsonOk } from '@/lib/api';
 import { getPaymentProvider, PaymentNotConfiguredError } from '@/lib/payments';
+import { expireDueOrders } from '@/lib/order-expiry';
 
 type RouteContext = {
   params: Promise<{
@@ -16,6 +17,8 @@ export async function POST(_request: Request, context: RouteContext) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    await expireDueOrders();
 
     const { id } = await context.params;
     const order = await prisma.order.findFirst({

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { consultationDetailSelect } from '@/lib/consultation';
+import { sendConsultationCancelledToDoctorEmail } from '@/lib/transaction-email';
 
 const cancelSchema = z.object({
   reason: z.string().trim().max(500).nullable().optional()
@@ -34,7 +35,13 @@ export async function POST(request: Request, context: RouteContext) {
         scheduledAt: true,
         doctorProfile: {
           select: {
-            userId: true
+            userId: true,
+            user: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
           }
         }
       }
@@ -91,6 +98,16 @@ export async function POST(request: Request, context: RouteContext) {
 
       return updated;
     });
+
+    if (existing.doctorProfile.user.email) {
+      await sendConsultationCancelledToDoctorEmail({
+        to: existing.doctorProfile.user.email,
+        name: existing.doctorProfile.user.name,
+        patientName: auth.user.name || 'Pasien',
+        scheduledAt: existing.scheduledAt,
+        reason
+      });
+    }
 
     return jsonOk(consultation);
   } catch (error) {

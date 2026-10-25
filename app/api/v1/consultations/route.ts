@@ -21,6 +21,7 @@ import {
   getJakartaSchedulePosition,
   isWithinDoctorSchedule
 } from '@/lib/consultation';
+import { sendConsultationRequestEmail } from '@/lib/transaction-email';
 
 const createSchema = z.object({
   doctorSlug: z.string().trim().min(1).max(200),
@@ -107,6 +108,12 @@ export async function POST(request: Request) {
         id: true,
         userId: true,
         consultationFee: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
         schedules: {
           where: {
             isActive: true
@@ -192,6 +199,16 @@ export async function POST(request: Request) {
 
       return created;
     });
+
+    if (doctor.user.email) {
+      await sendConsultationRequestEmail({
+        to: doctor.user.email,
+        name: doctor.user.name,
+        patientName: auth.user.name || 'Pasien',
+        scheduledAt: consultation.scheduledAt,
+        complaint: consultation.complaint
+      });
+    }
 
     return jsonCreated(consultation);
   } catch (error) {

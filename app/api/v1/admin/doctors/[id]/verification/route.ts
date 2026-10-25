@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminDoctorSelect, verificationStatuses } from '@/lib/admin';
+import { sendPartnerVerificationEmail } from '@/lib/transaction-email';
 
 const verificationSchema = z.object({
   status: z.enum(verificationStatuses),
@@ -40,6 +41,8 @@ export async function PATCH(request: Request, context: RouteContext) {
         userId: true,
         user: {
           select: {
+            name: true,
+            email: true,
             deletedAt: true
           }
         }
@@ -60,6 +63,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return parsed.error;
     }
 
+    const changed = doctor.verificationStatus !== parsed.data.status;
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.doctorProfile.update({
         where: {
@@ -71,7 +75,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         select: adminDoctorSelect
       });
 
-      if (doctor.verificationStatus !== parsed.data.status) {
+      if (changed) {
         await tx.notification.create({
           data: {
             userId: doctor.userId,
@@ -88,6 +92,16 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       return result;
     });
+
+    if (changed && doctor.user.email) {
+      await sendPartnerVerificationEmail({
+        to: doctor.user.email,
+        name: doctor.user.name,
+        partnerType: 'DOKTER',
+        status: parsed.data.status,
+        note: parsed.data.note
+      });
+    }
 
     return jsonOk(updated);
   } catch (error) {
