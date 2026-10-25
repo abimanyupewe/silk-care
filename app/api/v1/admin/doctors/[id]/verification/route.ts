@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminDoctorSelect, verificationStatuses } from '@/lib/admin';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { sendPartnerVerificationEmail } from '@/lib/transaction-email';
 
 const verificationSchema = z.object({
@@ -88,6 +89,22 @@ export async function PATCH(request: Request, context: RouteContext) {
             }
           }
         });
+
+        await writeAuditLog(
+          {
+            actorId: auth.user.id,
+            action: auditActions.doctorVerification,
+            targetType: 'DOCTOR',
+            targetId: doctor.id,
+            metadata: {
+              from: doctor.verificationStatus,
+              to: parsed.data.status,
+              note: parsed.data.note?.trim() || null
+            },
+            request
+          },
+          tx
+        );
       }
 
       return result;

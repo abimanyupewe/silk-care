@@ -34,7 +34,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       orderId: id,
       nextStatus: parsed.data.status,
       changedById: auth.user.id,
-      note: parsed.data.note
+      note: parsed.data.note,
+      audit: {
+        request
+      }
     });
 
     return jsonOk(order);

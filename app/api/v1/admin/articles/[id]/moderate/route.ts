@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminArticleSelect } from '@/lib/article';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { sendArticleModerationEmail } from '@/lib/transaction-email';
 
 const moderationSchema = z.object({
@@ -89,6 +90,22 @@ export async function POST(request: Request, context: RouteContext) {
           }
         }
       });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.articleModerate,
+          targetType: 'ARTICLE',
+          targetId: existing.id,
+          metadata: {
+            from: existing.status,
+            to: parsed.data.status,
+            note
+          },
+          request
+        },
+        tx
+      );
 
       return updated;
     });

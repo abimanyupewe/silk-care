@@ -46,13 +46,16 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   Cloudinary upload signatures at `/api/v1/uploads/signature`, admin
   user/doctor/facility/order/article
   management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*` (including
-  article moderation at `articles/[id]/moderate`), dashboard
+  article moderation at `articles/[id]/moderate`), admin audit logs at
+  `/api/v1/admin/audit-logs`, admin broadcast notifications at
+  `/api/v1/admin/notifications/broadcast`, dashboard
   stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
   `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers,
   `lib/catalog.ts` for shared public filters/selects, `lib/availability.ts` for day/time
   availability filters, `lib/geo.ts` for coordinate parsing, Haversine distance, and
   bounding boxes, `lib/rating.ts` for rating filters and denormalized review aggregates,
+  `lib/audit.ts` for admin audit log helpers and action/target constants,
   `lib/auth-guard.ts` for session/role
   guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
   facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile
@@ -95,8 +98,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 - Prisma Client is generated to `lib/generated/prisma` and gitignored. `postinstall` and
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
-  `article_moderation`, `consultation_records`, `catalog_discovery_filters`, and
-  `catalog_rating_backfill` migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
+  `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
+  `catalog_rating_backfill`, and `audit_log` migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
 - Account profile/password, email verification, password reset, cart, customer checkout,
@@ -163,7 +166,12 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   catalog rating aggregates and public review lists only count approved reviews
   (`Review.status = 'APPROVED'`); new or edited reviews return to `PENDING` until an admin
   moderates them. Review creation writes a `REVIEW` notification to the target owner, and
-  moderation writes one to the author. Transactional email is best-effort and covers
+  moderation writes one to the author. Admin-sensitive mutations write `AuditLog` rows with
+  actor, action, target, metadata, IP, and user agent inside the same transaction where
+  possible; `GET /api/v1/admin/audit-logs` supports actor/action/target/date filters and
+  pagination. `POST /api/v1/admin/notifications/broadcast` sends `SYSTEM` notifications to
+  all active users, selected roles, or selected user IDs, and records the broadcast in the
+  audit log. Transactional email is best-effort and covers
   order created/status/payment, consultation request/status/record, article moderation,
   review received/moderation, and partner verification; failures are logged, not surfaced
   to the API caller.

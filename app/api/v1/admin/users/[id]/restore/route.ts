@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
 import { adminUserSelect } from '@/lib/admin';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 
 type RouteContext = {
   params: Promise<{
@@ -9,7 +10,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const auth = await requireRole(['ADMIN']);
 
@@ -31,14 +32,29 @@ export async function POST(_request: Request, context: RouteContext) {
       return jsonError('Pengguna tidak ditemukan.', 404);
     }
 
-    const restored = await prisma.user.update({
-      where: {
-        id: user.id
-      },
-      data: {
-        deletedAt: null
-      },
-      select: adminUserSelect
+    const restored = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          deletedAt: null
+        },
+        select: adminUserSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.userRestore,
+          targetType: 'USER',
+          targetId: user.id,
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(restored);

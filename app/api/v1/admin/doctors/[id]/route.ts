@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminDoctorDetailSelect } from '@/lib/admin';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 
 const updateSchema = z
   .object({
@@ -79,12 +80,30 @@ export async function PATCH(request: Request, context: RouteContext) {
       return parsed.error;
     }
 
-    const doctor = await prisma.doctorProfile.update({
-      where: {
-        id: existing.id
-      },
-      data: parsed.data,
-      select: adminDoctorDetailSelect
+    const doctor = await prisma.$transaction(async (tx) => {
+      const result = await tx.doctorProfile.update({
+        where: {
+          id: existing.id
+        },
+        data: parsed.data,
+        select: adminDoctorDetailSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.doctorUpdate,
+          targetType: 'DOCTOR',
+          targetId: existing.id,
+          metadata: {
+            fields: Object.keys(parsed.data)
+          },
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(doctor);

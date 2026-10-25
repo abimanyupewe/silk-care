@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { refreshReviewTargetRatings } from '@/lib/rating';
 import { publicReviewSelect } from '@/lib/reviews';
 
@@ -88,7 +89,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const auth = await requireUser();
 
@@ -128,6 +129,22 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
       if (existing.status === 'APPROVED') {
         await refreshReviewTargetRatings(tx, existing);
+      }
+
+      if (auth.user.role === 'ADMIN') {
+        await writeAuditLog(
+          {
+            actorId: auth.user.id,
+            action: auditActions.reviewDelete,
+            targetType: 'REVIEW',
+            targetId: existing.id,
+            metadata: {
+              status: existing.status
+            },
+            request
+          },
+          tx
+        );
       }
     });
 

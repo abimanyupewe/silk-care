@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminArticleSelect } from '@/lib/article';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 
 const updateSchema = z
   .object({
@@ -64,6 +65,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       },
       select: {
         id: true,
+        status: true,
         deletedAt: true
       }
     });
@@ -83,20 +85,40 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const { status, ...articleData } = parsed.data;
-    const article = await prisma.article.update({
-      where: {
-        id: existing.id
-      },
-      data: {
-        ...articleData,
-        ...(status !== undefined
-          ? {
-              status,
-              reviewedAt: status === 'PUBLISHED' ? new Date() : null
-            }
-          : {})
-      },
-      select: adminArticleSelect
+    const article = await prisma.$transaction(async (tx) => {
+      const result = await tx.article.update({
+        where: {
+          id: existing.id
+        },
+        data: {
+          ...articleData,
+          ...(status !== undefined
+            ? {
+                status,
+                reviewedAt: status === 'PUBLISHED' ? new Date() : null
+              }
+            : {})
+        },
+        select: adminArticleSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.articleUpdate,
+          targetType: 'ARTICLE',
+          targetId: existing.id,
+          metadata: {
+            fields: Object.keys(parsed.data),
+            previousStatus: existing.status,
+            status: parsed.data.status ?? existing.status
+          },
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(article);
@@ -105,7 +127,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const auth = await requireRole(['ADMIN']);
 
@@ -115,18 +137,40 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const { id } = await context.params;
     const deletedAt = new Date();
-    const deleted = await prisma.article.updateMany({
-      where: {
-        id,
-        deletedAt: null
-      },
-      data: {
-        deletedAt,
-        status: 'DRAFT'
+    const deleted = await prisma.$transaction(async (tx) => {
+      const result = await tx.article.updateMany({
+        where: {
+          id,
+          deletedAt: null
+        },
+        data: {
+          deletedAt,
+          status: 'DRAFT'
+        }
+      });
+
+      if (result.count === 0) {
+        return false;
       }
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.articleDelete,
+          targetType: 'ARTICLE',
+          targetId: id,
+          metadata: {
+            deletedAt: deletedAt.toISOString()
+          },
+          request
+        },
+        tx
+      );
+
+      return true;
     });
 
-    if (deleted.count === 0) {
+    if (!deleted) {
       return jsonError('Artikel tidak ditemukan.', 404);
     }
 

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { refreshReviewTargetRatings } from '@/lib/rating';
 import { adminReviewSelect, reviewTargetType } from '@/lib/reviews';
 import { sendReviewModerationEmail } from '@/lib/transaction-email';
@@ -89,6 +90,23 @@ export async function PATCH(request: Request, context: RouteContext) {
           }
         });
       }
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.reviewModerate,
+          targetType: 'REVIEW',
+          targetId: existing.id,
+          metadata: {
+            from: existing.status,
+            to: parsed.data.status,
+            note,
+            changed
+          },
+          request
+        },
+        tx
+      );
 
       return updated;
     });

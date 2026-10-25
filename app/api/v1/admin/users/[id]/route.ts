@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminUserSelect } from '@/lib/admin';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 
 const updateSchema = z
   .object({
@@ -123,12 +124,32 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
-    const updated = await prisma.user.update({
-      where: {
-        id: user.id
-      },
-      data: parsed.data,
-      select: adminUserSelect
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({
+        where: {
+          id: user.id
+        },
+        data: parsed.data,
+        select: adminUserSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.userUpdate,
+          targetType: 'USER',
+          targetId: user.id,
+          metadata: {
+            fields: Object.keys(parsed.data),
+            previousRole: user.role,
+            role: parsed.data.role ?? user.role
+          },
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(updated);
@@ -137,7 +158,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const auth = await requireRole(['ADMIN']);
 
@@ -176,14 +197,33 @@ export async function DELETE(_request: Request, context: RouteContext) {
       );
     }
 
-    const deleted = await prisma.user.update({
-      where: {
-        id: user.id
-      },
-      data: {
-        deletedAt: new Date()
-      },
-      select: adminUserSelect
+    const deletedAt = new Date();
+    const deleted = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          deletedAt
+        },
+        select: adminUserSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.userDelete,
+          targetType: 'USER',
+          targetId: user.id,
+          metadata: {
+            deletedAt: deletedAt.toISOString()
+          },
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(deleted);

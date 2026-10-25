@@ -1,5 +1,6 @@
 import type { OrderStatus, Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { OrderActionError, orderDetailSelect } from '@/lib/order';
 import { sendOrderStatusEmail } from '@/lib/transaction-email';
 
@@ -36,6 +37,9 @@ type ChangeOrderStatusInput = {
   changedById: string;
   note?: string | null;
   facilityId?: string;
+  audit?: {
+    request: Request;
+  };
 };
 
 export async function changeOrderStatus({
@@ -43,7 +47,8 @@ export async function changeOrderStatus({
   nextStatus,
   changedById,
   note,
-  facilityId
+  facilityId,
+  audit
 }: ChangeOrderStatusInput) {
   const order = await prisma.order.findUnique({
     where: {
@@ -150,6 +155,24 @@ export async function changeOrderStatus({
         }
       }
     });
+
+    if (audit) {
+      await writeAuditLog(
+        {
+          actorId: changedById,
+          action: auditActions.orderStatusUpdate,
+          targetType: 'ORDER',
+          targetId: order.id,
+          metadata: {
+            from: order.status,
+            to: nextStatus,
+            note: statusNote
+          },
+          request: audit.request
+        },
+        tx
+      );
+    }
 
     return tx.order.findUniqueOrThrow({
       where: {

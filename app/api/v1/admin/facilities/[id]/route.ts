@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { adminFacilityDetailSelect } from '@/lib/admin';
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { facilityTypes } from '@/lib/facility';
 
 const updateSchema = z
@@ -113,18 +114,55 @@ export async function PATCH(request: Request, context: RouteContext) {
           }
         });
 
+        await writeAuditLog(
+          {
+            actorId: auth.user.id,
+            action: auditActions.facilityUpdate,
+            targetType: 'FACILITY',
+            targetId: existing.id,
+            metadata: {
+              fields: Object.keys(parsed.data),
+              previousType: existing.type,
+              type: nextType,
+              ownerRole: role
+            },
+            request
+          },
+          tx
+        );
+
         return updated;
       });
 
       return jsonOk(facility);
     }
 
-    const facility = await prisma.facility.update({
-      where: {
-        id: existing.id
-      },
-      data: parsed.data,
-      select: adminFacilityDetailSelect
+    const facility = await prisma.$transaction(async (tx) => {
+      const result = await tx.facility.update({
+        where: {
+          id: existing.id
+        },
+        data: parsed.data,
+        select: adminFacilityDetailSelect
+      });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.facilityUpdate,
+          targetType: 'FACILITY',
+          targetId: existing.id,
+          metadata: {
+            fields: Object.keys(parsed.data),
+            previousType: existing.type,
+            type: nextType ?? existing.type
+          },
+          request
+        },
+        tx
+      );
+
+      return result;
     });
 
     return jsonOk(facility);
