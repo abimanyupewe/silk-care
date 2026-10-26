@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { publicProductWhere } from '@/lib/catalog';
-import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { handleRouteError, jsonError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import { cartSelect, serializeCart } from '@/lib/cart';
+import { rateLimit } from '@/lib/rate-limit';
 
 const addItemSchema = z.object({
   productId: z.string().trim().min(1).max(100),
@@ -16,6 +17,12 @@ export async function POST(request: Request) {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`cart:write:${auth.user.id}`, 60, 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const parsed = await parseJson(request, addItemSchema);

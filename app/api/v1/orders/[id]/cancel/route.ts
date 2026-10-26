@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
 import { OrderActionError, orderDetailSelect } from '@/lib/order';
+import { sendOrderStatusEmail } from '@/lib/transaction-email';
 
 type RouteContext = {
   params: Promise<{
@@ -107,6 +108,16 @@ export async function POST(_request: Request, context: RouteContext) {
         select: orderDetailSelect
       });
     });
+
+    if (auth.user.email) {
+      await sendOrderStatusEmail({
+        to: auth.user.email,
+        name: auth.user.name || cancelled.recipientName,
+        orderId: cancelled.id,
+        status: 'CANCELLED',
+        note: 'Pesanan dibatalkan.'
+      });
+    }
 
     return jsonOk(cancelled);
   } catch (error) {

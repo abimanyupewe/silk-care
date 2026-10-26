@@ -1,8 +1,8 @@
-import type { PaymentAttemptStatus } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
-import { isMidtransConfigured, verifyMidtransSignature } from '@/lib/midtrans';
+import { getPaymentProvider } from '@/lib/payments';
+import { sendPaymentEmail } from '@/lib/transaction-email';
 
 const notificationSchema = z
   .object({
@@ -17,37 +17,11 @@ const notificationSchema = z
   })
   .passthrough();
 
-function mapPaymentStatus(transactionStatus: string, fraudStatus?: string): PaymentAttemptStatus {
-  if (transactionStatus === 'capture') {
-    return fraudStatus === 'accept' ? 'PAID' : 'PENDING';
-  }
-
-  if (transactionStatus === 'settlement') {
-    return 'PAID';
-  }
-
-  if (transactionStatus === 'pending') {
-    return 'PENDING';
-  }
-
-  if (transactionStatus === 'deny' || transactionStatus === 'cancel') {
-    return 'FAILED';
-  }
-
-  if (transactionStatus === 'expire') {
-    return 'EXPIRED';
-  }
-
-  if (transactionStatus === 'refund' || transactionStatus === 'partial_refund') {
-    return 'REFUNDED';
-  }
-
-  return 'PENDING';
-}
-
 export async function POST(request: Request) {
   try {
-    if (!isMidtransConfigured()) {
+    const provider = getPaymentProvider();
+
+    if (!provider.isConfigured()) {
       return jsonError('Pembayaran belum dikonfigurasi.', 503);
     }
 
@@ -70,11 +44,13 @@ export async function POST(request: Request) {
     };
 
     if (
-      !verifyMidtransSignature({
+      !provider.verifyWebhook({
         orderId: data.order_id,
         statusCode: data.status_code,
         grossAmount: data.gross_amount,
-        signatureKey: data.signature_key
+        signatureKey: data.signature_key,
+        transactionStatus: data.transaction_status,
+        fraudStatus: data.fraud_status
       })
     ) {
       return jsonError('Signature Midtrans tidak valid.', 401);
@@ -95,7 +71,24 @@ export async function POST(request: Request) {
             id: true,
             userId: true,
             status: true,
-            paymentStatus: true
+            paymentStatus: true,
+            user: {
+              select: {
+                name: true,
+                email: true
+              }
+            },
+            items: {
+              select: {
+                productId: true,
+                quantity: true
+              }
+            },
+            facility: {
+              select: {
+                userId: true
+              }
+            }
           }
         }
       }
@@ -111,7 +104,7 @@ export async function POST(request: Request) {
       return jsonError('Nominal pembayaran tidak sesuai.', 400);
     }
 
-    const nextStatus = mapPaymentStatus(data.transaction_status, data.fraud_status);
+    const nextStatus = provider.mapStatus(data.transaction_status, data.fraud_status);
 
     if (payment.status === nextStatus) {
       await prisma.payment.update({
@@ -127,6 +120,7 @@ export async function POST(request: Request) {
     }
 
     const now = new Date();
+    let emailOutcome: 'PAID' | 'LATE_PAID' | 'FAILED' | 'EXPIRED' | 'REFUNDED' | null = null;
 
     await prisma.$transaction(async (tx) => {
       await tx.payment.update({
@@ -142,6 +136,7 @@ export async function POST(request: Request) {
 
       if (nextStatus === 'PAID') {
         const isNewlyPaid = payment.order.paymentStatus !== 'PAID';
+        const latePayment = payment.order.status === 'CANCELLED';
 
         await tx.order.update({
           where: {
@@ -155,27 +150,69 @@ export async function POST(request: Request) {
         });
 
         if (isNewlyPaid) {
-          await tx.orderStatusHistory.create({
-            data: {
-              orderId: payment.orderId,
-              status: 'PAID',
-              note: 'Pembayaran diterima.'
-            }
-          });
-
-          await tx.notification.create({
-            data: {
-              userId: payment.order.userId,
-              type: 'ORDER',
-              title: 'Pembayaran diterima',
-              body: `Pembayaran untuk pesanan #${payment.orderId
-                .slice(-8)
-                .toUpperCase()} telah diterima.`,
+          if (latePayment) {
+            emailOutcome = 'LATE_PAID';
+            await tx.orderStatusHistory.create({
               data: {
-                orderId: payment.orderId
+                orderId: payment.orderId,
+                status: 'CANCELLED',
+                note: 'Pembayaran diterima setelah pesanan dibatalkan; perlu proses refund manual.'
               }
+            });
+
+            await tx.notification.create({
+              data: {
+                userId: payment.order.userId,
+                type: 'ORDER',
+                title: 'Pembayaran diterima setelah pembatalan',
+                body: `Pembayaran pesanan #${payment.orderId
+                  .slice(-8)
+                  .toUpperCase()} diterima setelah pesanan dibatalkan. Hubungi admin untuk proses refund.`,
+                data: {
+                  orderId: payment.orderId
+                }
+              }
+            });
+          } else {
+            emailOutcome = 'PAID';
+            await tx.orderStatusHistory.create({
+              data: {
+                orderId: payment.orderId,
+                status: 'PAID',
+                note: 'Pembayaran diterima.'
+              }
+            });
+
+            await tx.notification.create({
+              data: {
+                userId: payment.order.userId,
+                type: 'ORDER',
+                title: 'Pembayaran diterima',
+                body: `Pembayaran untuk pesanan #${payment.orderId
+                  .slice(-8)
+                  .toUpperCase()} telah diterima.`,
+                data: {
+                  orderId: payment.orderId
+                }
+              }
+            });
+
+            if (payment.order.facility.userId !== payment.order.userId) {
+              await tx.notification.create({
+                data: {
+                  userId: payment.order.facility.userId,
+                  type: 'ORDER',
+                  title: 'Pesanan baru telah dibayar',
+                  body: `Pesanan #${payment.orderId
+                    .slice(-8)
+                    .toUpperCase()} telah dibayar dan siap diproses.`,
+                  data: {
+                    orderId: payment.orderId
+                  }
+                }
+              });
             }
-          });
+          }
         }
 
         return;
@@ -183,14 +220,59 @@ export async function POST(request: Request) {
 
       if (nextStatus === 'FAILED' || nextStatus === 'EXPIRED') {
         if (payment.order.paymentStatus !== 'PAID' && payment.order.paymentStatus !== 'REFUNDED') {
-          await tx.order.update({
-            where: {
-              id: payment.orderId
-            },
-            data: {
-              paymentStatus: 'FAILED'
+          if (nextStatus === 'EXPIRED' && payment.order.status === 'PENDING') {
+            const cancelled = await tx.order.updateMany({
+              where: {
+                id: payment.orderId,
+                status: 'PENDING',
+                paymentStatus: {
+                  notIn: ['PAID', 'REFUNDED']
+                }
+              },
+              data: {
+                status: 'CANCELLED',
+                paymentStatus: 'FAILED',
+                cancelledAt: now
+              }
+            });
+
+            if (cancelled.count > 0) {
+              for (const item of payment.order.items) {
+                await tx.product.update({
+                  where: {
+                    id: item.productId
+                  },
+                  data: {
+                    stock: {
+                      increment: item.quantity
+                    }
+                  }
+                });
+              }
+
+              await tx.orderStatusHistory.create({
+                data: {
+                  orderId: payment.orderId,
+                  status: 'CANCELLED',
+                  note: 'Pembayaran kedaluwarsa dan pesanan dibatalkan otomatis.'
+                }
+              });
+
+              emailOutcome = 'EXPIRED';
             }
-          });
+          } else {
+            await tx.order.updateMany({
+              where: {
+                id: payment.orderId,
+                paymentStatus: {
+                  notIn: ['PAID', 'REFUNDED']
+                }
+              },
+              data: {
+                paymentStatus: 'FAILED'
+              }
+            });
+          }
 
           await tx.notification.create({
             data: {
@@ -205,6 +287,10 @@ export async function POST(request: Request) {
               }
             }
           });
+
+          if (nextStatus === 'FAILED') {
+            emailOutcome = 'FAILED';
+          }
         }
 
         return;
@@ -233,8 +319,19 @@ export async function POST(request: Request) {
             }
           }
         });
+
+        emailOutcome = 'REFUNDED';
       }
     });
+
+    if (emailOutcome && payment.order.user.email) {
+      await sendPaymentEmail({
+        to: payment.order.user.email,
+        name: payment.order.user.name,
+        orderId: payment.orderId,
+        outcome: emailOutcome
+      });
+    }
 
     return jsonOk({ message: 'Notifikasi pembayaran diproses.' });
   } catch (error) {

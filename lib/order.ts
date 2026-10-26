@@ -1,5 +1,16 @@
 import type { Prisma } from '@/lib/generated/prisma';
 
+export const orderStatuses = [
+  'PENDING',
+  'PAID',
+  'PROCESSING',
+  'SHIPPED',
+  'COMPLETED',
+  'CANCELLED'
+] as const;
+
+export const paymentStatuses = ['UNPAID', 'PAID', 'FAILED', 'REFUNDED'] as const;
+
 export const orderListSelect = {
   id: true,
   status: true,
@@ -26,6 +37,14 @@ export const orderListSelect = {
       price: true
     }
   }
+} satisfies Prisma.OrderSelect;
+
+export const orderManagementListSelect = {
+  ...orderListSelect,
+  userId: true,
+  recipientName: true,
+  recipientPhone: true,
+  shippingCity: true
 } satisfies Prisma.OrderSelect;
 
 export const orderDetailSelect = {

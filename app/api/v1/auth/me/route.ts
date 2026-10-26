@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { jsonError, jsonOk } from '@/lib/api';
 
 export async function GET() {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: 'Belum login.' }, { status: 401 });
+    return jsonError('Belum login.', 401);
   }
 
-  return NextResponse.json({ data: session.user });
+  return jsonOk(session.user);
 }

@@ -65,6 +65,19 @@ type DemoReview = {
   productSlug: string | null;
 };
 
+type DemoSchedule = {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+};
+
+type DemoOperatingHour = {
+  dayOfWeek: number;
+  openTime: string | null;
+  closeTime: string | null;
+  isClosed: boolean;
+};
+
 const demoPassword = process.env.SEED_DEMO_PASSWORD || 'Demo12345!';
 
 const users: DemoUser[] = [
@@ -290,6 +303,29 @@ const reviews: DemoReview[] = [
   }
 ];
 
+const doctorSchedules: DemoSchedule[] = [
+  { dayOfWeek: 1, startTime: '09:00', endTime: '12:00' },
+  { dayOfWeek: 1, startTime: '13:00', endTime: '17:00' },
+  { dayOfWeek: 2, startTime: '09:00', endTime: '12:00' },
+  { dayOfWeek: 2, startTime: '13:00', endTime: '17:00' },
+  { dayOfWeek: 3, startTime: '09:00', endTime: '12:00' },
+  { dayOfWeek: 3, startTime: '13:00', endTime: '17:00' },
+  { dayOfWeek: 4, startTime: '09:00', endTime: '12:00' },
+  { dayOfWeek: 4, startTime: '13:00', endTime: '17:00' },
+  { dayOfWeek: 5, startTime: '09:00', endTime: '12:00' },
+  { dayOfWeek: 5, startTime: '13:00', endTime: '17:00' }
+];
+
+const facilityOperatingHours: DemoOperatingHour[] = [
+  { dayOfWeek: 1, openTime: '08:00', closeTime: '21:00', isClosed: false },
+  { dayOfWeek: 2, openTime: '08:00', closeTime: '21:00', isClosed: false },
+  { dayOfWeek: 3, openTime: '08:00', closeTime: '21:00', isClosed: false },
+  { dayOfWeek: 4, openTime: '08:00', closeTime: '21:00', isClosed: false },
+  { dayOfWeek: 5, openTime: '08:00', closeTime: '21:00', isClosed: false },
+  { dayOfWeek: 6, openTime: '08:00', closeTime: '18:00', isClosed: false },
+  { dayOfWeek: 7, openTime: null, closeTime: null, isClosed: true }
+];
+
 function buildUserSql(passwordHash: string) {
   return users
     .map(
@@ -394,11 +430,65 @@ ON CONFLICT ("slug") DO UPDATE SET
     .join('\n');
 }
 
+function buildDoctorScheduleSql() {
+  return doctors
+    .map(
+      (doctor) => `
+DELETE FROM "DoctorSchedule"
+WHERE "doctorProfileId" = (SELECT "id" FROM "DoctorProfile" WHERE "slug" = ${sqlString(doctor.slug)});
+
+${doctorSchedules
+  .map(
+    (schedule) => `
+INSERT INTO "DoctorSchedule" ("id", "doctorProfileId", "dayOfWeek", "startTime", "endTime", "isActive", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "DoctorProfile" WHERE "slug" = ${sqlString(doctor.slug)}),
+  ${schedule.dayOfWeek},
+  ${sqlString(schedule.startTime)},
+  ${sqlString(schedule.endTime)},
+  TRUE,
+  NOW(),
+  NOW()
+);`
+  )
+  .join('\n')}`
+    )
+    .join('\n');
+}
+
+function buildFacilityOperatingHourSql() {
+  return facilities
+    .map(
+      (facility) => `
+DELETE FROM "FacilityOperatingHour"
+WHERE "facilityId" = (SELECT "id" FROM "Facility" WHERE "slug" = ${sqlString(facility.slug)});
+
+${facilityOperatingHours
+  .map(
+    (hour) => `
+INSERT INTO "FacilityOperatingHour" ("id", "facilityId", "dayOfWeek", "openTime", "closeTime", "isClosed", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "Facility" WHERE "slug" = ${sqlString(facility.slug)}),
+  ${hour.dayOfWeek},
+  ${sqlNullableString(hour.openTime)},
+  ${sqlNullableString(hour.closeTime)},
+  ${hour.isClosed ? 'TRUE' : 'FALSE'},
+  NOW(),
+  NOW()
+);`
+  )
+  .join('\n')}`
+    )
+    .join('\n');
+}
+
 function buildArticleSql() {
   return articles
     .map(
       (article) => `
-INSERT INTO "Article" ("id", "slug", "title", "excerpt", "content", "coverImage", "published", "authorId", "createdAt", "updatedAt")
+INSERT INTO "Article" ("id", "slug", "title", "excerpt", "content", "coverImage", "status", "authorId", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
   ${sqlString(article.slug)},
@@ -406,7 +496,7 @@ VALUES (
   ${sqlString(article.excerpt)},
   ${sqlString(article.content)},
   ${sqlString(article.coverImage)},
-  TRUE,
+  'PUBLISHED',
   (SELECT "id" FROM "User" WHERE "email" = 'clara@silk.local'),
   NOW(),
   NOW()
@@ -416,7 +506,7 @@ ON CONFLICT ("slug") DO UPDATE SET
   "excerpt" = EXCLUDED."excerpt",
   "content" = EXCLUDED."content",
   "coverImage" = EXCLUDED."coverImage",
-  "published" = TRUE,
+  "status" = 'PUBLISHED',
   "authorId" = EXCLUDED."authorId",
   "deletedAt" = NULL,
   "updatedAt" = NOW();`
@@ -459,7 +549,7 @@ ON CONFLICT ("slug") DO UPDATE SET
 }
 
 function buildReviewSql() {
-  return reviews
+  const reviewSql = reviews
     .map((review) => {
       const doctorId = review.doctorSlug
         ? `(SELECT "id" FROM "DoctorProfile" WHERE "slug" = ${sqlString(review.doctorSlug)})`
@@ -496,6 +586,39 @@ ON CONFLICT ("id") DO UPDATE SET
   "updatedAt" = NOW();`;
     })
     .join('\n');
+
+  return `${reviewSql}
+UPDATE "DoctorProfile" AS d
+SET
+  "ratingAverage" = stats."ratingAverage",
+  "reviewCount" = stats."reviewCount",
+  "updatedAt" = NOW()
+FROM (
+  SELECT
+    "doctorProfileId" AS "id",
+    ROUND(AVG("rating")::numeric, 2)::double precision AS "ratingAverage",
+    COUNT(*)::int AS "reviewCount"
+  FROM "Review"
+  WHERE "status" = 'APPROVED' AND "doctorProfileId" IS NOT NULL
+  GROUP BY "doctorProfileId"
+) AS stats
+WHERE d."id" = stats."id";
+
+UPDATE "Facility" AS f
+SET
+  "ratingAverage" = stats."ratingAverage",
+  "reviewCount" = stats."reviewCount",
+  "updatedAt" = NOW()
+FROM (
+  SELECT
+    "facilityId" AS "id",
+    ROUND(AVG("rating")::numeric, 2)::double precision AS "ratingAverage",
+    COUNT(*)::int AS "reviewCount"
+  FROM "Review"
+  WHERE "status" = 'APPROVED' AND "facilityId" IS NOT NULL
+  GROUP BY "facilityId"
+) AS stats
+WHERE f."id" = stats."id";`;
 }
 
 async function main() {
@@ -505,6 +628,8 @@ async function main() {
     buildUserSql(passwordHash),
     buildDoctorSql(),
     buildFacilitySql(),
+    buildDoctorScheduleSql(),
+    buildFacilityOperatingHourSql(),
     buildArticleSql(),
     buildProductSql(),
     buildReviewSql()

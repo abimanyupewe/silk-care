@@ -1,5 +1,5 @@
 import type { Prisma } from '@/lib/generated/prisma';
-import { prisma } from '@/lib/db';
+import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
 
 export const publicDoctorWhere = {
   verificationStatus: 'VERIFIED',
@@ -12,7 +12,7 @@ export const publicFacilityWhere = {
 } satisfies Prisma.FacilityWhereInput;
 
 export const publicArticleWhere = {
-  published: true,
+  status: 'PUBLISHED',
   deletedAt: null
 } satisfies Prisma.ArticleWhereInput;
 
@@ -34,7 +34,12 @@ export const doctorListSelect = {
   consultationFee: true,
   city: true,
   address: true,
+  latitude: true,
+  longitude: true,
+  ratingAverage: true,
+  reviewCount: true,
   createdAt: true,
+  photoUrl: true,
   user: {
     select: {
       name: true,
@@ -45,12 +50,22 @@ export const doctorListSelect = {
 
 export const doctorDetailSelect = {
   ...doctorListSelect,
-  latitude: true,
-  longitude: true,
+  videoUrl: true,
   updatedAt: true,
+  schedules: {
+    where: {
+      isActive: true
+    },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    select: doctorScheduleSelect
+  },
   _count: {
     select: {
-      reviews: true
+      reviews: {
+        where: {
+          status: 'APPROVED'
+        }
+      }
     }
   }
 } satisfies Prisma.DoctorProfileSelect;
@@ -64,7 +79,12 @@ export const facilityListSelect = {
   city: true,
   address: true,
   phone: true,
+  latitude: true,
+  longitude: true,
+  ratingAverage: true,
+  reviewCount: true,
   createdAt: true,
+  photoUrl: true,
   user: {
     select: {
       image: true
@@ -79,9 +99,14 @@ export const facilityListSelect = {
 
 export const facilityDetailSelect = {
   ...facilityListSelect,
-  latitude: true,
-  longitude: true,
-  updatedAt: true
+  videoUrl: true,
+  updatedAt: true,
+  operatingHours: {
+    orderBy: {
+      dayOfWeek: 'asc'
+    },
+    select: facilityOperatingHourSelect
+  }
 } satisfies Prisma.FacilitySelect;
 
 export const articleListSelect = {
@@ -125,74 +150,3 @@ export const productSelect = {
     }
   }
 } satisfies Prisma.ProductSelect;
-
-export type RatingSummary = {
-  rating: number | null;
-  reviewCount: number;
-};
-
-function summarizeRating(average: number | null, reviewCount: number): RatingSummary {
-  return {
-    rating: average === null ? null : Number(average.toFixed(1)),
-    reviewCount
-  };
-}
-
-export async function getDoctorRatings(doctorIds: string[]) {
-  if (doctorIds.length === 0) {
-    return new Map<string, RatingSummary>();
-  }
-
-  const rows = await prisma.review.groupBy({
-    by: ['doctorProfileId'],
-    where: {
-      doctorProfileId: {
-        in: doctorIds
-      },
-      status: 'APPROVED'
-    },
-    _avg: {
-      rating: true
-    },
-    _count: {
-      _all: true
-    }
-  });
-
-  return new Map(
-    rows
-      .filter((row) => row.doctorProfileId !== null)
-      .map((row) => [
-        row.doctorProfileId as string,
-        summarizeRating(row._avg.rating, row._count._all)
-      ])
-  );
-}
-
-export async function getFacilityRatings(facilityIds: string[]) {
-  if (facilityIds.length === 0) {
-    return new Map<string, RatingSummary>();
-  }
-
-  const rows = await prisma.review.groupBy({
-    by: ['facilityId'],
-    where: {
-      facilityId: {
-        in: facilityIds
-      },
-      status: 'APPROVED'
-    },
-    _avg: {
-      rating: true
-    },
-    _count: {
-      _all: true
-    }
-  });
-
-  return new Map(
-    rows
-      .filter((row) => row.facilityId !== null)
-      .map((row) => [row.facilityId as string, summarizeRating(row._avg.rating, row._count._all)])
-  );
-}

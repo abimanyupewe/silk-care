@@ -1,7 +1,10 @@
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
-import { jsonCreated, jsonError, jsonOk } from '@/lib/api';
-import { createSnapTransaction, MidtransNotConfiguredError } from '@/lib/midtrans';
+import { jsonCreated, jsonError, jsonOk, jsonTooManyRequests } from '@/lib/api';
+import { getPaymentProvider, PaymentNotConfiguredError } from '@/lib/payments';
+import { expireDueOrders } from '@/lib/order-expiry';
+import { rateLimit } from '@/lib/rate-limit';
+import { logError } from '@/lib/logger';
 
 type RouteContext = {
   params: Promise<{
@@ -16,6 +19,14 @@ export async function POST(_request: Request, context: RouteContext) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    const limit = await rateLimit(`orders:payment:${auth.user.id}`, 10, 10 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
+    }
+
+    await expireDueOrders();
 
     const { id } = await context.params;
     const order = await prisma.order.findFirst({
@@ -98,7 +109,13 @@ export async function POST(_request: Request, context: RouteContext) {
     });
 
     const externalId = `${order.id}-${Date.now().toString(36)}`;
-    const snap = await createSnapTransaction({
+    const provider = getPaymentProvider();
+
+    if (!provider.isConfigured()) {
+      throw new PaymentNotConfiguredError();
+    }
+
+    const transaction = await provider.createTransaction({
       orderId: externalId,
       amount: order.total,
       items: order.items.map((item) => ({
@@ -122,8 +139,8 @@ export async function POST(_request: Request, context: RouteContext) {
           externalId,
           amount: order.total,
           status: 'PENDING',
-          snapToken: snap.token,
-          redirectUrl: snap.redirect_url,
+          snapToken: transaction.token,
+          redirectUrl: transaction.redirectUrl,
           expiresAt
         },
         select: {
@@ -150,14 +167,14 @@ export async function POST(_request: Request, context: RouteContext) {
 
     return jsonCreated(payment);
   } catch (error) {
-    if (error instanceof MidtransNotConfiguredError) {
+    if (error instanceof PaymentNotConfiguredError) {
       return jsonError(
         'Pembayaran belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY terlebih dahulu.',
         503
       );
     }
 
-    console.error('[order:payment]', error);
+    logError('payment.create_failed', error);
     return jsonError('Gagal membuat transaksi pembayaran.', 502);
   }
 }
