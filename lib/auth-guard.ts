@@ -28,6 +28,7 @@ export async function requireUser(): Promise<AuthResult> {
     select: {
       id: true,
       role: true,
+      sessionVersion: true,
       name: true,
       email: true,
       image: true,
@@ -37,6 +38,10 @@ export async function requireUser(): Promise<AuthResult> {
 
   if (!user || user.deletedAt) {
     return { ok: false, error: jsonError('Akun tidak aktif.', 401) };
+  }
+
+  if (session.user.sessionVersion !== user.sessionVersion) {
+    return { ok: false, error: jsonError('Sesi berakhir. Silakan login kembali.', 401) };
   }
 
   return {

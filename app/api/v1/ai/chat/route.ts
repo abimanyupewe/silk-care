@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     const session = await auth();
     const identity = session?.user?.id ? `user:${session.user.id}` : `ip:${getClientIp(request)}`;
     const limit = session?.user?.id
-      ? rateLimit(`ai:chat:${identity}`, 20, 10 * 60 * 1000)
-      : rateLimit(`ai:chat:${identity}`, 5, 10 * 60 * 1000);
+      ? await rateLimit(`ai:chat:${identity}`, 20, 10 * 60 * 1000)
+      : await rateLimit(`ai:chat:${identity}`, 5, 10 * 60 * 1000);
 
     if (!limit.allowed) {
       return jsonTooManyRequests(limit.resetAt);

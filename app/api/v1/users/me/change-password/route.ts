@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
-    const limit = rateLimit(`change-password:${auth.user.id}`, 5, 15 * 60 * 1000);
+    const limit = await rateLimit(`change-password:${auth.user.id}`, 5, 15 * 60 * 1000);
 
     if (!limit.allowed) {
       return jsonTooManyRequests(limit.resetAt);
@@ -71,11 +71,17 @@ export async function POST(request: Request) {
         id: user.id
       },
       data: {
-        passwordHash
+        passwordHash,
+        sessionVersion: {
+          increment: 1
+        }
       }
     });
 
-    return jsonOk({ message: 'Password berhasil diubah.' });
+    return jsonOk({
+      message: 'Password berhasil diubah. Silakan login kembali.',
+      reauthenticate: true
+    });
   } catch (error) {
     return handleRouteError(error);
   }

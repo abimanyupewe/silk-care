@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
-import { handleRouteError, jsonOk } from '@/lib/api';
+import { handleRouteError, jsonOk, jsonTooManyRequests } from '@/lib/api';
 import { cartSelect, serializeCart } from '@/lib/cart';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
@@ -30,6 +31,12 @@ export async function DELETE() {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`cart:write:${auth.user.id}`, 60, 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const existing = await prisma.cart.findUnique({

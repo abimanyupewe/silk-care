@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireDoctorProfile } from '@/lib/doctor-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { logError } from '@/lib/logger';
 import { doctorProfileSelect } from '@/lib/doctor';
 import {
   deleteCloudinaryAsset,
@@ -132,7 +133,9 @@ export async function PATCH(request: Request) {
       try {
         await deleteCloudinaryAsset(existing.photoPublicId, 'image');
       } catch (error) {
-        console.error('[cloudinary] gagal menghapus foto lama', error);
+        logError('cloudinary.cleanup_failed', error, {
+          asset: 'doctor-photo'
+        });
       }
     }
 
@@ -144,7 +147,9 @@ export async function PATCH(request: Request) {
       try {
         await deleteCloudinaryAsset(existing.videoPublicId, 'video');
       } catch (error) {
-        console.error('[cloudinary] gagal menghapus video lama', error);
+        logError('cloudinary.cleanup_failed', error, {
+          asset: 'doctor-video'
+        });
       }
     }
 

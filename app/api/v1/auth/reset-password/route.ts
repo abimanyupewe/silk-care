@@ -22,7 +22,7 @@ const invalidTokenMessage = 'Token reset password tidak valid atau sudah kedaluw
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const ipLimit = rateLimit(`reset-password:ip:${ip}`, 10, 15 * 60 * 1000);
+    const ipLimit = await rateLimit(`reset-password:ip:${ip}`, 10, 15 * 60 * 1000);
 
     if (!ipLimit.allowed) {
       return jsonTooManyRequests(ipLimit.resetAt);
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const tokenHash = hashAuthToken(parsed.data.token);
-    const tokenLimit = rateLimit(`reset-password:token:${tokenHash}`, 5, 15 * 60 * 1000);
+    const tokenLimit = await rateLimit(`reset-password:token:${tokenHash}`, 5, 15 * 60 * 1000);
 
     if (!tokenLimit.allowed) {
       return jsonTooManyRequests(tokenLimit.resetAt);
@@ -88,6 +88,9 @@ export async function POST(request: Request) {
         },
         data: {
           passwordHash,
+          sessionVersion: {
+            increment: 1
+          },
           emailVerified: record.user.emailVerified ?? now
         }
       }),

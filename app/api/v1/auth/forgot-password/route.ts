@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { sendPasswordResetEmail } from '@/lib/auth-email';
 import { getClientIp, handleRouteError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import { rateLimit } from '@/lib/rate-limit';
+import { logError } from '@/lib/logger';
 
 const requestSchema = z.object({
   email: z
@@ -17,7 +18,7 @@ const genericMessage = 'Jika email terdaftar, instruksi reset password telah dik
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const ipLimit = rateLimit(`forgot-password:ip:${ip}`, 20, 15 * 60 * 1000);
+    const ipLimit = await rateLimit(`forgot-password:ip:${ip}`, 20, 15 * 60 * 1000);
 
     if (!ipLimit.allowed) {
       return jsonTooManyRequests(ipLimit.resetAt);
@@ -29,7 +30,11 @@ export async function POST(request: Request) {
       return parsed.error;
     }
 
-    const emailLimit = rateLimit(`forgot-password:email:${parsed.data.email}`, 5, 15 * 60 * 1000);
+    const emailLimit = await rateLimit(
+      `forgot-password:email:${parsed.data.email}`,
+      5,
+      15 * 60 * 1000
+    );
 
     if (!emailLimit.allowed) {
       return jsonTooManyRequests(emailLimit.resetAt);
@@ -54,7 +59,9 @@ export async function POST(request: Request) {
       try {
         await sendPasswordResetEmail(user);
       } catch (error) {
-        console.error('[forgot-password]', error);
+        logError('auth.password_reset_email_failed', error, {
+          userId: user.id
+        });
       }
     }
 

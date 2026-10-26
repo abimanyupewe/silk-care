@@ -1,5 +1,6 @@
 import { getAppUrl } from '@/lib/app-url';
 import { sendEmail } from '@/lib/email';
+import { logError } from '@/lib/logger';
 
 type EmailRecipient = {
   name: string;
@@ -44,7 +45,7 @@ async function sendSafe(input: { to: string; subject: string; text: string }) {
   try {
     await sendEmail(input);
   } catch (error) {
-    console.error('[email] gagal mengirim email transaksi', error);
+    logError('email.transaction_failed', error);
   }
 }
 

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { logError } from '@/lib/logger';
 import { partnerArticleSelect } from '@/lib/article';
 import {
   deleteCloudinaryAsset,
@@ -145,7 +146,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       try {
         await deleteCloudinaryAsset(existing.coverPublicId, 'image');
       } catch (error) {
-        console.error('[cloudinary] gagal menghapus sampul lama', error);
+        logError('cloudinary.cleanup_failed', error, {
+          asset: 'article-cover'
+        });
       }
     }
 

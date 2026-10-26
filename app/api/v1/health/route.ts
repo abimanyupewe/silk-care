@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { jsonError, jsonOk } from '@/lib/api';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function GET() {
       latencyMs: Date.now() - startedAt
     });
   } catch (error) {
-    console.error('[health]', error);
+    logError('health.database_failed', error);
 
     return jsonError('Database tidak tersedia.', 503);
   }

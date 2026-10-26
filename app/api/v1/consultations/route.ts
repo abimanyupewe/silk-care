@@ -9,6 +9,7 @@ import {
   jsonCreated,
   jsonError,
   jsonOk,
+  jsonTooManyRequests,
   paginationMeta,
   parseJson
 } from '@/lib/api';
@@ -21,6 +22,15 @@ import {
   getJakartaSchedulePosition,
   isWithinDoctorSchedule
 } from '@/lib/consultation';
+import {
+  completeIdempotencyRecord,
+  createIdempotencyRecord,
+  isIdempotencyUniqueError,
+  replayIdempotency,
+  resolveIdempotency,
+  type IdempotencyContext
+} from '@/lib/idempotency';
+import { rateLimit } from '@/lib/rate-limit';
 import { sendConsultationRequestEmail } from '@/lib/transaction-email';
 
 const createSchema = z.object({
@@ -78,6 +88,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  let idempotency: (IdempotencyContext & { userId: string }) | null = null;
+
   try {
     const auth = await requireRole(['PATIENT']);
 
@@ -89,6 +101,30 @@ export async function POST(request: Request) {
 
     if (parsed.error) {
       return parsed.error;
+    }
+
+    const idempotencyResult = await resolveIdempotency(
+      request,
+      auth.user.id,
+      'CONSULTATION_CREATE',
+      parsed.data
+    );
+
+    if (idempotencyResult.response) {
+      return idempotencyResult.response;
+    }
+
+    idempotency = idempotencyResult.context
+      ? {
+          ...idempotencyResult.context,
+          userId: auth.user.id
+        }
+      : null;
+
+    const limit = await rateLimit(`consultations:create:${auth.user.id}`, 10, 10 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     if (Number.isNaN(parsed.data.scheduledAt.getTime())) {
@@ -171,6 +207,18 @@ export async function POST(request: Request) {
     }
 
     const consultation = await prisma.$transaction(async (tx) => {
+      let idempotencyRecordId: string | null = null;
+
+      if (idempotency) {
+        const record = await createIdempotencyRecord(tx, {
+          userId: idempotency.userId,
+          scope: 'CONSULTATION_CREATE',
+          context: idempotency
+        });
+
+        idempotencyRecordId = record.id;
+      }
+
       const created = await tx.consultation.create({
         data: {
           patientId: auth.user.id,
@@ -197,6 +245,16 @@ export async function POST(request: Request) {
         }
       });
 
+      if (idempotencyRecordId) {
+        await completeIdempotencyRecord(tx, idempotencyRecordId, {
+          status: 201,
+          body: {
+            data: created
+          },
+          resourceId: created.id
+        });
+      }
+
       return created;
     });
 
@@ -212,6 +270,15 @@ export async function POST(request: Request) {
 
     return jsonCreated(consultation);
   } catch (error) {
+    if (idempotency && isIdempotencyUniqueError(error)) {
+      return replayIdempotency(
+        idempotency.userId,
+        'CONSULTATION_CREATE',
+        idempotency.key,
+        idempotency.requestHash
+      );
+    }
+
     return handleRouteError(error);
   }
 }

@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
-    const limit = rateLimit(`review:create:${auth.user.id}`, 10, 10 * 60 * 1000);
+    const limit = await rateLimit(`review:create:${auth.user.id}`, 10, 10 * 60 * 1000);
 
     if (!limit.allowed) {
       return jsonTooManyRequests(limit.resetAt);

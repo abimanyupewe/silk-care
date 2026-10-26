@@ -204,7 +204,10 @@ export async function DELETE(request: Request, context: RouteContext) {
           id: user.id
         },
         data: {
-          deletedAt
+          deletedAt,
+          sessionVersion: {
+            increment: 1
+          }
         },
         select: adminUserSelect
       });

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
-    const limit = rateLimit(`notification:broadcast:${auth.user.id}`, 5, 10 * 60 * 1000);
+    const limit = await rateLimit(`notification:broadcast:${auth.user.id}`, 5, 10 * 60 * 1000);
 
     if (!limit.allowed) {
       return jsonTooManyRequests(limit.resetAt);

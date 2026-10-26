@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@/lib/generated/prisma';
+import { handleRouteError, jsonCreated, jsonError, parseJson } from '@/lib/api';
 import { sendVerificationEmail } from '@/lib/auth-email';
+import { logError } from '@/lib/logger';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -17,24 +18,10 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
+  const parsed = await parseJson(request, registerSchema);
 
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body harus berupa JSON.' }, { status: 400 });
-  }
-
-  const parsed = registerSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Data tidak valid.',
-        issues: parsed.error.flatten().fieldErrors
-      },
-      { status: 422 }
-    );
+  if (parsed.error) {
+    return parsed.error;
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
@@ -59,15 +46,17 @@ export async function POST(request: Request) {
     try {
       await sendVerificationEmail(user);
     } catch (error) {
-      console.error('[register] gagal mengirim email verifikasi', error);
+      logError('auth.verification_email_failed', error, {
+        userId: user.id
+      });
     }
 
-    return NextResponse.json({ data: user }, { status: 201 });
+    return jsonCreated(user);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return NextResponse.json({ error: 'Email sudah terdaftar.' }, { status: 409 });
+      return jsonError('Email sudah terdaftar.', 409);
     }
 
-    throw error;
+    return handleRouteError(error);
   }
 }

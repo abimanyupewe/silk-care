@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/auth-email';
 import { getClientIp, handleRouteError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import { rateLimit } from '@/lib/rate-limit';
+import { logError } from '@/lib/logger';
 
 const requestSchema = z.object({
   email: z
@@ -18,7 +19,7 @@ const genericMessage =
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const ipLimit = rateLimit(`verify-email-request:ip:${ip}`, 20, 15 * 60 * 1000);
+    const ipLimit = await rateLimit(`verify-email-request:ip:${ip}`, 20, 15 * 60 * 1000);
 
     if (!ipLimit.allowed) {
       return jsonTooManyRequests(ipLimit.resetAt);
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
       return parsed.error;
     }
 
-    const emailLimit = rateLimit(
+    const emailLimit = await rateLimit(
       `verify-email-request:email:${parsed.data.email}`,
       5,
       15 * 60 * 1000
@@ -57,7 +58,9 @@ export async function POST(request: Request) {
       try {
         await sendVerificationEmail(user);
       } catch (error) {
-        console.error('[verify-email:request]', error);
+        logError('auth.verification_email_failed', error, {
+          userId: user.id
+        });
       }
     }
 

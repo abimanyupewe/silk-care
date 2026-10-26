@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireFacility } from '@/lib/facility-guard';
 import { facilityProfileSelect, facilityTypes } from '@/lib/facility';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { logError } from '@/lib/logger';
 import {
   deleteCloudinaryAsset,
   isCloudinaryConfigured,
@@ -132,7 +133,9 @@ export async function PATCH(request: Request) {
       try {
         await deleteCloudinaryAsset(existing.photoPublicId, 'image');
       } catch (error) {
-        console.error('[cloudinary] gagal menghapus foto lama', error);
+        logError('cloudinary.cleanup_failed', error, {
+          asset: 'facility-photo'
+        });
       }
     }
 
@@ -144,7 +147,9 @@ export async function PATCH(request: Request) {
       try {
         await deleteCloudinaryAsset(existing.videoPublicId, 'video');
       } catch (error) {
-        console.error('[cloudinary] gagal menghapus video lama', error);
+        logError('cloudinary.cleanup_failed', error, {
+          asset: 'facility-video'
+        });
       }
     }
 

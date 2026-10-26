@@ -99,18 +99,24 @@ enum NotificationType {
   SYSTEM
 }
 
+enum IdempotencyScope {
+  CHECKOUT
+  CONSULTATION_CREATE
+}
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  name          String
-  phone         String?
-  image         String?
-  role          UserRole  @default(PATIENT)
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String?
+  name           String
+  phone          String?
+  image          String?
+  role           UserRole  @default(PATIENT)
+  sessionVersion Int       @default(0)
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   doctorProfile        DoctorProfile?
   facility             Facility?
@@ -125,6 +131,7 @@ model User {
   patientConsultations Consultation[]       @relation("PatientConsultations")
   medicalRecords       MedicalRecord[]      @relation("PatientMedicalRecords")
   auditLogs            AuditLog[]           @relation("AuditLogs")
+  idempotencyKeys      IdempotencyKey[]
 
   @@index([role])
   @@index([deletedAt])
@@ -510,4 +517,21 @@ model AuditLog {
   @@index([action])
   @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+model IdempotencyKey {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope          IdempotencyScope
+  key            String
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  resourceId     String?
+  createdAt      DateTime         @default(now())
+  expiresAt      DateTime
+
+  @@unique([userId, scope, key])
+  @@index([expiresAt])
 }

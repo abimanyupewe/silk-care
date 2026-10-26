@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth-guard';
-import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { handleRouteError, jsonError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import {
   CloudinaryNotConfiguredError,
   cloudinaryUploadPurposes,
   createCloudinaryUploadSignature,
   isUploadPurposeAllowed
 } from '@/lib/cloudinary';
+import { rateLimit } from '@/lib/rate-limit';
 
 const signatureSchema = z.object({
   purpose: z.enum(cloudinaryUploadPurposes)
@@ -18,6 +19,12 @@ export async function POST(request: Request) {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`uploads:signature:${auth.user.id}`, 30, 10 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const parsed = await parseJson(request, signatureSchema);

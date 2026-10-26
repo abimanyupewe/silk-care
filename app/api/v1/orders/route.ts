@@ -10,6 +10,7 @@ import {
   jsonCreated,
   jsonError,
   jsonOk,
+  jsonTooManyRequests,
   paginationMeta,
   parseJson
 } from '@/lib/api';
@@ -21,6 +22,15 @@ import {
   paymentStatuses
 } from '@/lib/order';
 import { expireDueOrders, ORDER_PAYMENT_WINDOW_MS } from '@/lib/order-expiry';
+import {
+  completeIdempotencyRecord,
+  createIdempotencyRecord,
+  isIdempotencyUniqueError,
+  replayIdempotency,
+  resolveIdempotency,
+  type IdempotencyContext
+} from '@/lib/idempotency';
+import { rateLimit } from '@/lib/rate-limit';
 import { sendOrderCreatedEmail } from '@/lib/transaction-email';
 
 const checkoutSchema = z.object({
@@ -79,6 +89,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  let idempotency: (IdempotencyContext & { userId: string }) | null = null;
+
   try {
     const auth = await requireUser();
 
@@ -90,6 +102,30 @@ export async function POST(request: Request) {
 
     if (parsed.error) {
       return parsed.error;
+    }
+
+    const idempotencyResult = await resolveIdempotency(
+      request,
+      auth.user.id,
+      'CHECKOUT',
+      parsed.data
+    );
+
+    if (idempotencyResult.response) {
+      return idempotencyResult.response;
+    }
+
+    idempotency = idempotencyResult.context
+      ? {
+          ...idempotencyResult.context,
+          userId: auth.user.id
+        }
+      : null;
+
+    const limit = await rateLimit(`orders:create:${auth.user.id}`, 5, 10 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const cart = await prisma.cart.findUnique({
@@ -131,6 +167,18 @@ export async function POST(request: Request) {
     const expiresAt = new Date(Date.now() + ORDER_PAYMENT_WINDOW_MS);
 
     const order = await prisma.$transaction(async (tx) => {
+      let idempotencyRecordId: string | null = null;
+
+      if (idempotency) {
+        const record = await createIdempotencyRecord(tx, {
+          userId: idempotency.userId,
+          scope: 'CHECKOUT',
+          context: idempotency
+        });
+
+        idempotencyRecordId = record.id;
+      }
+
       for (const item of cart.items) {
         const stockUpdate = await tx.product.updateMany({
           where: {
@@ -217,12 +265,24 @@ export async function POST(request: Request) {
         }
       });
 
-      return tx.order.findUniqueOrThrow({
+      const detail = await tx.order.findUniqueOrThrow({
         where: {
           id: created.id
         },
         select: orderDetailSelect
       });
+
+      if (idempotencyRecordId) {
+        await completeIdempotencyRecord(tx, idempotencyRecordId, {
+          status: 201,
+          body: {
+            data: detail
+          },
+          resourceId: detail.id
+        });
+      }
+
+      return detail;
     });
 
     if (auth.user.email) {
@@ -237,6 +297,15 @@ export async function POST(request: Request) {
 
     return jsonCreated(order);
   } catch (error) {
+    if (idempotency && isIdempotencyUniqueError(error)) {
+      return replayIdempotency(
+        idempotency.userId,
+        'CHECKOUT',
+        idempotency.key,
+        idempotency.requestHash
+      );
+    }
+
     if (error instanceof OrderActionError) {
       return jsonError(error.message, error.status);
     }

@@ -9,7 +9,8 @@ docs, and code comments are Indonesian; the root layout sets `lang="id"`.
 - `npm run dev` — dev server on :3000
 - `npm run lint` — `next lint` with the flat config; keep it clean (currently clean)
 - `npm run typecheck` — `tsc --noEmit`; `npm run build` also typechecks
-- `npm run build` — production build (`prebuild` regenerates Prisma Client)
+- `npm run build` — production build (`prebuild` regenerates Prisma Client and runs the OpenAPI contract check)
+- `npm run openapi:check` — compare route files and exported methods with `docs/openapi.yaml`
 - `npm run format` — Prettier across the repo
 - `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` / `db:seed:demo` — Prisma
 
@@ -51,7 +52,13 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `/api/v1/admin/notifications/broadcast`, dashboard
   stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
-  `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers,
+  `/api/v1/admin/reviews*` (including `[id]/moderate`). Use `lib/api.ts` for response/pagination helpers;
+  its error body is `{ error, code, details? }`, where `code` is derived from the HTTP
+  status (`BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`,
+  `VALIDATION_ERROR`, `RATE_LIMITED`, `INTERNAL_ERROR`, `BAD_GATEWAY`,
+  `SERVICE_UNAVAILABLE`). The API contract lives in `docs/openapi.yaml` and is served as
+  YAML at `/api/v1/openapi`; conventions, error table, endpoint index, and demo fixtures
+  live in `docs/API.md`.
   `lib/catalog.ts` for shared public filters/selects, `lib/availability.ts` for day/time
   availability filters, `lib/geo.ts` for coordinate parsing, Haversine distance, and
   bounding boxes, `lib/rating.ts` for rating filters and denormalized review aggregates,
@@ -70,8 +77,12 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   hashed email/reset tokens, `lib/auth-email.ts` for
   verification/reset emails, `lib/cart.ts` for cart projections, `lib/order.ts` for order
   selects/errors/status values, `lib/order-status.ts` for shared order status transitions,
-  `lib/order-expiry.ts` for the unpaid-order expiry sweep, `lib/transaction-email.ts` for
-  best-effort transactional email copy,
+  `lib/order-expiry.ts` for the unpaid-order expiry sweep, `lib/rate-limit.ts` for the
+  async rate limiter with `lib/rate-limit-store.ts` (in-memory by default, Upstash REST
+  when configured), `lib/logger.ts` for JSON server logs,
+  `lib/idempotency.ts` for `Idempotency-Key` request replay and
+  cleanup, `lib/transaction-email.ts` for best-effort transactional email
+  copy,
   `lib/payments/` for the payment-provider abstraction (`lib/midtrans.ts` stays the
   low-level Snap/signature adapter), `lib/ai/` for the AI provider contract and prompt
   scaffold, and `lib/reviews.ts` for review target
@@ -86,10 +97,18 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 - Auth: Auth.js v5 beta in `auth.ts`, credentials + JWT sessions. Route handlers live in
   `app/api/auth/[...nextauth]` and `app/api/v1/auth/*`. Roles are in the `UserRole` enum.
   There is no login UI yet; use the Auth.js default pages or the API directly. Email
-  verification and password reset use hashed `AuthToken` rows. Without
+  verification and password reset use hashed `AuthToken` rows. JWT payloads carry
+  `sessionVersion`; `requireUser` compares it with `User.sessionVersion` so password
+  changes/resets and admin deactivation/restoration invalidate old tokens. Without
   `RESEND_API_KEY`/`EMAIL_FROM`, `lib/email.ts` prints the email (including token) to the
   server console in development and throws in production. `/verify-email` and
-  `/reset-password` are minimal pages that call the corresponding API routes.
+  `/reset-password` are minimal pages that call the corresponding API routes. Rate limits
+  cover auth flows, reviews, AI chat, admin broadcast, change-password, checkout,
+  consultation creation, payment creation, upload signatures, and cart writes; the
+  limiter is async and uses Upstash REST when `UPSTASH_REDIS_REST_URL` and
+  `UPSTASH_REDIS_REST_TOKEN` are set, otherwise it falls back to in-memory storage.
+  `middleware.ts` adds `x-request-id` to `/api/*`; server errors are logged as JSON with
+  that ID.
 
 ## Database
 
@@ -99,7 +118,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
   `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
-  `catalog_rating_backfill`, and `audit_log` migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
+  `catalog_rating_backfill`, `audit_log`, `session_revocation`, and `idempotency_keys`
+  migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
 - Account profile/password, email verification, password reset, cart, customer checkout,
@@ -139,7 +159,11 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   user row so deactivation takes effect for existing JWT sessions. Checkout snapshots
   product prices into
   `OrderItem`, decrements stock conditionally inside a transaction, writes
-  `OrderStatusHistory` and a `Notification`, then clears the cart. Checkout sets
+  `OrderStatusHistory` and a `Notification`, then clears the cart. Checkout and
+  consultation creation accept an optional `Idempotency-Key` header: the same key and
+  payload replay the original `201` with `Idempotent-Replayed: true`, a different payload
+  returns `409`, and keys expire after 24 hours (the cron endpoint also removes expired
+  rows). Checkout sets
   `expiresAt` to 24 hours ahead. `expireDueOrders` cancels due unpaid/failed orders,
   restores stock, writes history plus notification, and sends a payment-expired email; it
   runs from the order list/payment paths and from `/api/v1/cron/orders/expire`, which
@@ -180,9 +204,11 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when
   outbound WebSocket/HTTP is blocked.
 - `db:seed:demo` is optional and demo-only. It adds 2 doctors, 2 facilities, 4 articles,
-  4 products, and 5 reviews, plus the demo users `clara@`, `santika@`, `klinik@`,
-  `aposilk@`, and `pasien@silk.local`. All demo accounts use `SEED_DEMO_PASSWORD`; running
-  it repeatedly is safe (upserts by unique keys).
+  4 products, 5 reviews, deterministic weekly doctor schedules, and facility operating
+  hours, plus the demo users `clara@`, `santika@`, `klinik@`, `aposilk@`, and
+  `pasien@silk.local`. All demo accounts use `SEED_DEMO_PASSWORD`; running it repeatedly is
+  safe (upserts by unique keys, and demo schedules/hours are replaced). Stable identifiers
+  and QA notes are in `docs/API.md`.
 
 ## Gotchas
 

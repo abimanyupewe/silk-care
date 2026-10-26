@@ -24,7 +24,8 @@ export async function POST(request: Request, context: RouteContext) {
         id
       },
       select: {
-        id: true
+        id: true,
+        deletedAt: true
       }
     });
 
@@ -38,7 +39,14 @@ export async function POST(request: Request, context: RouteContext) {
           id: user.id
         },
         data: {
-          deletedAt: null
+          deletedAt: null,
+          ...(user.deletedAt
+            ? {
+                sessionVersion: {
+                  increment: 1
+                }
+              }
+            : {})
         },
         select: adminUserSelect
       });

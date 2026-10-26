@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
-import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
+import { handleRouteError, jsonError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import { cartSelect, serializeCart } from '@/lib/cart';
+import { rateLimit } from '@/lib/rate-limit';
 
 const updateItemSchema = z.object({
   quantity: z.number().int().min(1).max(99)
@@ -20,6 +21,12 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`cart:write:${auth.user.id}`, 60, 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const { id } = await context.params;
@@ -99,6 +106,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`cart:write:${auth.user.id}`, 60, 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     const { id } = await context.params;

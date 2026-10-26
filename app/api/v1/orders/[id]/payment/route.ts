@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
-import { jsonCreated, jsonError, jsonOk } from '@/lib/api';
+import { jsonCreated, jsonError, jsonOk, jsonTooManyRequests } from '@/lib/api';
 import { getPaymentProvider, PaymentNotConfiguredError } from '@/lib/payments';
 import { expireDueOrders } from '@/lib/order-expiry';
+import { rateLimit } from '@/lib/rate-limit';
+import { logError } from '@/lib/logger';
 
 type RouteContext = {
   params: Promise<{
@@ -16,6 +18,12 @@ export async function POST(_request: Request, context: RouteContext) {
 
     if (!auth.ok) {
       return auth.error;
+    }
+
+    const limit = await rateLimit(`orders:payment:${auth.user.id}`, 10, 10 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return jsonTooManyRequests(limit.resetAt);
     }
 
     await expireDueOrders();
@@ -166,7 +174,7 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
-    console.error('[order:payment]', error);
+    logError('payment.create_failed', error);
     return jsonError('Gagal membuat transaksi pembayaran.', 502);
   }
 }
