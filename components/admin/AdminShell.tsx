@@ -4,10 +4,57 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import {
+  Building2,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Megaphone,
+  Menu,
+  MessageSquareText,
+  ScrollText,
+  ShoppingBag,
+  Stethoscope,
+  Users,
+  X
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard }];
+const navGroups = [
+  {
+    label: 'Ringkasan',
+    items: [{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard }]
+  },
+  {
+    label: 'Manajemen',
+    items: [
+      { href: '/admin/users', label: 'Pengguna', icon: Users },
+      { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag }
+    ]
+  },
+  {
+    label: 'Verifikasi',
+    items: [
+      { href: '/admin/doctors', label: 'Dokter', icon: Stethoscope },
+      { href: '/admin/facilities', label: 'Fasilitas', icon: Building2 }
+    ]
+  },
+  {
+    label: 'Moderasi',
+    items: [
+      { href: '/admin/reviews', label: 'Ulasan', icon: MessageSquareText },
+      { href: '/admin/articles', label: 'Artikel', icon: FileText }
+    ]
+  },
+  {
+    label: 'Komunikasi',
+    items: [{ href: '/admin/broadcast', label: 'Broadcast', icon: Megaphone }]
+  },
+  {
+    label: 'Keamanan',
+    items: [{ href: '/admin/audit-logs', label: 'Audit log', icon: ScrollText }]
+  }
+];
 
 type AdminShellProps = {
   user: {
@@ -58,31 +105,38 @@ export function AdminShell({ user, children }: AdminShellProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3" aria-label="Navigasi admin">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const active =
-                item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
-              const Icon = item.icon;
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-4 last:mb-0">
+              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                {group.label}
+              </p>
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const active =
+                    item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+                  const Icon = item.icon;
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex min-h-11 items-center gap-3 rounded-md border border-transparent px-3 text-sm font-medium',
-                      active
-                        ? 'border-primary bg-primary-tint text-primary-hover'
-                        : 'text-ink-muted hover:border-border hover:bg-surface hover:text-ink'
-                    )}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'flex min-h-11 items-center gap-3 rounded-md border border-transparent px-3 text-sm font-medium',
+                          active
+                            ? 'border-primary bg-primary-tint text-primary-hover'
+                            : 'text-ink-muted hover:border-border hover:bg-surface hover:text-ink'
+                        )}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-border p-3">
