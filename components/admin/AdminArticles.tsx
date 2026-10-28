@@ -116,13 +116,21 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
         title="Artikel"
         description="Moderasi kiriman mitra dan kelola status terbit artikel."
         action={
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Muat ulang
-          </button>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/articles/new"
+              className="inline-flex min-h-11 items-center border border-primary bg-primary px-3 text-sm font-semibold text-white hover:bg-primary-hover"
+            >
+              Buat artikel
+            </Link>
+            <button
+              type="button"
+              onClick={() => setAttempt((value) => value + 1)}
+              className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            >
+              Muat ulang
+            </button>
+          </div>
         }
       />
 

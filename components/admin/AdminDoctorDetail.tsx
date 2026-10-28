@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { AdminActionPanel } from '@/components/admin/AdminActionPanel';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
@@ -25,6 +25,190 @@ function DetailItem({ label, value }: { label: string; value: string | null | un
       <dt className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</dt>
       <dd className="mt-1 text-sm text-ink">{value || '—'}</dd>
     </div>
+  );
+}
+
+function DoctorEditPanel({
+  doctor,
+  onUpdated
+}: {
+  doctor: AdminDoctorDetailData;
+  onUpdated: (doctor: AdminDoctorDetailData) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+
+  const save = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const numberOrNull = (name: string) => {
+      const value = String(form.get(name) ?? '').trim();
+      return value ? Number(value) : null;
+    };
+
+    setPending(true);
+    setError('');
+    try {
+      const response = await fetchAdmin<AdminDoctorDetailData>(`/admin/doctors/${doctor.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          specialty: form.get('specialty'),
+          bio: form.get('bio') || null,
+          experienceYears: numberOrNull('experienceYears'),
+          consultationFee: numberOrNull('consultationFee'),
+          city: form.get('city') || null,
+          address: form.get('address') || null,
+          latitude: numberOrNull('latitude'),
+          longitude: numberOrNull('longitude')
+        })
+      });
+      onUpdated(response.data);
+      setEditing(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Gagal memperbarui profil dokter.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <section className="border border-border bg-white p-5">
+        <h2 className="text-lg font-bold text-ink">Perbarui profil</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Koreksi data praktik sebelum memproses verifikasi.
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="mt-4 inline-flex min-h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+        >
+          Edit profil
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="border border-border bg-white p-5">
+      <h2 className="text-lg font-bold text-ink">Edit profil dokter</h2>
+      <form onSubmit={save} className="mt-4 space-y-4">
+        <label className="block text-sm font-medium text-ink">
+          Spesialis
+          <input
+            name="specialty"
+            required
+            minLength={2}
+            maxLength={100}
+            defaultValue={doctor.specialty}
+            className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Kota
+          <input
+            name="city"
+            maxLength={100}
+            defaultValue={doctor.city ?? ''}
+            className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-medium text-ink">
+            Pengalaman (tahun)
+            <input
+              name="experienceYears"
+              type="number"
+              min="0"
+              max="80"
+              defaultValue={doctor.experienceYears ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+          <label className="block text-sm font-medium text-ink">
+            Tarif konsultasi
+            <input
+              name="consultationFee"
+              type="number"
+              min="0"
+              max="100000000"
+              defaultValue={doctor.consultationFee ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+        </div>
+        <label className="block text-sm font-medium text-ink">
+          Alamat
+          <textarea
+            name="address"
+            maxLength={500}
+            defaultValue={doctor.address ?? ''}
+            rows={3}
+            className="mt-1 w-full border border-border-strong p-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Bio
+          <textarea
+            name="bio"
+            maxLength={2000}
+            defaultValue={doctor.bio ?? ''}
+            rows={4}
+            className="mt-1 w-full border border-border-strong p-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-medium text-ink">
+            Latitude
+            <input
+              name="latitude"
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              defaultValue={doctor.latitude ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+          <label className="block text-sm font-medium text-ink">
+            Longitude
+            <input
+              name="longitude"
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              defaultValue={doctor.longitude ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+        </div>
+        {error ? (
+          <p className="flex gap-2 text-sm text-destructive" aria-live="polite">
+            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {error}
+          </p>
+        ) : null}
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex min-h-11 items-center border border-primary bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {pending ? 'Menyimpan...' : 'Simpan perubahan'}
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setEditing(false)}
+            className="inline-flex min-h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+          >
+            Batal
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -196,6 +380,7 @@ export function AdminDoctorDetail({ id }: { id: string }) {
         </div>
 
         <div className="space-y-4">
+          <DoctorEditPanel doctor={doctor} onUpdated={setDoctor} />
           <AdminActionPanel
             title="Tindakan verifikasi"
             description="Setujui profil jika data sudah sesuai, atau tolak dengan catatan yang jelas."

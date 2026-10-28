@@ -91,7 +91,7 @@ export function AdminDashboardSkeleton() {
           <div key={index} className="border border-border bg-white p-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="mt-3 h-8 w-20" />
-            <Skeleton className="mt-2 h-3 w-28" />
+            <Skeleton className="mt-2 h-4 w-28" />
           </div>
         ))}
       </div>
@@ -118,7 +118,7 @@ export function AdminDashboardSkeleton() {
           </div>
         </div>
       </div>
-      <Skeleton className="mt-4 h-3 w-40" />
+      <Skeleton className="mt-4 h-4 w-40" />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { AdminActionPanel } from '@/components/admin/AdminActionPanel';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
@@ -21,6 +21,192 @@ function DetailItem({ label, value }: { label: string; value: string | null | un
       <dt className="text-xs font-medium uppercase tracking-wide text-ink-faint">{label}</dt>
       <dd className="mt-1 text-sm text-ink">{value || '—'}</dd>
     </div>
+  );
+}
+
+function FacilityEditPanel({
+  facility,
+  onUpdated
+}: {
+  facility: AdminFacilityDetailData;
+  onUpdated: (facility: AdminFacilityDetailData) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+
+  const save = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const numberOrNull = (name: string) => {
+      const value = String(form.get(name) ?? '').trim();
+      return value ? Number(value) : null;
+    };
+    setPending(true);
+    setError('');
+    try {
+      const response = await fetchAdmin<AdminFacilityDetailData>(
+        `/admin/facilities/${facility.id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            name: form.get('name'),
+            type: form.get('type'),
+            description: form.get('description') || null,
+            address: form.get('address') || null,
+            city: form.get('city') || null,
+            phone: form.get('phone') || null,
+            latitude: numberOrNull('latitude'),
+            longitude: numberOrNull('longitude')
+          })
+        }
+      );
+      onUpdated(response.data);
+      setEditing(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Gagal memperbarui profil fasilitas.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  if (!editing)
+    return (
+      <section className="border border-border bg-white p-5">
+        <h2 className="text-lg font-bold text-ink">Perbarui profil</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Koreksi data fasilitas sebelum memproses verifikasi.
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="mt-4 inline-flex min-h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+        >
+          Edit profil
+        </button>
+      </section>
+    );
+
+  return (
+    <section className="border border-border bg-white p-5">
+      <h2 className="text-lg font-bold text-ink">Edit profil fasilitas</h2>
+      <p className="mt-1 text-sm text-ink-muted">Mengubah tipe dapat menyesuaikan peran pemilik.</p>
+      <form onSubmit={save} className="mt-4 space-y-4">
+        <label className="block text-sm font-medium text-ink">
+          Nama
+          <input
+            name="name"
+            required
+            minLength={2}
+            maxLength={150}
+            defaultValue={facility.name}
+            className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Tipe
+          <select
+            name="type"
+            defaultValue={facility.type}
+            className="mt-1 h-10 w-full border border-border-strong bg-white px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          >
+            {Object.entries(adminFacilityTypeLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Kota
+          <input
+            name="city"
+            maxLength={100}
+            defaultValue={facility.city ?? ''}
+            className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Telepon
+          <input
+            name="phone"
+            minLength={8}
+            maxLength={20}
+            defaultValue={facility.phone ?? ''}
+            className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Alamat
+          <textarea
+            name="address"
+            maxLength={500}
+            defaultValue={facility.address ?? ''}
+            rows={3}
+            className="mt-1 w-full border border-border-strong p-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <label className="block text-sm font-medium text-ink">
+          Deskripsi
+          <textarea
+            name="description"
+            maxLength={2000}
+            defaultValue={facility.description ?? ''}
+            rows={4}
+            className="mt-1 w-full border border-border-strong p-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+          />
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-medium text-ink">
+            Latitude
+            <input
+              name="latitude"
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              defaultValue={facility.latitude ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+          <label className="block text-sm font-medium text-ink">
+            Longitude
+            <input
+              name="longitude"
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              defaultValue={facility.longitude ?? ''}
+              className="mt-1 h-10 w-full border border-border-strong px-3 text-ink outline-none focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+            />
+          </label>
+        </div>
+        {error ? (
+          <p className="flex gap-2 text-sm text-destructive" aria-live="polite">
+            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {error}
+          </p>
+        ) : null}
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex min-h-11 items-center border border-primary bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {pending ? 'Menyimpan...' : 'Simpan perubahan'}
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setEditing(false)}
+            className="inline-flex min-h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+          >
+            Batal
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -194,6 +380,7 @@ export function AdminFacilityDetail({ id }: { id: string }) {
         </div>
 
         <div className="space-y-4">
+          <FacilityEditPanel facility={facility} onUpdated={setFacility} />
           <AdminActionPanel
             title="Tindakan verifikasi"
             description="Setujui fasilitas jika data sudah sesuai, atau tolak dengan catatan yang jelas."

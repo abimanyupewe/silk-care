@@ -5,6 +5,8 @@ import { userRoles, verificationStatuses } from '@/lib/admin';
 import { orderStatuses, paymentStatuses } from '@/lib/order';
 import { reviewStatuses } from '@/lib/reviews';
 
+const articleStatusKeys = ['DRAFT', 'PENDING', 'PUBLISHED', 'REJECTED'] as const;
+
 function toCountMap<T extends string>(
   keys: readonly T[],
   rows: Array<{
@@ -26,30 +28,20 @@ export async function GET() {
     }
 
     const [
-      usersTotal,
       usersDeleted,
       usersByRole,
       doctorsByStatus,
       facilitiesByStatus,
-      articlesTotal,
-      articlesPublished,
-      articlesPending,
-      articlesDraft,
-      articlesRejected,
+      articlesByStatus,
       articlesDeleted,
-      productsTotal,
-      productsActive,
-      productsInactive,
+      productsByActive,
       productsDeleted,
-      ordersTotal,
       ordersByStatus,
       ordersByPaymentStatus,
       revenue,
-      reviewsTotal,
       reviewsByStatus,
       recentOrders
     ] = await Promise.all([
-      prisma.user.count(),
       prisma.user.count({
         where: {
           deletedAt: {
@@ -88,29 +80,13 @@ export async function GET() {
           _all: true
         }
       }),
-      prisma.article.count(),
-      prisma.article.count({
+      prisma.article.groupBy({
+        by: ['status'],
         where: {
-          status: 'PUBLISHED',
           deletedAt: null
-        }
-      }),
-      prisma.article.count({
-        where: {
-          status: 'PENDING',
-          deletedAt: null
-        }
-      }),
-      prisma.article.count({
-        where: {
-          status: 'DRAFT',
-          deletedAt: null
-        }
-      }),
-      prisma.article.count({
-        where: {
-          status: 'REJECTED',
-          deletedAt: null
+        },
+        _count: {
+          _all: true
         }
       }),
       prisma.article.count({
@@ -120,17 +96,13 @@ export async function GET() {
           }
         }
       }),
-      prisma.product.count(),
-      prisma.product.count({
+      prisma.product.groupBy({
+        by: ['active'],
         where: {
-          active: true,
           deletedAt: null
-        }
-      }),
-      prisma.product.count({
-        where: {
-          active: false,
-          deletedAt: null
+        },
+        _count: {
+          _all: true
         }
       }),
       prisma.product.count({
@@ -140,7 +112,6 @@ export async function GET() {
           }
         }
       }),
-      prisma.order.count(),
       prisma.order.groupBy({
         by: ['status'],
         _count: {
@@ -164,7 +135,6 @@ export async function GET() {
           total: true
         }
       }),
-      prisma.review.count(),
       prisma.review.groupBy({
         by: ['status'],
         _count: {
@@ -242,6 +212,30 @@ export async function GET() {
       }))
     );
 
+    const articlesByStatusMap = toCountMap(
+      articleStatusKeys,
+      articlesByStatus.map((row) => ({
+        key: row.status,
+        count: row._count._all
+      }))
+    );
+    const articlesPending = articlesByStatusMap.PENDING;
+    const articlesLive = articleStatusKeys.reduce(
+      (total, status) => total + articlesByStatusMap[status],
+      0
+    );
+    const productsActive = productsByActive.find((row) => row.active)?._count._all ?? 0;
+    const productsInactive = productsByActive.find((row) => !row.active)?._count._all ?? 0;
+    const usersActive = userRoles.reduce((total, role) => total + usersByRoleMap[role], 0);
+    const ordersTotal = orderStatuses.reduce(
+      (total, status) => total + ordersByStatusMap[status],
+      0
+    );
+    const reviewsTotal = reviewStatuses.reduce(
+      (total, status) => total + reviewsByStatusMap[status],
+      0
+    );
+
     const doctorTotal = verificationStatuses.reduce(
       (total, status) => total + doctorsByStatusMap[status],
       0
@@ -254,8 +248,8 @@ export async function GET() {
     return jsonOk({
       generatedAt: new Date().toISOString(),
       users: {
-        total: usersTotal,
-        active: usersTotal - usersDeleted,
+        total: usersActive + usersDeleted,
+        active: usersActive,
         deleted: usersDeleted,
         byRole: usersByRoleMap
       },
@@ -271,15 +265,15 @@ export async function GET() {
       },
       catalog: {
         articles: {
-          total: articlesTotal,
-          published: articlesPublished,
+          total: articlesLive + articlesDeleted,
+          published: articlesByStatusMap.PUBLISHED,
           pending: articlesPending,
-          draft: articlesDraft,
-          rejected: articlesRejected,
+          draft: articlesByStatusMap.DRAFT,
+          rejected: articlesByStatusMap.REJECTED,
           deleted: articlesDeleted
         },
         products: {
-          total: productsTotal,
+          total: productsActive + productsInactive + productsDeleted,
           active: productsActive,
           inactive: productsInactive,
           deleted: productsDeleted
@@ -299,8 +293,12 @@ export async function GET() {
         pendingDoctors: doctorsByStatusMap.PENDING,
         pendingFacilities: facilitiesByStatusMap.PENDING,
         pendingReviews: reviewsByStatusMap.PENDING,
+        pendingArticles: articlesPending,
         totalPending:
-          doctorsByStatusMap.PENDING + facilitiesByStatusMap.PENDING + reviewsByStatusMap.PENDING
+          doctorsByStatusMap.PENDING +
+          facilitiesByStatusMap.PENDING +
+          reviewsByStatusMap.PENDING +
+          articlesPending
       },
       recentOrders
     });

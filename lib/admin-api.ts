@@ -118,12 +118,13 @@ export type AdminStats = {
     pendingDoctors: number;
     pendingFacilities: number;
     pendingReviews: number;
+    pendingArticles: number;
     totalPending: number;
   };
   recentOrders: Array<{
     id: string;
-    status: string;
-    paymentStatus: string;
+    status: AdminOrderStatus;
+    paymentStatus: AdminPaymentStatus;
     total: number;
     createdAt: string;
     user: {
