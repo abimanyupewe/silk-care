@@ -1,8 +1,9 @@
 # Ringkasan Perubahan UI — SILK
 
 Dokumen ini merangkum arah desain dan perubahan UI yang direncanakan untuk SILK.
-Status: **sebagian diimplementasikan** — tipografi, navbar, dan modal pencarian
-sudah diterapkan. Layout section beranda dan keputusan radius masih berupa rencana.
+Status: **sebagian diimplementasikan** — tipografi, navbar, modal pencarian, dan
+panel admin verifikasi/moderasi sudah diterapkan. Layout section beranda dan
+keputusan radius masih berupa rencana.
 
 Referensi:
 
@@ -332,6 +333,11 @@ Apa pun pilihannya:
 - [x] `lib/search-index.ts`: satukan data yang dapat dicari.
 - [x] `app/search/page.tsx`: halaman hasil pencarian.
 - [x] `components/features/Homepage/Hero.tsx`: hero layanan-first, 6 kartu layanan, tanpa carousel.
+- [x] Admin: navigasi Dashboard, pengguna, pesanan, verifikasi mitra, moderasi ulasan/artikel,
+      broadcast, dan audit log.
+- [x] Admin: skeleton untuk konten yang sedang dimuat; tanpa loading circle.
+- [x] Admin: edit/aktifkan pengguna, ubah status pesanan, moderasi dan terbitkan artikel.
+- [x] Admin: filter/pagination tersimpan di URL dan aksi destruktif memakai konfirmasi.
 - [ ] Buat `SectionHeader` untuk menghilangkan duplikasi header section.
 - [ ] Selaraskan radius di seluruh komponen.
 - [ ] Selaraskan container (`max-w-7xl` vs 1200px).
@@ -356,6 +362,41 @@ Ketiganya lulus tanpa error.
 - Setiap `app/**/layout.tsx` di bawah root merender `<html>` dan `<body>` lagi.
   Hanya root layout yang seharusnya melakukan itu.
 - Halaman `[slug]` mengetik `params` sebagai `Promise`, tetapi belum di-`await`.
-- Belum ada test runner, test script, atau API backend.
-- Semua konten masih statis dan hardcoded di komponen.
+- Belum ada test runner atau test script.
+- Konten publik masih banyak yang statis dan hardcoded di komponen.
 - `next lint` memakai `eslint.config.mjs`; `.eslintrc.json` tidak dipakai.
+
+---
+
+## 10. Admin panel
+
+Panel admin inti sudah fungsional dan memakai API yang tersedia.
+
+| Area      | Route                    | Fungsi                                            |
+| --------- | ------------------------ | ------------------------------------------------- |
+| Dashboard | `/admin`                 | Statistik, antrean moderasi, pesanan terbaru      |
+| Pengguna  | `/admin/users`           | Cari, filter peran/status, pagination             |
+| Pengguna  | `/admin/users/[id]`      | Edit data/peran, nonaktifkan, pulihkan akun       |
+| Pesanan   | `/admin/orders`          | Filter status/pembayaran, pagination              |
+| Pesanan   | `/admin/orders/[id]`     | Rincian, riwayat, pembayaran, ubah status         |
+| Dokter    | `/admin/doctors`         | Cari, filter status, pagination, buka detail      |
+| Dokter    | `/admin/doctors/[id]`    | Profil, jadwal, media, setujui/tolak              |
+| Fasilitas | `/admin/facilities`      | Cari, filter status/tipe, pagination, buka detail |
+| Fasilitas | `/admin/facilities/[id]` | Profil, jam operasional, media, setujui/tolak     |
+| Ulasan    | `/admin/reviews`         | Filter status/target/rating/negatif, pagination   |
+| Ulasan    | `/admin/reviews/[id]`    | Isi ulasan, riwayat, setujui/tolak                |
+| Artikel   | `/admin/articles`        | Cari, filter status/visibilitas, pagination       |
+| Artikel   | `/admin/articles/[id]`   | Moderasi, terbitkan/draf, hapus/pulihkan          |
+| Broadcast | `/admin/broadcast`       | Kirim notifikasi ke semua/peran/pengguna          |
+| Keamanan  | `/admin/audit-logs`      | Filter aktor/aksi/target/tanggal, metadata        |
+
+Aturan loading:
+
+- Konten admin **tidak memakai loading circle**.
+- Skeleton meniru layout akhir: kartu statistik, tabel, filter, dan panel detail.
+- Tombol aksi memakai teks “Menyimpan...” dengan `disabled` dan `aria-busy`,
+  bukan spinner.
+- `app/admin/loading.tsx` menyediakan skeleton saat transisi route.
+
+Komponen bersama ada di `components/admin/` dan `components/ui/skeleton.tsx`.
+Filter dan pagination disimpan di URL agar bisa di-refresh atau dibagikan.
