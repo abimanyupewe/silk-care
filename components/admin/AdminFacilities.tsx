@@ -121,13 +121,21 @@ export function AdminFacilities({ filters }: { filters: AdminFacilityFilters }) 
         title="Fasilitas"
         description="Tinjau data fasilitas kesehatan dan tentukan status verifikasi mitra."
         action={
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Muat ulang
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAttempt((value) => value + 1)}
+              className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            >
+              Muat ulang
+            </button>
+            <Link
+              href="/admin/facilities/new"
+              className="btn btn-primary min-h-11 border border-primary"
+            >
+              Buat fasilitas / apotek
+            </Link>
+          </div>
         }
       />
 

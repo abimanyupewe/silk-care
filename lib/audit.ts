@@ -3,11 +3,13 @@ import { prisma } from '@/lib/db';
 import { getClientIp } from '@/lib/api';
 
 export const auditActions = {
+  userCreate: 'USER_CREATE',
   userUpdate: 'USER_UPDATE',
   userDelete: 'USER_DELETE',
   userRestore: 'USER_RESTORE',
   doctorUpdate: 'DOCTOR_UPDATE',
   doctorVerification: 'DOCTOR_VERIFICATION',
+  facilityCreate: 'FACILITY_CREATE',
   facilityUpdate: 'FACILITY_UPDATE',
   facilityVerification: 'FACILITY_VERIFICATION',
   articleUpdate: 'ARTICLE_UPDATE',

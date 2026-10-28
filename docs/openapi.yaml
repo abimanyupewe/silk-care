@@ -2907,6 +2907,59 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin]
+      summary: Buat pengguna (pasien atau admin)
+      description: >-
+        Email langsung terverifikasi. Peran dokter, fasilitas, dan apotek dibuat lewat
+        onboarding partner, bukan endpoint ini.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 72
+                phone:
+                  type: string
+                  minLength: 8
+                  maxLength: 20
+                role:
+                  type: string
+                  enum: [PATIENT, ADMIN]
+                  default: PATIENT
+      responses:
+        '201':
+          description: Pengguna dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/admin/users/{id}:
     get:
       tags: [Admin]
@@ -3235,6 +3288,108 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin]
+      summary: Buat fasilitas beserta akun pemilik
+      description: >-
+        Membuat akun pemilik (email langsung terverifikasi) dan profil fasilitas yang langsung
+        berstatus VERIFIED. Role pemilik menjadi PHARMACY untuk tipe PHARMACY, selain itu
+        FACILITY.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [owner, facility]
+              properties:
+                owner:
+                  type: object
+                  required: [name, email, password]
+                  properties:
+                    name:
+                      type: string
+                      minLength: 2
+                      maxLength: 100
+                    email:
+                      type: string
+                      format: email
+                    password:
+                      type: string
+                      minLength: 8
+                      maxLength: 72
+                    phone:
+                      type: string
+                      minLength: 8
+                      maxLength: 20
+                facility:
+                  type: object
+                  required: [name, type]
+                  properties:
+                    name:
+                      type: string
+                      minLength: 2
+                      maxLength: 150
+                    type:
+                      type: string
+                      enum:
+                        [
+                          HOSPITAL,
+                          CLINIC,
+                          LABORATORY,
+                          PHARMACY,
+                          PHYSIOTHERAPY,
+                          RADIOLOGY,
+                          FUNERAL_HOME,
+                          WELLNESS
+                        ]
+                    description:
+                      type: string
+                      maxLength: 2000
+                      nullable: true
+                    address:
+                      type: string
+                      maxLength: 500
+                      nullable: true
+                    city:
+                      type: string
+                      maxLength: 100
+                      nullable: true
+                    phone:
+                      type: string
+                      minLength: 8
+                      maxLength: 20
+                      nullable: true
+                    latitude:
+                      type: number
+                      minimum: -90
+                      maximum: 90
+                      nullable: true
+                    longitude:
+                      type: number
+                      minimum: -180
+                      maximum: 180
+                      nullable: true
+      responses:
+        '201':
+          description: Fasilitas dan akun pemilik dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Facility'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/admin/facilities/{id}:
