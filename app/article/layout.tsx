@@ -1,29 +1,10 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin']
-});
 
 export const metadata: Metadata = {
   title: 'SILK',
-  description: 'Sistem Informasi Layanan Kesehatan',
+  description: 'Sistem Informasi Layanan Kesehatan'
 };
 
-export default function RootLayout({
-  children
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
-    </html>
-  );
+export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return children;
 }

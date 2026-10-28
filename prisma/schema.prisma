@@ -1,0 +1,537 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  FACILITY
+  PHARMACY
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum FacilityType {
+  HOSPITAL
+  CLINIC
+  LABORATORY
+  PHARMACY
+  PHYSIOTHERAPY
+  RADIOLOGY
+  FUNERAL_HOME
+  WELLNESS
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum ConsultationType {
+  ONLINE
+  IN_PERSON
+}
+
+enum ConsultationStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  MIDTRANS
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum NotificationType {
+  ACCOUNT
+  ORDER
+  REVIEW
+  ARTICLE
+  CONSULTATION
+  SYSTEM
+}
+
+enum IdempotencyScope {
+  CHECKOUT
+  CONSULTATION_CREATE
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String?
+  name           String
+  phone          String?
+  image          String?
+  role           UserRole  @default(PATIENT)
+  sessionVersion Int       @default(0)
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  doctorProfile        DoctorProfile?
+  facility             Facility?
+  articles             Article[]
+  orders               Order[]
+  reviews              Review[]
+  authTokens           AuthToken[]
+  cart                 Cart?
+  moderatedReviews     Review[]             @relation("ReviewModerator")
+  orderStatusChanges   OrderStatusHistory[] @relation("OrderStatusChanger")
+  notifications        Notification[]
+  patientConsultations Consultation[]       @relation("PatientConsultations")
+  medicalRecords       MedicalRecord[]      @relation("PatientMedicalRecords")
+  auditLogs            AuditLog[]           @relation("AuditLogs")
+  idempotencyKeys      IdempotencyKey[]
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model DoctorProfile {
+  id                 String             @id @default(cuid())
+  slug               String             @unique
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty          String
+  bio                String?
+  experienceYears    Int?
+  consultationFee    Int?
+  city               String?
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  photoUrl           String?
+  photoPublicId      String?
+  videoUrl           String?
+  videoPublicId      String?
+  verificationStatus VerificationStatus @default(PENDING)
+  ratingAverage      Float?
+  reviewCount        Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  reviews        Review[]
+  schedules      DoctorSchedule[]
+  consultations  Consultation[]
+  medicalRecords MedicalRecord[]
+
+  @@index([specialty])
+  @@index([city])
+  @@index([verificationStatus])
+  @@index([ratingAverage])
+  @@index([reviewCount])
+}
+
+model DoctorSchedule {
+  id              String        @id @default(cuid())
+  doctorProfileId String
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([doctorProfileId, dayOfWeek, startTime])
+  @@index([doctorProfileId, dayOfWeek])
+}
+
+model Facility {
+  id                 String             @id @default(cuid())
+  slug               String             @unique
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  type               FacilityType
+  description        String?
+  address            String?
+  city               String?
+  phone              String?
+  latitude           Float?
+  longitude          Float?
+  photoUrl           String?
+  photoPublicId      String?
+  videoUrl           String?
+  videoPublicId      String?
+  verificationStatus VerificationStatus @default(PENDING)
+  ratingAverage      Float?
+  reviewCount        Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  products       Product[]
+  reviews        Review[]
+  carts          Cart[]
+  orders         Order[]
+  operatingHours FacilityOperatingHour[]
+
+  @@index([type])
+  @@index([city])
+  @@index([verificationStatus])
+  @@index([ratingAverage])
+  @@index([reviewCount])
+}
+
+model FacilityOperatingHour {
+  id         String   @id @default(cuid())
+  facilityId String
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int
+  openTime   String?
+  closeTime  String?
+  isClosed   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([facilityId, dayOfWeek])
+  @@index([facilityId, dayOfWeek])
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  excerpt       String?
+  content       String
+  coverImage    String?
+  coverPublicId String?
+  status        ArticleStatus @default(DRAFT)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  @@index([authorId])
+  @@index([status, createdAt])
+}
+
+model Consultation {
+  id              String             @id @default(cuid())
+  patientId       String
+  patient         User               @relation("PatientConsultations", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorProfileId String
+  doctorProfile   DoctorProfile      @relation(fields: [doctorProfileId], references: [id], onDelete: Restrict)
+  type            ConsultationType   @default(ONLINE)
+  status          ConsultationStatus @default(REQUESTED)
+  scheduledAt     DateTime
+  endsAt          DateTime
+  durationMinutes Int                @default(30)
+  fee             Int?
+  complaint       String
+  cancelReason    String?
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  medicalRecord MedicalRecord?
+
+  @@index([patientId, scheduledAt])
+  @@index([doctorProfileId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model MedicalRecord {
+  id              String        @id @default(cuid())
+  consultationId  String        @unique
+  consultation    Consultation  @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         User          @relation("PatientMedicalRecords", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorProfileId String
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Restrict)
+  diagnosis       String
+  notes           String?
+  prescription    String?
+  followUpAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([patientId, createdAt])
+  @@index([doctorProfileId, createdAt])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  price       Int
+  stock       Int       @default(0)
+  image       String?
+  category    String?
+  active      Boolean   @default(true)
+  facilityId  String
+  facility    Facility  @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  orderItems OrderItem[]
+  reviews    Review[]
+  cartItems  CartItem[]
+
+  @@index([facilityId])
+  @@index([category])
+  @@index([active])
+}
+
+model Order {
+  id                 String        @id @default(cuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  facilityId         String
+  facility           Facility      @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  status             OrderStatus   @default(PENDING)
+  paymentStatus      PaymentStatus @default(UNPAID)
+  total              Int
+  recipientName      String
+  recipientPhone     String
+  shippingAddress    String
+  shippingCity       String
+  shippingPostalCode String?
+  notes              String?
+  paidAt             DateTime?
+  expiresAt          DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
+  @@index([userId])
+  @@index([facilityId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName  String
+  productSlug  String?
+  productImage String?
+  quantity     Int
+  price        Int
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id              String         @id @default(cuid())
+  rating          Int
+  comment         String?
+  authorId        String
+  author          User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  doctorProfileId String?
+  doctorProfile   DoctorProfile? @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  facilityId      String?
+  facility        Facility?      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  status         ReviewStatus @default(PENDING)
+  isNegative     Boolean      @default(false)
+  moderatedAt    DateTime?
+  moderatedById  String?
+  moderatedBy    User?        @relation("ReviewModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderationNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([authorId, doctorProfileId])
+  @@unique([authorId, facilityId])
+  @@unique([authorId, productId])
+  @@index([authorId])
+  @@index([doctorProfileId])
+  @@index([facilityId])
+  @@index([productId])
+  @@index([status])
+  @@index([moderatedById])
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  tokenHash String        @unique
+  type      AuthTokenType
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  userId     String     @unique
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facilityId String?
+  facility   Facility?  @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  items      CartItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([facilityId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+model Payment {
+  id          String               @id @default(cuid())
+  orderId     String
+  order       Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider    PaymentProvider      @default(MIDTRANS)
+  externalId  String?              @unique
+  status      PaymentAttemptStatus @default(PENDING)
+  amount      Int
+  snapToken   String?
+  redirectUrl String?
+  rawPayload  Json?
+  paidAt      DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  note        String?
+  changedById String?
+  changedBy   User?       @relation("OrderStatusChanger", fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId])
+  @@index([changedById])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model IdempotencyKey {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope          IdempotencyScope
+  key            String
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  resourceId     String?
+  createdAt      DateTime         @default(now())
+  expiresAt      DateTime
+
+  @@unique([userId, scope, key])
+  @@index([expiresAt])
+}

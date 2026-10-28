@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Star, AlertTriangle } from "lucide-react";
-import React from "react";
-import Image from "next/image"; // Import Image
+import { Star, AlertTriangle } from 'lucide-react';
+import React from 'react';
+import Image from 'next/image'; // Import Image
 
 export const Hero = () => {
   const mainImage = '/assets/apotek/alat1.png'; // Path gambar
@@ -15,24 +15,27 @@ export const Hero = () => {
           <div className="flex gap-4">
             {/* Gambar Utama */}
             <div className="relative w-full aspect-square rounded-2xl flex-grow overflow-hidden">
-                <Image
-                    src={mainImage}
-                    alt="Amoxicillin 500mg"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 50vw, 40vw"
-                />
+              <Image
+                src={mainImage}
+                alt="Amoxicillin 500mg"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 50vw, 40vw"
+              />
             </div>
             {/* Thumbnails */}
             <div className="flex flex-col gap-3">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="relative w-16 h-16 rounded-lg cursor-pointer overflow-hidden">
-                    <Image
-                        src={mainImage}
-                        alt={`Thumbnail ${index + 1}`}
-                        fill
-                        className="object-cover"
-                    />
+                <div
+                  key={index}
+                  className="relative w-16 h-16 rounded-lg cursor-pointer overflow-hidden"
+                >
+                  <Image
+                    src={mainImage}
+                    alt={`Thumbnail ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
               ))}
             </div>
@@ -42,9 +45,7 @@ export const Hero = () => {
           <div className="flex flex-col gap-4">
             {/* Judul & Info Rating */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Amoxicillin 500mg
-              </h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Amoxicillin 500mg</h1>
               <div className="flex items-center gap-3 text-sm text-gray-600 mt-2">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
@@ -81,12 +82,12 @@ export const Hero = () => {
             </div>
 
             {/* Garis Pemisah */}
-            <hr className="border-gray-200" />
+            <hr className="border-border" />
 
             {/* Harga */}
             <div className="flex items-center gap-3">
               <span className="text-2xl text-gray-400 line-through">Rp. 12.000</span>
-              <span className="text-3xl font-bold text-[#00A991]">Rp. 6.000</span>
+              <span className="text-3xl font-bold text-primary">Rp. 6.000</span>
               <span className="bg-red-100 text-red-600 text-sm font-bold px-2 py-1 rounded">
                 50%
               </span>
@@ -97,7 +98,7 @@ export const Hero = () => {
               <button className="w-full py-3 text-sm font-semibold bg-slate-100 text-gray-800 rounded-lg hover:bg-slate-200 transition">
                 Keranjang
               </button>
-              <button className="w-full py-3 text-sm font-semibold bg-[#00A991] text-white rounded-lg hover:bg-opacity-90 transition">
+              <button className="w-full py-3 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover transition">
                 Beli
               </button>
             </div>
