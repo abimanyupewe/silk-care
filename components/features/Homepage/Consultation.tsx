@@ -1,93 +1,69 @@
+import { ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Activity,
-  Baby,
-  ChevronRight,
-  Eye,
-  HeartPulse,
-  Sparkles,
-  Stethoscope,
-  type LucideIcon
-} from 'lucide-react';
 
-const specialistServices: {
-  name: string;
-  icon: LucideIcon;
-  href: string;
-}[] = [
+const specialistServices = [
+  { name: 'Spe Mata', iconColor: 'bg-orange-100', icon: '/assets/icon/homepage-service/Eye.svg' },
+  { name: 'Spe Kulit', iconColor: 'bg-red-100', icon: '/assets/icon/homepage-service/Skin.svg' },
+  { name: 'Spe Anak', iconColor: 'bg-teal-100', icon: '/assets/icon/homepage-service/Boy.svg' },
   {
-    name: 'Dokter umum',
-    icon: Stethoscope,
-    href: '/search?q=Dokter%20umum'
+    name: 'Spe THT',
+    iconColor: 'bg-blue-100',
+    icon: '/assets/icon/homepage-service/Rhinology.svg'
   },
   {
-    name: 'Spesialis anak',
-    icon: Baby,
-    href: '/search?q=Spesialis%20anak'
+    name: 'Spe Kandungan',
+    iconColor: 'bg-amber-100',
+    icon: '/assets/icon/homepage-service/Pregnancy.svg'
   },
   {
-    name: 'Spesialis kulit',
-    icon: Sparkles,
-    href: '/search?q=Spesialis%20kulit'
-  },
-  {
-    name: 'Spesialis mata',
-    icon: Eye,
-    href: '/search?q=Spesialis%20mata'
-  },
-  {
-    name: 'Spesialis kandungan',
-    icon: HeartPulse,
-    href: '/search?q=Spesialis%20kandungan'
-  },
-  {
-    name: 'Spesialis penyakit dalam',
-    icon: Activity,
-    href: '/search?q=Spesialis%20penyakit%20dalam'
+    name: 'Spe Penyakit Dalam',
+    iconColor: 'bg-indigo-100',
+    icon: '/assets/icon/homepage-service/Endocrine.svg'
   }
 ];
 
-const ServiceItem = ({ name, icon: Icon, href }: (typeof specialistServices)[0]) => (
+const ServiceItem = ({
+  name,
+  icon
+}: {
+  name: string;
+  icon: string;
+}) => (
   <Link
-    href={href}
-    className="group flex min-h-[76px] items-center justify-between gap-3 rounded-lg border border-border bg-white p-3 transition-colors hover:border-primary md:p-4"
+    href="#"
+    className="group flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all duration-300"
   >
-    <div className="flex min-w-0 items-center gap-3 md:gap-4">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-tint text-primary md:h-10 md:w-10">
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <span className="text-sm font-semibold leading-snug text-ink md:text-lg">{name}</span>
+    <div className="flex items-center gap-4">
+      <Image width={40} height={40} src={icon} alt={name} />
+      <span className="font-semibold text-gray-800 text-[16px] md:text-[20px]">{name}</span>
     </div>
-    <ChevronRight
-      className="h-5 w-5 shrink-0 text-primary transition-colors group-hover:text-primary-hover"
-      aria-hidden="true"
-    />
+    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-[#00A991] transition-colors" />
   </Link>
 );
 
 export const Consultation = () => {
   return (
-    <section className="w-full bg-surface py-12 md:py-16">
+    <section className="w-full py-20">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-ink md:text-[28px]">Konsultasi spesialis</h2>
-            <p className="mt-1 text-ink-muted">
-              Pilih spesialis, lalu bandingkan jadwal dan biaya sebelum membuat janji.
-            </p>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Konsultasi Spesialis</h2>
           <Link
-            href="/doctor"
-            className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-hover underline underline-offset-4"
+            href="/konsultasi"
+            className="flex items-center gap-1 text-sm font-medium text-[#00A991] hover:text-[#008774] transition-colors"
           >
-            Lihat semua
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            Lihat semua konsultasi
+            <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {specialistServices.map((service) => (
-            <ServiceItem key={service.name} {...service} />
+            <ServiceItem
+              icon={service.icon}
+              key={service.name}
+              name={service.name}
+            />
           ))}
         </div>
       </div>
