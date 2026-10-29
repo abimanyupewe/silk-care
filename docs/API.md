@@ -263,41 +263,41 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 
 ### Admin
 
-| Method | Path                                         | Sukses |
-| ------ | -------------------------------------------- | ------ |
-| GET    | `/api/v1/admin/users`                        | 200    |
-| GET    | `/api/v1/admin/users/{id}`                   | 200    |
-| PATCH  | `/api/v1/admin/users/{id}`                   | 200    |
-| DELETE | `/api/v1/admin/users/{id}`                   | 200    |
-| POST   | `/api/v1/admin/users/{id}/restore`           | 200    |
-| GET    | `/api/v1/admin/doctors`                      | 200    |
-| GET    | `/api/v1/admin/doctors/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/doctors/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/doctors/{id}/verification`    | 200    |
-| GET    | `/api/v1/admin/facilities`                   | 200    |
-| GET    | `/api/v1/admin/facilities/{id}`              | 200    |
-| PATCH  | `/api/v1/admin/facilities/{id}`              | 200    |
-| PATCH  | `/api/v1/admin/facilities/{id}/verification` | 200    |
-| GET    | `/api/v1/admin/orders`                       | 200    |
-| GET    | `/api/v1/admin/orders/{id}`                  | 200    |
-| PATCH  | `/api/v1/admin/orders/{id}/status`           | 200    |
-| GET    | `/api/v1/admin/articles`                     | 200    |
-| POST   | `/api/v1/admin/articles`                     | 201    |
-| GET    | `/api/v1/admin/articles/{id}`                | 200    |
-| PATCH  | `/api/v1/admin/articles/{id}`                | 200    |
-| DELETE | `/api/v1/admin/articles/{id}`                | 200    |
-| POST   | `/api/v1/admin/articles/{id}/moderate`       | 200    |
-| POST   | `/api/v1/admin/articles/{id}/restore`        | 200    |
-| GET    | `/api/v1/admin/reviews`                      | 200    |
-| GET    | `/api/v1/admin/reviews/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/reviews/{id}/moderate`        | 200    |
-| GET    | `/api/v1/admin/audit-logs`                   | 200    |
-| POST   | `/api/v1/admin/notifications/broadcast`      | 201    |
-| GET    | `/api/v1/admin/stats`                        | 200    |
-| GET    | `/api/v1/admin/system`                       | 200    |
-| GET    | `/api/v1/admin/email-templates`              | 200    |
-| PUT    | `/api/v1/admin/email-templates/{key}/{audience}`    | 200    |
-| DELETE | `/api/v1/admin/email-templates/{key}/{audience}`    | 200    |
+| Method | Path                                             | Sukses |
+| ------ | ------------------------------------------------ | ------ |
+| GET    | `/api/v1/admin/users`                            | 200    |
+| GET    | `/api/v1/admin/users/{id}`                       | 200    |
+| PATCH  | `/api/v1/admin/users/{id}`                       | 200    |
+| DELETE | `/api/v1/admin/users/{id}`                       | 200    |
+| POST   | `/api/v1/admin/users/{id}/restore`               | 200    |
+| GET    | `/api/v1/admin/doctors`                          | 200    |
+| GET    | `/api/v1/admin/doctors/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/doctors/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/doctors/{id}/verification`        | 200    |
+| GET    | `/api/v1/admin/facilities`                       | 200    |
+| GET    | `/api/v1/admin/facilities/{id}`                  | 200    |
+| PATCH  | `/api/v1/admin/facilities/{id}`                  | 200    |
+| PATCH  | `/api/v1/admin/facilities/{id}/verification`     | 200    |
+| GET    | `/api/v1/admin/orders`                           | 200    |
+| GET    | `/api/v1/admin/orders/{id}`                      | 200    |
+| PATCH  | `/api/v1/admin/orders/{id}/status`               | 200    |
+| GET    | `/api/v1/admin/articles`                         | 200    |
+| POST   | `/api/v1/admin/articles`                         | 201    |
+| GET    | `/api/v1/admin/articles/{id}`                    | 200    |
+| PATCH  | `/api/v1/admin/articles/{id}`                    | 200    |
+| DELETE | `/api/v1/admin/articles/{id}`                    | 200    |
+| POST   | `/api/v1/admin/articles/{id}/moderate`           | 200    |
+| POST   | `/api/v1/admin/articles/{id}/restore`            | 200    |
+| GET    | `/api/v1/admin/reviews`                          | 200    |
+| GET    | `/api/v1/admin/reviews/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/reviews/{id}/moderate`            | 200    |
+| GET    | `/api/v1/admin/audit-logs`                       | 200    |
+| POST   | `/api/v1/admin/notifications/broadcast`          | 201    |
+| GET    | `/api/v1/admin/stats`                            | 200    |
+| GET    | `/api/v1/admin/system`                           | 200    |
+| GET    | `/api/v1/admin/email-templates`                  | 200    |
+| PUT    | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
+| DELETE | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
 
 ## Fixtures demo deterministik
 
