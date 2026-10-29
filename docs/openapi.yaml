@@ -3533,6 +3533,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Limit'
+        - name: q
+          in: query
+          description: Cari ID pesanan, nama/telepon penerima, nama/email pembeli, atau nama fasilitas.
+          schema:
+            type: string
         - name: status
           in: query
           schema:
@@ -4185,6 +4190,113 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/email-templates:
+    get:
+      tags: [Admin]
+      summary: Daftar template email beserta isi efektif per audiens
+      description: Isi efektif = override admin bila ada, selain itu teks default.
+      responses:
+        '200':
+          description: Daftar template.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminEmailTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/email-templates/{key}/{audience}:
+    put:
+      tags: [Admin]
+      summary: Simpan override template email
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: audience
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PATIENT, DOCTOR, FACILITY]
+      description: Menolak placeholder yang tidak dikenal atau placeholder wajib yang hilang.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body]
+              properties:
+                subject:
+                  type: string
+                  maxLength: 200
+                body:
+                  type: string
+                  maxLength: 5000
+      responses:
+        '200':
+          description: Template disimpan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminEmailTemplateVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Admin]
+      summary: Kembalikan template email ke default
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: audience
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PATIENT, DOCTOR, FACILITY]
+      responses:
+        '200':
+          description: Override dihapus; mengembalikan teks default.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminEmailTemplateVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/payments/midtrans/webhook:
@@ -5273,6 +5385,64 @@ components:
               type: boolean
             cron:
               type: boolean
+    AdminEmailTemplateVersion:
+      type: object
+      required: [subject, body, customized]
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        customized:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    AdminEmailTemplate:
+      type: object
+      required: [key, label, group, variables, required, subject, body, audiences]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        group:
+          type: string
+        variables:
+          type: array
+          items:
+            type: object
+            required: [name, label, sample]
+            properties:
+              name:
+                type: string
+              label:
+                type: string
+              sample:
+                type: string
+        required:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+          description: Subjek default.
+        body:
+          type: string
+          description: Isi default.
+        audiences:
+          type: object
+          required: [PATIENT, DOCTOR, FACILITY]
+          properties:
+            PATIENT:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
+            DOCTOR:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
+            FACILITY:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
     AiStatus:
       type: object
       required: [available, provider]

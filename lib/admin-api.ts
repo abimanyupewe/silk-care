@@ -30,6 +30,21 @@ export class AdminApiError extends Error {
   }
 }
 
+// Guard sisi klien: sesi habis/akun tidak valid (401) ke halaman masuk, bukan admin lagi (403)
+// ke beranda. Promise sengaja tidak pernah selesai agar UI tidak sempat menampilkan error
+// selama peramban berpindah halaman.
+function leaveAdmin(status: 401 | 403): Promise<never> {
+  if (status === 401) {
+    const here = window.location.pathname + window.location.search;
+
+    window.location.href = `/login?callbackUrl=${encodeURIComponent(here)}`;
+  } else {
+    window.location.href = '/';
+  }
+
+  return new Promise<never>(() => {});
+}
+
 export async function fetchAdmin<T>(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
 
@@ -47,6 +62,10 @@ export async function fetchAdmin<T>(path: string, init: RequestInit = {}) {
   const body = (await response.json().catch(() => null)) as
     | (AdminApiEnvelope<T> & AdminApiErrorBody)
     | null;
+
+  if (typeof window !== 'undefined' && (response.status === 401 || response.status === 403)) {
+    return leaveAdmin(response.status);
+  }
 
   if (!response.ok) {
     throw new AdminApiError(
@@ -155,6 +174,25 @@ export type AdminStats = {
       name: string;
     };
   }>;
+};
+
+export type AdminEmailTemplateVersion = {
+  subject: string;
+  body: string;
+  customized: boolean;
+  updatedAt: string | null;
+};
+
+export type AdminEmailTemplate = {
+  key: string;
+  label: string;
+  description: string;
+  group: string;
+  variables: Array<{ name: string; label: string; sample: string }>;
+  required: string[];
+  subject: string;
+  body: string;
+  audiences: Record<'PATIENT' | 'DOCTOR' | 'FACILITY', AdminEmailTemplateVersion>;
 };
 
 export type AdminSystemStatus = {
@@ -411,7 +449,8 @@ export type AdminAuditTargetType =
   | 'ORDER'
   | 'REVIEW'
   | 'NOTIFICATION'
-  | 'CONSULTATION';
+  | 'CONSULTATION'
+  | 'EMAIL_TEMPLATE';
 
 export type AdminAuditLog = {
   id: string;
@@ -438,7 +477,8 @@ export const adminAuditTargetLabels: Record<AdminAuditTargetType, string> = {
   ORDER: 'Pesanan',
   REVIEW: 'Ulasan',
   NOTIFICATION: 'Notifikasi',
-  CONSULTATION: 'Konsultasi'
+  CONSULTATION: 'Konsultasi',
+  EMAIL_TEMPLATE: 'Template email'
 };
 
 export const adminAuditActionLabels: Record<string, string> = {
@@ -456,7 +496,9 @@ export const adminAuditActionLabels: Record<string, string> = {
   CONSULTATION_CANCEL: 'Membatalkan konsultasi',
   REVIEW_CREATE: 'Menulis ulasan',
   REVIEW_MODERATE: 'Ulasan dimoderasi',
-  REVIEW_DELETE: 'Ulasan dihapus'
+  REVIEW_DELETE: 'Ulasan dihapus',
+  EMAIL_TEMPLATE_UPDATE: 'Template email diubah',
+  EMAIL_TEMPLATE_RESET: 'Template email dikembalikan ke default'
 };
 
 export type AdminArticleStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'REJECTED';

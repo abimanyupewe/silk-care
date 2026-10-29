@@ -295,6 +295,9 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | POST   | `/api/v1/admin/notifications/broadcast`      | 201    |
 | GET    | `/api/v1/admin/stats`                        | 200    |
 | GET    | `/api/v1/admin/system`                       | 200    |
+| GET    | `/api/v1/admin/email-templates`              | 200    |
+| PUT    | `/api/v1/admin/email-templates/{key}/{audience}`    | 200    |
+| DELETE | `/api/v1/admin/email-templates/{key}/{audience}`    | 200    |
 
 ## Fixtures demo deterministik
 

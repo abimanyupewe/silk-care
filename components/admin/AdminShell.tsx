@@ -11,6 +11,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Mail,
   Megaphone,
   Menu,
   MessageSquareText,
@@ -78,6 +79,7 @@ const navGroups: Array<{ label?: string; items: NavItem[] }> = [
     items: [
       { href: '/admin/broadcast', label: 'Broadcast', icon: Megaphone },
       { href: '/admin/audit-logs', label: 'Audit log', icon: ScrollText },
+      { href: '/admin/email-templates', label: 'Template email', icon: Mail },
       { href: '/admin/system', label: 'Status sistem', icon: Activity }
     ]
   }

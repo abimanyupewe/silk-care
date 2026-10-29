@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useAdminQuery } from '@/lib/admin-swr';
+import { AdminFacilityCreateModal } from '@/components/admin/AdminFacilityCreateModal';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
@@ -30,6 +31,7 @@ const statusOptions = [
 export function AdminFacilities({ filters }: { filters: AdminFacilityFilters }) {
   const router = useRouter();
   const { q, verificationStatus, type, page } = filters;
+  const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(q);
   const [status, setStatus] = useState(verificationStatus);
   const [facilityType, setFacilityType] = useState(type);
@@ -91,12 +93,13 @@ export function AdminFacilities({ filters }: { filters: AdminFacilityFilters }) 
         description="Tinjau data fasilitas kesehatan dan tentukan status verifikasi mitra."
         action={
           <div className="flex flex-wrap gap-2">
-            <Link
-              href="/admin/facilities/new"
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
               className="btn btn-primary min-h-11 border border-primary"
             >
               Buat fasilitas / apotek
-            </Link>
+            </button>
           </div>
         }
       />
@@ -259,6 +262,14 @@ export function AdminFacilities({ filters }: { filters: AdminFacilityFilters }) 
           />
         </div>
       ) : null}
+      <AdminFacilityCreateModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => {
+          setCreateOpen(false);
+          reload();
+        }}
+      />
     </div>
   );
 }

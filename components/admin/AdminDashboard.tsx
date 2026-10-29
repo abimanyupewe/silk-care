@@ -163,7 +163,12 @@ function CategoryChart({
               <XAxis type="number" allowDecimals={false} tick={chartTick} />
               <YAxis type="category" dataKey="label" width={88} tick={chartTick} />
               {tooltip}
-              <Bar dataKey="value" fill="var(--color-primary)" maxBarSize={20} />
+              <Bar
+                isAnimationActive={false}
+                dataKey="value"
+                fill="var(--color-primary)"
+                maxBarSize={20}
+              />
             </BarChart>
           ) : (
             <LineChart data={rows} margin={{ left: 0, right: 16, top: 8 }}>
@@ -172,6 +177,7 @@ function CategoryChart({
               <YAxis allowDecimals={false} width={32} tick={chartTick} />
               {tooltip}
               <Line
+                isAnimationActive={false}
                 dataKey="value"
                 stroke="var(--color-primary)"
                 strokeWidth={2}
@@ -215,12 +221,13 @@ function TrendChart({ daily }: { daily: AdminStats['daily'] }) {
           {type === 'bar' ? (
             <BarChart data={daily} margin={{ left: 0, right: 8 }}>
               {common}
-              <Bar dataKey="orders" fill="var(--color-primary)" />
+              <Bar isAnimationActive={false} dataKey="orders" fill="var(--color-primary)" />
             </BarChart>
           ) : (
             <LineChart data={daily} margin={{ left: 0, right: 8, top: 8 }}>
               {common}
               <Line
+                isAnimationActive={false}
                 dataKey="orders"
                 stroke="var(--color-primary)"
                 strokeWidth={2}

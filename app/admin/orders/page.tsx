@@ -16,6 +16,7 @@ export default async function AdminOrdersPage({
   return (
     <AdminOrders
       filters={{
+        q: adminParam(params, 'q'),
         status: adminParam(params, 'status'),
         paymentStatus: adminParam(params, 'paymentStatus'),
         page: adminPage(params)

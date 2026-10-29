@@ -11,10 +11,19 @@ type AdminModalProps = {
   description?: string;
   // Saat true, Esc, klik latar, dan tombol tutup diabaikan (mis. request sedang berjalan).
   busy?: boolean;
+  wide?: boolean;
   children: React.ReactNode;
 };
 
-export function AdminModal({ open, onClose, title, description, busy, children }: AdminModalProps) {
+export function AdminModal({
+  open,
+  onClose,
+  title,
+  description,
+  busy,
+  wide,
+  children
+}: AdminModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -37,7 +46,10 @@ export function AdminModal({ open, onClose, title, description, busy, children }
       onClick={(event) => {
         if (event.target === ref.current && !busy) onClose();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-lg border border-border bg-white p-0 text-ink backdrop:bg-ink/50"
+      className={cn(
+        'm-auto w-[calc(100%-2rem)] border border-border bg-white p-0 text-ink backdrop:bg-ink/50',
+        wide ? 'max-w-3xl' : 'max-w-lg'
+      )}
     >
       {open ? (
         <div className="max-h-[calc(100vh-2rem)] overflow-y-auto p-5">

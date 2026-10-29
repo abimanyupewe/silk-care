@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
+import { getActiveSession } from '@/lib/auth-guard';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
@@ -13,9 +13,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const session = await auth();
+  const session = await getActiveSession();
 
-  if (session?.user?.role === 'ADMIN') {
+  if (session?.user.role === 'ADMIN') {
     redirect('/admin');
   }
 

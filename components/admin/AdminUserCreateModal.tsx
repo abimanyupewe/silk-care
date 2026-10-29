@@ -60,7 +60,7 @@ function CreateUserForm({
           minLength={2}
           maxLength={100}
           autoComplete="off"
-          className="input input-primary h-11 w-full bg-white text-ink"
+          className="h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
         />
       </fieldset>
       <fieldset className="fieldset">
@@ -70,7 +70,7 @@ function CreateUserForm({
           type="email"
           required
           autoComplete="off"
-          className="input input-primary h-11 w-full bg-white text-ink"
+          className="h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
         />
       </fieldset>
       <fieldset className="fieldset">
@@ -82,7 +82,7 @@ function CreateUserForm({
           minLength={8}
           maxLength={20}
           autoComplete="off"
-          className="input input-primary h-11 w-full bg-white text-ink"
+          className="h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
         />
       </fieldset>
       <fieldset className="fieldset">
@@ -95,7 +95,7 @@ function CreateUserForm({
           minLength={8}
           maxLength={72}
           autoComplete="new-password"
-          className="input input-primary h-11 w-full bg-white text-ink"
+          className="h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
         />
       </fieldset>
       <fieldset className="fieldset">
@@ -104,7 +104,7 @@ function CreateUserForm({
           name="role"
           value={role}
           onChange={(event) => setRole(event.target.value)}
-          className="select select-primary h-11 w-full bg-white text-ink"
+          className="h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
         >
           <option value="PATIENT">Pasien</option>
           <option value="ADMIN">Admin</option>

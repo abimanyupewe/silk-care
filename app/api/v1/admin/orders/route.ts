@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     const searchParams = new URL(request.url).searchParams;
     const status = getEnum(searchParams, 'status', orderStatuses);
     const paymentStatus = getEnum(searchParams, 'paymentStatus', paymentStatuses);
+    const q = getString(searchParams, 'q', 100)?.replace(/^#/, '');
     const facilityId = getString(searchParams, 'facilityId', 100);
     const userId = getString(searchParams, 'userId', 100);
     const pagination = getPagination(searchParams, 10);
@@ -45,6 +46,18 @@ export async function GET(request: Request) {
 
     if (userId) {
       where.userId = userId;
+    }
+
+    // ID pesanan di UI hanya 8 karakter terakhir, jadi cocokkan ID dengan contains.
+    if (q) {
+      where.OR = [
+        { id: { contains: q, mode: 'insensitive' } },
+        { recipientName: { contains: q, mode: 'insensitive' } },
+        { recipientPhone: { contains: q } },
+        { user: { name: { contains: q, mode: 'insensitive' } } },
+        { user: { email: { contains: q, mode: 'insensitive' } } },
+        { facility: { name: { contains: q, mode: 'insensitive' } } }
+      ];
     }
 
     const [orders, total] = await Promise.all([

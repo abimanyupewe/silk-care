@@ -21,6 +21,8 @@ export const auditActions = {
   reviewModerate: 'REVIEW_MODERATE',
   reviewDelete: 'REVIEW_DELETE',
   notificationBroadcast: 'NOTIFICATION_BROADCAST',
+  emailTemplateUpdate: 'EMAIL_TEMPLATE_UPDATE',
+  emailTemplateReset: 'EMAIL_TEMPLATE_RESET',
   // Aktivitas yang dilakukan pengguna sendiri.
   userRegister: 'USER_REGISTER',
   userLogin: 'USER_LOGIN',
@@ -40,7 +42,8 @@ export const auditTargetTypes = [
   'ORDER',
   'REVIEW',
   'NOTIFICATION',
-  'CONSULTATION'
+  'CONSULTATION',
+  'EMAIL_TEMPLATE'
 ] as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

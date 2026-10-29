@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Search } from 'lucide-react';
 import {
   AdminOrderStatusBadge,
   AdminPaymentStatusBadge
@@ -22,6 +23,7 @@ import {
 import { formatAdminCurrency, formatAdminDate } from '@/lib/admin-format';
 
 export type AdminOrderFilters = {
+  q: string;
   status: string;
   paymentStatus: string;
   page: number;
@@ -33,17 +35,20 @@ function shortId(value: string) {
 
 export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
   const router = useRouter();
-  const { status, paymentStatus, page } = filters;
+  const { q, status, paymentStatus, page } = filters;
+  const [search, setSearch] = useState(q);
   const [orderStatus, setOrderStatus] = useState(status);
   const [payment, setPayment] = useState(paymentStatus);
 
   useEffect(() => {
+    setSearch(q);
     setOrderStatus(status);
     setPayment(paymentStatus);
-  }, [status, paymentStatus]);
+  }, [q, status, paymentStatus]);
 
   const params = new URLSearchParams();
 
+  if (q) params.set('q', q);
   if (status) params.set('status', status);
   if (paymentStatus) params.set('paymentStatus', paymentStatus);
   params.set('page', String(page));
@@ -56,12 +61,19 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
     reload
   } = useAdminQuery<AdminOrder[]>(`/admin/orders?${params.toString()}`);
 
-  const applyFilters = (next: { status?: string; paymentStatus?: string; page?: number }) => {
+  const applyFilters = (next: {
+    search?: string;
+    status?: string;
+    paymentStatus?: string;
+    page?: number;
+  }) => {
+    const nextSearch = next.search ?? search;
     const nextStatus = next.status ?? orderStatus;
     const nextPayment = next.paymentStatus ?? payment;
     const nextPage = next.page ?? 1;
     const params = new URLSearchParams();
 
+    if (nextSearch.trim()) params.set('q', nextSearch.trim());
     if (nextStatus) params.set('status', nextStatus);
     if (nextPayment) params.set('paymentStatus', nextPayment);
     if (nextPage > 1) params.set('page', String(nextPage));
@@ -71,6 +83,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
   };
 
   const resetFilters = () => {
+    setSearch('');
     setOrderStatus('');
     setPayment('');
     router.push('/admin/orders');
@@ -91,6 +104,23 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         }}
         className="mt-6 flex flex-col gap-3 border border-border bg-white p-4 md:flex-row md:items-end"
       >
+        <label className="flex-1 text-sm font-medium text-ink">
+          Cari pesanan
+          <span className="relative mt-1 block">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="ID, penerima, pembeli, atau fasilitas"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+            />
+          </span>
+        </label>
+
         <label className="text-sm font-medium text-ink md:w-52">
           Status pesanan
           <select
@@ -160,7 +190,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         ) : orders.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada pesanan"
-            description="Coba ubah filter status pesanan atau pembayaran."
+            description="Coba ubah kata kunci atau filter status pesanan dan pembayaran."
           />
         ) : (
           <div className="overflow-x-auto border border-border bg-white">
@@ -228,7 +258,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
             totalPages={meta.totalPages}
             total={meta.total}
             limit={meta.limit}
-            query={{ status, paymentStatus }}
+            query={{ q, status, paymentStatus }}
           />
         </div>
       ) : null}
