@@ -1,3 +1,4 @@
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -156,6 +157,18 @@ export async function POST(request: Request) {
           }
         });
       }
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.reviewCreate,
+          targetType: 'REVIEW',
+          targetId: created.id,
+          metadata: { targetType, targetId, rating },
+          request
+        },
+        tx
+      );
 
       return created;
     });

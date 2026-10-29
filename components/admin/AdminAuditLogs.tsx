@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminEmptyState, AdminErrorState } from '@/components/admin/AdminState';
 import {
-  AdminApiError,
   adminAuditTargetLabels,
-  fetchAdmin,
   type AdminAuditLog,
-  type AdminAuditTargetType,
-  type AdminPaginationMeta
+  type AdminAuditTargetType
 } from '@/lib/admin-api';
 import { formatAdminDateTime } from '@/lib/admin-format';
 
@@ -43,11 +41,6 @@ function targetHref(log: AdminAuditLog) {
 export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
   const router = useRouter();
   const { q, targetType, action, from, to, page } = filters;
-  const [logs, setLogs] = useState<AdminAuditLog[]>([]);
-  const [meta, setMeta] = useState<AdminPaginationMeta>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
   const [search, setSearch] = useState(q);
   const [target, setTarget] = useState(targetType);
   const [auditAction, setAuditAction] = useState(action);
@@ -62,43 +55,22 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
     setToDate(to);
   }, [q, targetType, action, from, to]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (q) params.set('q', q);
-    if (targetType) params.set('targetType', targetType);
-    if (action) params.set('action', action);
-    if (from) params.set('from', `${from}T00:00:00.000Z`);
-    if (to) params.set('to', `${to}T23:59:59.999Z`);
-    params.set('page', String(page));
+  if (q) params.set('q', q);
+  if (targetType) params.set('targetType', targetType);
+  if (action) params.set('action', action);
+  if (from) params.set('from', `${from}T00:00:00.000Z`);
+  if (to) params.set('to', `${to}T23:59:59.999Z`);
+  params.set('page', String(page));
 
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminAuditLog[]>(`/admin/audit-logs?${params.toString()}`, {
-      signal: controller.signal
-    })
-      .then((response) => {
-        setLogs(response.data);
-        setMeta(response.meta as AdminPaginationMeta | undefined);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/audit-logs';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat audit log.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [q, targetType, action, from, to, page, attempt]);
+  const {
+    data: logs = [],
+    meta,
+    loading,
+    error,
+    reload
+  } = useAdminQuery<AdminAuditLog[]>(`/admin/audit-logs?${params.toString()}`);
 
   const applyFilters = (next: {
     search?: string;
@@ -142,15 +114,6 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
         eyebrow="Keamanan"
         title="Audit log"
         description="Lacak tindakan admin yang memengaruhi pengguna, mitra, konten, dan pesanan."
-        action={
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Muat ulang
-          </button>
-        }
       />
 
       <form
@@ -172,7 +135,7 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Cari aksi atau aktor"
-              className="h-11 w-full rounded-md border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
             />
           </span>
         </label>
@@ -185,7 +148,7 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
               setTarget(event.target.value);
               applyFilters({ targetType: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Semua target</option>
             {(Object.keys(adminAuditTargetLabels) as AdminAuditTargetType[]).map((value) => (
@@ -203,7 +166,7 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
             value={auditAction}
             onChange={(event) => setAuditAction(event.target.value)}
             placeholder="USER_UPDATE"
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
           />
         </label>
 
@@ -213,7 +176,7 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
             type="date"
             value={fromDate}
             onChange={(event) => setFromDate(event.target.value)}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           />
         </label>
 
@@ -223,21 +186,21 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
             type="date"
             value={toDate}
             onChange={(event) => setToDate(event.target.value)}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           />
         </label>
 
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="inline-flex h-11 items-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Terapkan
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            className="inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
           >
             Reset
           </button>
@@ -252,7 +215,7 @@ export function AdminAuditLogs({ filters }: { filters: AdminAuditFilters }) {
         {loading ? (
           <AdminTableSkeleton rows={8} columns={6} />
         ) : error ? (
-          <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />
+          <AdminErrorState message={error} onRetry={reload} />
         ) : logs.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada audit log"

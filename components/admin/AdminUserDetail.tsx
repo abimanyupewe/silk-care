@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
+import { AdminConfirmDialog } from '@/components/admin/AdminModal';
+import { AdminUserActivity } from '@/components/admin/AdminUserActivity';
 import { AdminAccountStatusBadge } from '@/components/admin/AdminAccountStatusBadge';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
@@ -107,7 +109,7 @@ function AdminUserEditForm({
             maxLength={100}
             required
             minLength={2}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           />
         </label>
 
@@ -119,7 +121,7 @@ function AdminUserEditForm({
             onChange={(event) => setPhone(event.target.value)}
             maxLength={20}
             placeholder="Opsional"
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
           />
         </label>
 
@@ -128,7 +130,7 @@ function AdminUserEditForm({
           <select
             value={role}
             onChange={(event) => setRole(event.target.value as AdminUserRole)}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             {Object.entries(adminUserRoleLabels).map(([value, label]) => (
               <option key={value} value={value}>
@@ -156,7 +158,7 @@ function AdminUserEditForm({
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? 'Menyimpan...' : 'Simpan perubahan'}
         </button>
@@ -205,6 +207,7 @@ function AdminUserAccountActions({
       setError(cause instanceof Error ? cause.message : 'Gagal memperbarui status akun.');
     } finally {
       setPending(null);
+      setConfirming(false);
     }
   };
 
@@ -232,30 +235,7 @@ function AdminUserAccountActions({
       ) : null}
 
       {active ? (
-        confirming ? (
-          <div className="mt-4 border border-destructive bg-surface p-3">
-            <p className="text-sm text-ink">Yakin menonaktifkan akun ini?</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => updateAccount('delete')}
-                disabled={pending !== null}
-                aria-busy={pending === 'delete'}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-destructive px-4 text-sm font-semibold text-white hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pending === 'delete' ? 'Menonaktifkan...' : 'Ya, nonaktifkan'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirming(false)}
-                disabled={pending !== null}
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Batal
-              </button>
-            </div>
-          </div>
-        ) : (
+        <>
           <button
             type="button"
             onClick={() => {
@@ -263,18 +243,28 @@ function AdminUserAccountActions({
               setError('');
               setSuccess('');
             }}
-            className="mt-4 inline-flex min-h-11 items-center rounded-md border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface"
+            className="mt-4 inline-flex min-h-11 items-center border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface"
           >
             Nonaktifkan akun
           </button>
-        )
+          <AdminConfirmDialog
+            open={confirming}
+            title="Nonaktifkan akun ini?"
+            description={`${user.name} (${user.email}) tidak bisa masuk lagi dan sesi aktifnya dicabut. Data tetap tersimpan dan akun bisa dipulihkan.`}
+            confirmLabel="Ya, nonaktifkan"
+            pendingLabel="Menonaktifkan..."
+            pending={pending === 'delete'}
+            onConfirm={() => updateAccount('delete')}
+            onCancel={() => setConfirming(false)}
+          />
+        </>
       ) : (
         <button
           type="button"
           onClick={() => updateAccount('restore')}
           disabled={pending !== null}
           aria-busy={pending === 'restore'}
-          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending === 'restore' ? 'Memulihkan...' : 'Pulihkan akun'}
         </button>
@@ -401,7 +391,7 @@ export function AdminUserDetail({ id }: { id: string }) {
                 </div>
                 <Link
                   href={linkedProfile.href}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+                  className="inline-flex min-h-11 items-center gap-2 border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
                 >
                   Tinjau profil
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
@@ -436,6 +426,9 @@ export function AdminUserDetail({ id }: { id: string }) {
           <AdminUserEditForm user={user} onUpdated={setUser} />
           <AdminUserAccountActions user={user} onUpdated={setUser} />
         </div>
+      </div>
+      <div className="mt-6">
+        <AdminUserActivity userId={user.id} />
       </div>
     </div>
   );

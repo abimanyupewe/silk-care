@@ -107,7 +107,7 @@ function AdminOrderStatusPanel({
         maxLength={500}
         rows={3}
         placeholder="Opsional, misalnya nomor resi atau informasi pengiriman..."
-        className="mt-1 w-full rounded-md border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+        className="mt-1 w-full border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
       />
 
       {error ? (
@@ -134,8 +134,8 @@ function AdminOrderStatusPanel({
             aria-busy={pending === nextStatus}
             className={
               nextStatus === 'CANCELLED'
-                ? 'inline-flex min-h-11 items-center justify-center rounded-md border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50'
-                : 'inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50'
+                ? 'inline-flex min-h-11 items-center justify-center border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50'
+                : 'inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50'
             }
           >
             {pending === nextStatus ? 'Memproses...' : actionLabels[nextStatus]}
@@ -326,7 +326,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
             </p>
             <Link
               href={`/admin/facilities/${order.facility.id}`}
-              className="mt-3 inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+              className="mt-3 inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
             >
               Tinjau fasilitas
             </Link>

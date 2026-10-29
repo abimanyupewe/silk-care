@@ -5,17 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AdminArticleStatusBadge } from '@/components/admin/AdminArticleBadges';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminEmptyState, AdminErrorState } from '@/components/admin/AdminState';
 import {
-  AdminApiError,
   adminArticleStatusLabels,
-  fetchAdmin,
   type AdminArticle,
-  type AdminArticleStatus,
-  type AdminPaginationMeta
+  type AdminArticleStatus
 } from '@/lib/admin-api';
 import { formatAdminDate } from '@/lib/admin-format';
 
@@ -29,11 +27,6 @@ export type AdminArticleFilters = {
 export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
   const router = useRouter();
   const { q, status, deleted, page } = filters;
-  const [articles, setArticles] = useState<AdminArticle[]>([]);
-  const [meta, setMeta] = useState<AdminPaginationMeta>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
   const [search, setSearch] = useState(q);
   const [articleStatus, setArticleStatus] = useState(status);
   const [visibility, setVisibility] = useState(deleted);
@@ -44,42 +37,21 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
     setVisibility(deleted);
   }, [q, status, deleted]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (q) params.set('q', q);
-    if (status) params.set('status', status);
-    if (deleted === 'active') params.set('deleted', 'false');
-    if (deleted === 'deleted') params.set('deleted', 'true');
-    params.set('page', String(page));
+  if (q) params.set('q', q);
+  if (status) params.set('status', status);
+  if (deleted === 'active') params.set('deleted', 'false');
+  if (deleted === 'deleted') params.set('deleted', 'true');
+  params.set('page', String(page));
 
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminArticle[]>(`/admin/articles?${params.toString()}`, {
-      signal: controller.signal
-    })
-      .then((response) => {
-        setArticles(response.data);
-        setMeta(response.meta as AdminPaginationMeta | undefined);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/articles';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat data artikel.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [q, status, deleted, page, attempt]);
+  const {
+    data: articles = [],
+    meta,
+    loading,
+    error,
+    reload
+  } = useAdminQuery<AdminArticle[]>(`/admin/articles?${params.toString()}`);
 
   const applyFilters = (next: {
     search?: string;
@@ -123,13 +95,6 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
             >
               Buat artikel
             </Link>
-            <button
-              type="button"
-              onClick={() => setAttempt((value) => value + 1)}
-              className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-            >
-              Muat ulang
-            </button>
           </div>
         }
       />
@@ -153,7 +118,7 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Judul, slug, atau ringkasan"
-              className="h-11 w-full rounded-md border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
             />
           </span>
         </label>
@@ -166,7 +131,7 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
               setArticleStatus(event.target.value);
               applyFilters({ status: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Semua status</option>
             {(Object.keys(adminArticleStatusLabels) as AdminArticleStatus[]).map((value) => (
@@ -185,7 +150,7 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
               setVisibility(event.target.value);
               applyFilters({ deleted: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Aktif</option>
             <option value="deleted">Dihapus</option>
@@ -195,14 +160,14 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="inline-flex h-11 items-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Terapkan
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            className="inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
           >
             Reset
           </button>
@@ -219,7 +184,7 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
         {loading ? (
           <AdminTableSkeleton rows={7} columns={5} />
         ) : error ? (
-          <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />
+          <AdminErrorState message={error} onRetry={reload} />
         ) : articles.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada artikel"
@@ -263,7 +228,7 @@ export function AdminArticles({ filters }: { filters: AdminArticleFilters }) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/articles/${article.id}`}
-                        className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+                        className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
                       >
                         Tinjau
                       </Link>

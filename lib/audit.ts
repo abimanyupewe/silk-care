@@ -1,6 +1,7 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { getClientIp } from '@/lib/api';
+import { logError } from '@/lib/logger';
 
 export const auditActions = {
   userCreate: 'USER_CREATE',
@@ -19,7 +20,16 @@ export const auditActions = {
   orderStatusUpdate: 'ORDER_STATUS_UPDATE',
   reviewModerate: 'REVIEW_MODERATE',
   reviewDelete: 'REVIEW_DELETE',
-  notificationBroadcast: 'NOTIFICATION_BROADCAST'
+  notificationBroadcast: 'NOTIFICATION_BROADCAST',
+  // Aktivitas yang dilakukan pengguna sendiri.
+  userRegister: 'USER_REGISTER',
+  userLogin: 'USER_LOGIN',
+  userPasswordChange: 'USER_PASSWORD_CHANGE',
+  orderCreate: 'ORDER_CREATE',
+  orderCancel: 'ORDER_CANCEL',
+  consultationCreate: 'CONSULTATION_CREATE',
+  consultationCancel: 'CONSULTATION_CANCEL',
+  reviewCreate: 'REVIEW_CREATE'
 } as const;
 
 export const auditTargetTypes = [
@@ -29,7 +39,8 @@ export const auditTargetTypes = [
   'ARTICLE',
   'ORDER',
   'REVIEW',
-  'NOTIFICATION'
+  'NOTIFICATION',
+  'CONSULTATION'
 ] as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
@@ -59,4 +70,13 @@ export async function writeAuditLog(input: AuditLogInput, tx?: Prisma.Transactio
       userAgent
     }
   });
+}
+
+// Untuk aktivitas di luar transaksi: gagal mencatat tidak boleh menggagalkan aksi pengguna.
+export async function recordActivity(input: AuditLogInput) {
+  try {
+    await writeAuditLog(input);
+  } catch (error) {
+    logError('audit.activity_failed', error, { action: input.action, actorId: input.actorId });
+  }
 }

@@ -51,7 +51,7 @@ export function AdminOrderStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1.5 border px-2 py-1 text-xs font-medium',
         orderTone[status] ?? 'border-border bg-surface text-ink-muted',
         className
       )}
@@ -74,7 +74,7 @@ export function AdminPaymentStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1.5 border px-2 py-1 text-xs font-medium',
         paymentTone[status] ?? 'border-border bg-surface text-ink-muted',
         className
       )}

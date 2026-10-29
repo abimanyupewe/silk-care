@@ -4039,6 +4039,11 @@ paths:
           in: query
           schema:
             type: string
+        - name: userId
+          in: query
+          description: Aktivitas satu pengguna, baik yang ia lakukan sendiri maupun yang dilakukan admin terhadapnya.
+          schema:
+            type: string
         - name: action
           in: query
           schema:
@@ -4155,6 +4160,27 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/system:
+    get:
+      tags: [Admin]
+      summary: Status sistem admin
+      description: Latensi database dan status konfigurasi integrasi (hanya memeriksa env terisi).
+      responses:
+        '200':
+          description: Status sistem.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminSystemStatus'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -5220,6 +5246,33 @@ components:
         generatedAt:
           type: string
           format: date-time
+    AdminSystemStatus:
+      type: object
+      required: [checkedAt, database, integrations]
+      properties:
+        checkedAt:
+          type: string
+          format: date-time
+        database:
+          type: object
+          required: [latencyMs]
+          properties:
+            latencyMs:
+              type: integer
+        integrations:
+          type: object
+          required: [payment, upload, email, ai, cron]
+          properties:
+            payment:
+              type: boolean
+            upload:
+              type: boolean
+            email:
+              type: boolean
+            ai:
+              type: boolean
+            cron:
+              type: boolean
     AiStatus:
       type: object
       required: [available, provider]

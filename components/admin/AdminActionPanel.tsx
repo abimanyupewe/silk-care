@@ -97,7 +97,7 @@ export function AdminActionPanel({
         maxLength={noteMaxLength}
         rows={4}
         placeholder="Tambahkan catatan untuk mitra atau penulis..."
-        className="mt-1 w-full rounded-md border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+        className="mt-1 w-full border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
       />
       <p className="mt-1 text-xs text-ink-faint">
         {note.length}/{noteMaxLength} karakter. Catatan wajib saat menolak.
@@ -123,7 +123,7 @@ export function AdminActionPanel({
           onClick={() => submit('approve')}
           disabled={pending !== null || alreadyApproved}
           aria-busy={pending === 'approve'}
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending === 'approve'
             ? 'Menyimpan...'
@@ -136,7 +136,7 @@ export function AdminActionPanel({
           onClick={() => submit('reject')}
           disabled={pending !== null || alreadyRejected}
           aria-busy={pending === 'reject'}
-          className="inline-flex min-h-11 items-center justify-center rounded-md border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending === 'reject' ? 'Menyimpan...' : alreadyRejected ? 'Sudah ditolak' : rejectLabel}
         </button>

@@ -58,7 +58,7 @@ export function AdminPagination({
           aria-disabled={page <= 1}
           tabIndex={page <= 1 ? -1 : undefined}
           className={cn(
-            'inline-flex h-11 items-center gap-1 rounded-md border px-3 text-sm font-medium',
+            'inline-flex h-11 items-center gap-1 border px-3 text-sm font-medium',
             page <= 1
               ? 'pointer-events-none border-border text-ink-faint opacity-50'
               : 'border-border-strong text-ink hover:border-primary hover:bg-primary-tint'
@@ -75,7 +75,7 @@ export function AdminPagination({
           aria-disabled={page >= totalPages}
           tabIndex={page >= totalPages ? -1 : undefined}
           className={cn(
-            'inline-flex h-11 items-center gap-1 rounded-md border px-3 text-sm font-medium',
+            'inline-flex h-11 items-center gap-1 border px-3 text-sm font-medium',
             page >= totalPages
               ? 'pointer-events-none border-border text-ink-faint opacity-50'
               : 'border-border-strong text-ink hover:border-primary hover:bg-primary-tint'

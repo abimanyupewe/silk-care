@@ -64,7 +64,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="mt-2 h-12 w-full rounded-md border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+          className="mt-2 h-12 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary"
           placeholder="admin@silk.local"
         />
       </div>
@@ -80,7 +80,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-2 h-12 w-full rounded-md border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+          className="mt-2 h-12 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary"
           placeholder="Masukkan password"
         />
       </div>
@@ -95,7 +95,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-12 w-full items-center justify-center bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? 'Memeriksa...' : 'Masuk ke panel admin'}
       </button>

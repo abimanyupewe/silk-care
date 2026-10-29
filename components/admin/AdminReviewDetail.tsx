@@ -99,7 +99,7 @@ export function AdminReviewDetail({ id }: { id: string }) {
                 {review.rating} / 5
               </span>
               {review.isNegative ? (
-                <span className="rounded-md border border-destructive px-2 py-1 text-xs font-semibold text-destructive">
+                <span className="border border-destructive px-2 py-1 text-xs font-semibold text-destructive">
                   Ditandai negatif
                 </span>
               ) : null}

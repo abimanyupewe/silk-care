@@ -5,13 +5,17 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Activity,
   Building2,
+  ChevronRight,
   FileText,
   LayoutDashboard,
   LogOut,
   Megaphone,
   Menu,
   MessageSquareText,
+  PanelLeftClose,
+  PanelLeftOpen,
   ScrollText,
   ShoppingBag,
   Stethoscope,
@@ -29,20 +33,19 @@ type NavItem = {
   pending?: (moderation: AdminStats['moderation']) => number;
 };
 
-const navGroups: Array<{ label: string; items: NavItem[] }> = [
+const navGroups: Array<{ label?: string; items: NavItem[] }> = [
   {
-    label: 'Ringkasan',
     items: [{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard }]
   },
   {
-    label: 'Manajemen',
+    label: 'Operasional',
     items: [
       { href: '/admin/users', label: 'Pengguna', icon: Users },
       { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag }
     ]
   },
   {
-    label: 'Verifikasi',
+    label: 'Verifikasi & moderasi',
     items: [
       {
         href: '/admin/doctors',
@@ -55,12 +58,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
         label: 'Fasilitas',
         icon: Building2,
         pending: (moderation) => moderation.pendingFacilities
-      }
-    ]
-  },
-  {
-    label: 'Moderasi',
-    items: [
+      },
       {
         href: '/admin/reviews',
         label: 'Ulasan',
@@ -76,12 +74,12 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     ]
   },
   {
-    label: 'Komunikasi',
-    items: [{ href: '/admin/broadcast', label: 'Broadcast', icon: Megaphone }]
-  },
-  {
-    label: 'Keamanan',
-    items: [{ href: '/admin/audit-logs', label: 'Audit log', icon: ScrollText }]
+    label: 'Sistem',
+    items: [
+      { href: '/admin/broadcast', label: 'Broadcast', icon: Megaphone },
+      { href: '/admin/audit-logs', label: 'Audit log', icon: ScrollText },
+      { href: '/admin/system', label: 'Status sistem', icon: Activity }
+    ]
   }
 ];
 
@@ -92,6 +90,8 @@ type AdminShellProps = {
   };
   children: React.ReactNode;
 };
+
+const COLLAPSED_KEY = 'silk-admin-sidebar-collapsed';
 
 function isActivePath(pathname: string, href: string) {
   return href === '/admin'
@@ -110,15 +110,39 @@ export function AdminShell(props: AdminShellProps) {
 function AdminShellContent({ user, children }: AdminShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const { stats } = useAdminStats();
   // Angka antrean hanya pelengkap; sidebar tetap tampil tanpa angka.
   const moderation = stats?.moderation ?? null;
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const activeGroup = navGroups.find((group) =>
+    group.items.some((item) => isActivePath(pathname, item.href))
+  );
+  const activeItem = activeGroup?.items.find((item) => isActivePath(pathname, item.href));
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  // Dibaca setelah mount agar render server dan klien sama (tanpa hydration mismatch).
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(COLLAPSED_KEY) === '1');
+    } catch {
+      // Penyimpanan diblokir: sidebar tetap terbuka.
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0');
+    } catch {
+      // Hanya preferensi tampilan; aman diabaikan.
+    }
+  }
 
   useEffect(() => {
     if (!menuOpen) {
@@ -165,35 +189,74 @@ function AdminShellContent({ user, children }: AdminShellProps) {
         />
       ) : null}
 
+      {/* Outline primary tidak terlihat di atas primary-deep, jadi fokus di sidebar memakai putih. */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-white transition-[transform,visibility] md:sticky md:top-0 md:h-screen md:shrink-0 md:translate-x-0 md:visible',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-primary-deep text-white transition-[transform,visibility] md:sticky md:top-0 md:h-screen md:shrink-0 md:translate-x-0 md:visible [&_:focus-visible]:outline-white',
+          collapsed ? 'md:w-[72px]' : 'md:w-72',
           menuOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
         )}
       >
-        <div className="flex min-h-16 items-center justify-between border-b border-border px-4">
-          <div>
-            <p className="font-display text-lg font-bold text-ink">SILK Admin</p>
-            <p className="text-sm text-ink-faint">Panel operasional</p>
-          </div>
+        <div
+          className={cn(
+            'flex min-h-16 items-center justify-between border-b border-primary-hover px-4',
+            collapsed && 'md:justify-center md:px-0'
+          )}
+        >
+          <Link
+            href="/"
+            title="Ke halaman utama SILK"
+            className={cn('min-h-11 hover:text-white/90', collapsed && 'md:hidden')}
+          >
+            <span className="block font-display text-lg font-bold">SILK</span>
+            <span className="block text-sm text-white/75">Panel admin</span>
+          </Link>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
+            title={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
+            className="hidden h-11 w-11 items-center justify-center hover:bg-primary-hover md:inline-flex"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={() => setMenuOpen(false)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-border-strong md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center border border-white/40 hover:bg-primary-hover md:hidden"
             aria-label="Tutup menu"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3" aria-label="Navigasi admin">
+        <nav className="flex-1 overflow-y-auto py-3" aria-label="Navigasi admin">
           {navGroups.map((group) => (
-            <div key={group.label} className="mb-4 last:mb-0">
-              <p className="px-3 pb-1 text-sm font-semibold uppercase tracking-wide text-ink-faint">
-                {group.label}
-              </p>
-              <ul className="space-y-1">
+            <div
+              key={group.label ?? 'utama'}
+              className={cn(
+                'mb-4 last:mb-0',
+                collapsed &&
+                  'md:mb-2 md:border-t md:border-primary-hover md:pt-2 md:first:border-t-0 md:first:pt-0'
+              )}
+            >
+              {group.label ? (
+                <p
+                  className={cn(
+                    'px-4 pb-1 text-sm font-semibold text-white/75',
+                    collapsed && 'md:hidden'
+                  )}
+                >
+                  {group.label}
+                </p>
+              ) : null}
+              <ul>
                 {group.items.map((item) => {
                   const active = isActivePath(pathname, item.href);
                   const Icon = item.icon;
@@ -204,19 +267,26 @@ function AdminShellContent({ user, children }: AdminShellProps) {
                       <Link
                         href={item.href}
                         aria-current={active ? 'page' : undefined}
+                        title={collapsed ? item.label : undefined}
                         className={cn(
-                          'flex min-h-11 items-center gap-3 rounded-md border border-transparent px-3 text-sm font-medium',
+                          'relative flex min-h-11 items-center gap-3 border-l-4 pl-3 pr-4 text-sm',
+                          collapsed && 'md:justify-center md:pl-0 md:pr-0',
                           active
-                            ? 'border-primary bg-primary-tint text-primary-hover'
-                            : 'text-ink-muted hover:border-border hover:bg-surface hover:text-ink'
+                            ? 'border-amber bg-primary-tint font-semibold text-primary-hover'
+                            : 'border-transparent font-medium text-white hover:bg-primary-hover'
                         )}
                       >
                         <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                        <span className="flex-1">{item.label}</span>
+                        <span className={cn('flex-1', collapsed && 'md:sr-only')}>
+                          {item.label}
+                        </span>
                         {pending > 0 ? (
                           <span
                             aria-label={`${pending} menunggu`}
-                            className="inline-flex min-w-6 items-center justify-center rounded-md border border-amber bg-amber-tint px-1.5 text-sm font-semibold tabular-nums text-amber-ink"
+                            className={cn(
+                              'inline-flex min-w-6 items-center justify-center bg-amber px-1.5 text-sm font-semibold tabular-nums text-ink',
+                              collapsed && 'md:absolute md:right-0 md:top-0 md:min-w-5 md:px-1'
+                            )}
                           >
                             {pending > 99 ? '99+' : pending}
                           </span>
@@ -230,18 +300,22 @@ function AdminShellContent({ user, children }: AdminShellProps) {
           ))}
         </nav>
 
-        <div className="border-t border-border p-3">
-          <div className="rounded-md bg-surface px-3 py-2">
-            <p className="truncate text-sm font-semibold text-ink">{user.name || 'Admin SILK'}</p>
-            <p className="truncate text-sm text-ink-faint">{user.email}</p>
+        <div className="border-t border-primary-hover p-3">
+          <div className={cn('px-3 py-2', collapsed && 'md:hidden')}>
+            <p className="truncate text-sm font-semibold">{user.name || 'Admin SILK'}</p>
+            <p className="truncate text-sm text-white/75">{user.email}</p>
           </div>
           <button
             type="button"
             onClick={() => signOut({ redirectTo: '/' })}
-            className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-ink-muted hover:bg-surface hover:text-ink"
+            title={collapsed ? 'Keluar' : undefined}
+            className={cn(
+              'mt-1 flex min-h-11 w-full items-center gap-3 px-3 text-sm font-medium hover:bg-primary-hover',
+              collapsed && 'md:justify-center md:px-0'
+            )}
           >
             <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
-            Keluar
+            <span className={cn(collapsed && 'md:sr-only')}>Keluar</span>
           </button>
         </div>
       </aside>
@@ -252,18 +326,24 @@ function AdminShellContent({ user, children }: AdminShellProps) {
             ref={openButtonRef}
             type="button"
             onClick={() => setMenuOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-border-strong md:hidden"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border-strong md:hidden"
             aria-label="Buka menu"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
-          <div className="flex-1" />
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-medium text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Lihat situs
-          </Link>
+          <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+            {activeItem ? (
+              <ol className="flex items-center gap-2 text-sm">
+                {activeGroup?.label ? (
+                  <li className="hidden items-center gap-2 text-ink-faint sm:flex">
+                    {activeGroup.label}
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </li>
+                ) : null}
+                <li className="truncate font-semibold text-ink">{activeItem.label}</li>
+              </ol>
+            ) : null}
+          </nav>
         </header>
 
         <main id="admin-main" tabIndex={-1} className="px-4 py-6 outline-none md:px-8 md:py-8">

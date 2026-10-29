@@ -1,3 +1,4 @@
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
@@ -95,6 +96,18 @@ export async function POST(request: Request, context: RouteContext) {
           }
         }
       });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.consultationCancel,
+          targetType: 'CONSULTATION',
+          targetId: existing.id,
+          metadata: reason ? { reason } : undefined,
+          request
+        },
+        tx
+      );
 
       return updated;
     });

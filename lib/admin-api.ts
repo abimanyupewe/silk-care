@@ -121,6 +121,24 @@ export type AdminStats = {
     pendingArticles: number;
     totalPending: number;
   };
+  consultations: {
+    total: number;
+    REQUESTED: number;
+    CONFIRMED: number;
+    COMPLETED: number;
+    CANCELLED: number;
+  };
+  attention: {
+    refundNeeded: number;
+    stuckPaidOrders: number;
+    negativePendingReviews: number;
+    staleConsultations: number;
+  };
+  daily: Array<{
+    date: string;
+    orders: number;
+    revenue: number;
+  }>;
   recentOrders: Array<{
     id: string;
     status: AdminOrderStatus;
@@ -137,6 +155,20 @@ export type AdminStats = {
       name: string;
     };
   }>;
+};
+
+export type AdminSystemStatus = {
+  checkedAt: string;
+  database: {
+    latencyMs: number;
+  };
+  integrations: {
+    payment: boolean;
+    upload: boolean;
+    email: boolean;
+    ai: boolean;
+    cron: boolean;
+  };
 };
 
 export type AdminUserRole = 'PATIENT' | 'DOCTOR' | 'FACILITY' | 'PHARMACY' | 'ADMIN';
@@ -378,7 +410,8 @@ export type AdminAuditTargetType =
   | 'ARTICLE'
   | 'ORDER'
   | 'REVIEW'
-  | 'NOTIFICATION';
+  | 'NOTIFICATION'
+  | 'CONSULTATION';
 
 export type AdminAuditLog = {
   id: string;
@@ -404,7 +437,26 @@ export const adminAuditTargetLabels: Record<AdminAuditTargetType, string> = {
   ARTICLE: 'Artikel',
   ORDER: 'Pesanan',
   REVIEW: 'Ulasan',
-  NOTIFICATION: 'Notifikasi'
+  NOTIFICATION: 'Notifikasi',
+  CONSULTATION: 'Konsultasi'
+};
+
+export const adminAuditActionLabels: Record<string, string> = {
+  USER_REGISTER: 'Mendaftar akun',
+  USER_LOGIN: 'Masuk (login)',
+  USER_PASSWORD_CHANGE: 'Mengganti password',
+  USER_CREATE: 'Akun dibuat admin',
+  USER_UPDATE: 'Data akun diubah admin',
+  USER_DELETE: 'Akun dinonaktifkan admin',
+  USER_RESTORE: 'Akun dipulihkan admin',
+  ORDER_CREATE: 'Membuat pesanan',
+  ORDER_CANCEL: 'Membatalkan pesanan',
+  ORDER_STATUS_UPDATE: 'Status pesanan diubah',
+  CONSULTATION_CREATE: 'Mengajukan konsultasi',
+  CONSULTATION_CANCEL: 'Membatalkan konsultasi',
+  REVIEW_CREATE: 'Menulis ulasan',
+  REVIEW_MODERATE: 'Ulasan dimoderasi',
+  REVIEW_DELETE: 'Ulasan dihapus'
 };
 
 export type AdminArticleStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'REJECTED';

@@ -28,7 +28,7 @@ export function AdminArticleStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1.5 border px-2 py-1 text-xs font-medium',
         tone[status] ?? 'border-border bg-surface text-ink-muted',
         className
       )}
