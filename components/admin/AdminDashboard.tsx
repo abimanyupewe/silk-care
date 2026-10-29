@@ -288,7 +288,8 @@ export function AdminDashboard() {
         },
         {
           label: 'Konsultasi belum dikonfirmasi dokter lebih dari 24 jam',
-          count: stats.attention.staleConsultations
+          count: stats.attention.staleConsultations,
+          href: '/admin/consultations?stale=true'
         }
       ]
     : [];
@@ -361,6 +362,7 @@ export function AdminDashboard() {
               label="Konsultasi"
               value={stats.consultations.total.toLocaleString('id-ID')}
               detail={`${stats.consultations.REQUESTED.toLocaleString('id-ID')} menunggu konfirmasi, ${stats.consultations.CONFIRMED.toLocaleString('id-ID')} terkonfirmasi`}
+              href="/admin/consultations"
             />
           </section>
 

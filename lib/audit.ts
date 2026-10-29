@@ -83,3 +83,34 @@ export async function recordActivity(input: AuditLogInput) {
     logError('audit.activity_failed', error, { action: input.action, actorId: input.actorId });
   }
 }
+
+// Aktivitas pengguna (bukan tindakan admin) berisi IP dan jejak perilaku, jadi dihapus setelah
+// masa simpan. Tindakan admin tidak pernah dihapus otomatis.
+const activityAuditActions: AuditAction[] = [
+  auditActions.userRegister,
+  auditActions.userLogin,
+  auditActions.userPasswordChange,
+  auditActions.orderCreate,
+  auditActions.orderCancel,
+  auditActions.consultationCreate,
+  auditActions.consultationCancel,
+  auditActions.reviewCreate
+];
+
+function activityRetentionDays() {
+  const days = Number.parseInt(process.env.AUDIT_ACTIVITY_RETENTION_DAYS ?? '', 10);
+
+  return Number.isFinite(days) && days > 0 ? days : 90;
+}
+
+export async function cleanupActivityAuditLogs() {
+  const cutoff = new Date(Date.now() - activityRetentionDays() * 24 * 60 * 60 * 1000);
+  const result = await prisma.auditLog.deleteMany({
+    where: {
+      action: { in: activityAuditActions },
+      createdAt: { lt: cutoff }
+    }
+  });
+
+  return result.count;
+}

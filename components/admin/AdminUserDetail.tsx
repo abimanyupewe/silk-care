@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react
 import { AdminConfirmDialog } from '@/components/admin/AdminModal';
 import { AdminUserActivity } from '@/components/admin/AdminUserActivity';
 import { AdminAccountStatusBadge } from '@/components/admin/AdminAccountStatusBadge';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
@@ -274,39 +275,16 @@ function AdminUserAccountActions({
 }
 
 export function AdminUserDetail({ id }: { id: string }) {
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminUser>(`/admin/users/${id}`, { signal: controller.signal })
-      .then((response) => setUser(response.data))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/users';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat detail pengguna.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id, attempt]);
+  const {
+    data: user,
+    loading,
+    error,
+    reload,
+    update: setUser
+  } = useAdminQuery<AdminUser>(`/admin/users/${id}`, 30000);
 
   if (loading) return <AdminDetailSkeleton />;
-  if (error)
-    return <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />;
+  if (error) return <AdminErrorState message={error} onRetry={reload} />;
   if (!user) return null;
 
   const linkedProfile = user.doctorProfile

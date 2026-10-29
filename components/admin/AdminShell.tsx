@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
   Building2,
+  CalendarClock,
   ChevronRight,
   FileText,
   LayoutDashboard,
@@ -42,7 +43,8 @@ const navGroups: Array<{ label?: string; items: NavItem[] }> = [
     label: 'Operasional',
     items: [
       { href: '/admin/users', label: 'Pengguna', icon: Users },
-      { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag }
+      { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
+      { href: '/admin/consultations', label: 'Konsultasi', icon: CalendarClock }
     ]
   },
   {

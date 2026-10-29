@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
 import { AdminConfirmDialog } from '@/components/admin/AdminModal';
 import { AdminActionPanel } from '@/components/admin/AdminActionPanel';
 import { AdminArticleStatusBadge } from '@/components/admin/AdminArticleBadges';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { AdminApiError, fetchAdmin, type AdminArticle } from '@/lib/admin-api';
@@ -199,39 +200,16 @@ function AdminArticleRestorePanel({
 }
 
 export function AdminArticleDetail({ id }: { id: string }) {
-  const [article, setArticle] = useState<AdminArticle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminArticle>(`/admin/articles/${id}`, { signal: controller.signal })
-      .then((response) => setArticle(response.data))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/articles';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat detail artikel.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id, attempt]);
+  const {
+    data: article,
+    loading,
+    error,
+    reload,
+    update: setArticle
+  } = useAdminQuery<AdminArticle>(`/admin/articles/${id}`, 30000);
 
   if (loading) return <AdminDetailSkeleton />;
-  if (error)
-    return <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />;
+  if (error) return <AdminErrorState message={error} onRetry={reload} />;
   if (!article) return null;
 
   return (
@@ -341,7 +319,7 @@ export function AdminArticleDetail({ id }: { id: string }) {
               approveLabel="Setujui & terbitkan"
               rejectLabel="Tolak artikel"
               method="POST"
-              onUpdated={() => setAttempt((value) => value + 1)}
+              onUpdated={reload}
             />
           ) : (
             <AdminArticleStatusPanel article={article} onUpdated={setArticle} />

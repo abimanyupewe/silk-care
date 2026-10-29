@@ -11,12 +11,18 @@ export function useAdminQuery<T>(path: string | null, refreshInterval = 15000) {
   });
 
   const reload = useCallback(() => void mutate(), [mutate]);
+  // Tulis data hasil mutasi ke cache tanpa fetch ulang; polling berikutnya tetap menyegarkan.
+  const update = useCallback(
+    (next: T) => void mutate({ data: next }, { revalidate: false }),
+    [mutate]
+  );
 
   return {
     data: data?.data,
     meta: data?.meta as AdminPaginationMeta | undefined,
     loading: isLoading,
     error: !data && error instanceof Error ? error.message : '',
-    reload
+    reload,
+    update
   };
 }

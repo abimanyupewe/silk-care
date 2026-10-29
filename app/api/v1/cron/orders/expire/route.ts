@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { jsonError, jsonOk, handleRouteError } from '@/lib/api';
+import { cleanupActivityAuditLogs } from '@/lib/audit';
 import { cleanupExpiredIdempotencyKeys } from '@/lib/idempotency';
 import { expireDueOrders } from '@/lib/order-expiry';
 
@@ -31,11 +32,13 @@ export async function GET(request: Request) {
 
     const result = await expireDueOrders(200);
     const idempotencyKeysDeleted = await cleanupExpiredIdempotencyKeys();
+    const auditLogsDeleted = await cleanupActivityAuditLogs();
 
     return noStore(
       jsonOk({
         ...result,
-        idempotencyKeysDeleted
+        idempotencyKeysDeleted,
+        auditLogsDeleted
       })
     );
   } catch (error) {

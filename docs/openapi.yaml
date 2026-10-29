@@ -4192,6 +4192,47 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/admin/consultations:
+    get:
+      tags: [Admin]
+      summary: Daftar konsultasi untuk admin (metadata saja)
+      description: Tanpa keluhan, alasan batal, dan rekam medis; data kesehatan hanya untuk pasien dan dokter terkait.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [REQUESTED, CONFIRMED, COMPLETED, CANCELLED]
+        - name: stale
+          in: query
+          description: true = permintaan belum dikonfirmasi lebih dari 24 jam (menimpa status).
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Cari nama/email pasien, nama dokter, atau spesialisasi.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Daftar konsultasi.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminConsultation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/admin/email-templates:
     get:
       tags: [Admin]
@@ -4374,7 +4415,7 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [checked, expired, idempotencyKeysDeleted]
+                    required: [checked, expired, idempotencyKeysDeleted, auditLogsDeleted]
                     properties:
                       checked:
                         type: integer
@@ -4382,6 +4423,9 @@ paths:
                         type: integer
                       idempotencyKeysDeleted:
                         type: integer
+                      auditLogsDeleted:
+                        type: integer
+                        description: Log aktivitas pengguna yang melewati masa simpan.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -5385,6 +5429,56 @@ components:
               type: boolean
             cron:
               type: boolean
+    AdminConsultation:
+      type: object
+      required:
+        [id, status, type, scheduledAt, endsAt, durationMinutes, createdAt, patient, doctorProfile]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [REQUESTED, CONFIRMED, COMPLETED, CANCELLED]
+        type:
+          type: string
+          enum: [ONLINE, IN_PERSON]
+        scheduledAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        fee:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        patient:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        doctorProfile:
+          type: object
+          properties:
+            id:
+              type: string
+            slug:
+              type: string
+            specialty:
+              type: string
+            user:
+              type: object
+              properties:
+                name:
+                  type: string
     AdminEmailTemplateVersion:
       type: object
       required: [subject, body, customized]

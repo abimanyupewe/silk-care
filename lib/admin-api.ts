@@ -176,6 +176,33 @@ export type AdminStats = {
   }>;
 };
 
+export type AdminConsultationStatus = 'REQUESTED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+
+export const adminConsultationStatusLabels: Record<AdminConsultationStatus, string> = {
+  REQUESTED: 'Menunggu konfirmasi',
+  CONFIRMED: 'Dikonfirmasi',
+  COMPLETED: 'Selesai',
+  CANCELLED: 'Dibatalkan'
+};
+
+export type AdminConsultation = {
+  id: string;
+  status: AdminConsultationStatus;
+  type: 'ONLINE' | 'IN_PERSON';
+  scheduledAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  fee: number | null;
+  createdAt: string;
+  patient: { id: string; name: string; email: string };
+  doctorProfile: {
+    id: string;
+    slug: string;
+    specialty: string;
+    user: { name: string };
+  };
+};
+
 export type AdminEmailTemplateVersion = {
   subject: string;
   body: string;
