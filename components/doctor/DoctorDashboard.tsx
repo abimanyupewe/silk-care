@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { VerificationBanner } from '@/components/panel/VerificationBanner';
 import { useApiQuery } from '@/lib/api-swr';
+import { formatAdminDateTime } from '@/lib/admin-format';
 
 type DoctorProfile = {
   specialty: string;
@@ -18,11 +20,28 @@ type DoctorProfile = {
   schedules: Array<{ id: string }>;
 };
 
+type UpcomingConsultation = {
+  id: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  type: 'ONLINE' | 'IN_PERSON';
+  patient: { name: string };
+};
+
 export function DoctorDashboard() {
   const profile = useApiQuery<DoctorProfile>('/doctor/profile', 60000);
   const requested = useApiQuery<unknown[]>('/doctor/consultations?status=REQUESTED&limit=1', 30000);
-  const confirmed = useApiQuery<unknown[]>('/doctor/consultations?status=CONFIRMED&limit=1', 30000);
+  // shortcut: API tanpa filter tanggal dan urut terbaru dulu; ambil 50 lalu saring di klien, upgrade bila dokter punya >50 konsultasi terkonfirmasi.
+  const confirmed = useApiQuery<UpcomingConsultation[]>(
+    '/doctor/consultations?status=CONFIRMED&limit=50',
+    30000
+  );
   const doctor = profile.data;
+  const now = Date.now();
+  const upcoming = (confirmed.data ?? [])
+    .filter((item) => new Date(item.scheduledAt).getTime() >= now)
+    .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))
+    .slice(0, 5);
 
   if (profile.loading && !doctor) return <AdminDetailSkeleton />;
   if (profile.error) return <AdminErrorState message={profile.error} onRetry={profile.reload} />;
@@ -51,18 +70,46 @@ export function DoctorDashboard() {
       </div>
 
       <section className="mt-6 grid grid-cols-2 gap-3" aria-label="Konsultasi">
-        <div className="border border-border bg-white p-4">
+        <Link
+          href="/dashboard/dokter/konsultasi"
+          className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
+        >
           <p className="text-sm font-medium text-ink-muted">Menunggu konfirmasi Anda</p>
           <p className="mt-2 text-2xl font-bold text-ink">
             {(requested.meta?.total ?? 0).toLocaleString('id-ID')}
           </p>
-        </div>
-        <div className="border border-border bg-white p-4">
+        </Link>
+        <Link
+          href="/dashboard/dokter/konsultasi"
+          className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
+        >
           <p className="text-sm font-medium text-ink-muted">Terkonfirmasi</p>
           <p className="mt-2 text-2xl font-bold text-ink">
             {(confirmed.meta?.total ?? 0).toLocaleString('id-ID')}
           </p>
-        </div>
+        </Link>
+      </section>
+
+      <section className="mt-6 border border-border bg-white p-4" aria-label="Jadwal mendatang">
+        <h2 className="text-lg font-bold text-ink">Jadwal mendatang</h2>
+        {upcoming.length === 0 ? (
+          <p className="mt-1 text-sm text-ink-muted">Belum ada konsultasi terkonfirmasi.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-border border-y border-border">
+            {upcoming.map((item) => (
+              <li
+                key={item.id}
+                className="flex min-h-11 flex-wrap items-center gap-x-3 py-2 text-sm"
+              >
+                <span className="font-semibold text-ink">{item.patient.name}</span>
+                <span className="flex-1 text-ink-muted">
+                  {formatAdminDateTime(item.scheduledAt)} · {item.durationMinutes} menit ·{' '}
+                  {item.type === 'ONLINE' ? 'Online' : 'Tatap muka'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="mt-6 border border-border bg-white p-4" aria-label="Kelengkapan profil">

@@ -1,11 +1,26 @@
 'use client';
 
-import { LayoutDashboard } from 'lucide-react';
+import {
+  Bell,
+  CalendarClock,
+  FileText,
+  LayoutDashboard,
+  Stethoscope,
+  UserRound
+} from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
+import { useApiQuery } from '@/lib/api-swr';
 
 const navGroups: NavGroup[] = [
   {
-    items: [{ href: '/dashboard/dokter', label: 'Ringkasan', icon: LayoutDashboard }]
+    items: [
+      { href: '/dashboard/dokter', label: 'Ringkasan', icon: LayoutDashboard },
+      { href: '/dashboard/dokter/konsultasi', label: 'Konsultasi', icon: Stethoscope },
+      { href: '/dashboard/dokter/artikel', label: 'Artikel', icon: FileText },
+      { href: '/dashboard/dokter/notifikasi', label: 'Notifikasi', icon: Bell },
+      { href: '/dashboard/dokter/profil', label: 'Profil', icon: UserRound },
+      { href: '/dashboard/dokter/jadwal', label: 'Jadwal praktik', icon: CalendarClock }
+    ]
   }
 ];
 
@@ -16,8 +31,18 @@ export function DoctorShell({
   user: { name?: string | null; email?: string | null };
   children: React.ReactNode;
 }) {
+  // URL sama dengan kartu di Ringkasan, jadi SWR memakai satu cache dan satu polling.
+  const requested = useApiQuery<unknown[]>('/doctor/consultations?status=REQUESTED&limit=1', 30000);
+
+  const notifications = useApiQuery<unknown[]>('/notifications?limit=1', 30000);
+  const unread = (notifications.meta as { unreadCount?: number } | undefined)?.unreadCount ?? 0;
+
   return (
     <PanelShell
+      badges={{
+        '/dashboard/dokter/konsultasi': requested.meta?.total ?? 0,
+        '/dashboard/dokter/notifikasi': unread
+      }}
       navGroups={navGroups}
       brand={{ name: 'SILK', subtitle: 'Panel dokter' }}
       rootHref="/dashboard/dokter"
