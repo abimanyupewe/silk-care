@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Package, ShoppingBag } from 'lucide-react';
+import { Building2, LayoutDashboard, Package, ShoppingBag } from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
 
 const navGroups: NavGroup[] = [
@@ -8,7 +8,8 @@ const navGroups: NavGroup[] = [
     items: [
       { href: '/dashboard/fasilitas', label: 'Ringkasan', icon: LayoutDashboard },
       { href: '/dashboard/fasilitas/pesanan', label: 'Pesanan', icon: ShoppingBag },
-      { href: '/dashboard/fasilitas/produk', label: 'Produk', icon: Package }
+      { href: '/dashboard/fasilitas/produk', label: 'Produk', icon: Package },
+      { href: '/dashboard/fasilitas/profil', label: 'Profil', icon: Building2 }
     ]
   }
 ];
