@@ -3,6 +3,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { auditActions, recordActivity } from '@/lib/audit';
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -19,7 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials, request) => {
         const parsed = credentialsSchema.safeParse(credentials);
 
         if (!parsed.success) {
@@ -39,6 +40,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!isValid) {
           return null;
         }
+
+        await recordActivity({
+          actorId: user.id,
+          action: auditActions.userLogin,
+          targetType: 'USER',
+          targetId: user.id,
+          request
+        });
 
         return {
           id: user.id,

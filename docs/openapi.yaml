@@ -3533,6 +3533,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Limit'
+        - name: q
+          in: query
+          description: Cari ID pesanan, nama/telepon penerima, nama/email pembeli, atau nama fasilitas.
+          schema:
+            type: string
         - name: status
           in: query
           schema:
@@ -4039,6 +4044,11 @@ paths:
           in: query
           schema:
             type: string
+        - name: userId
+          in: query
+          description: Aktivitas satu pengguna, baik yang ia lakukan sendiri maupun yang dilakukan admin terhadapnya.
+          schema:
+            type: string
         - name: action
           in: query
           schema:
@@ -4161,6 +4171,175 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/admin/system:
+    get:
+      tags: [Admin]
+      summary: Status sistem admin
+      description: Latensi database dan status konfigurasi integrasi (hanya memeriksa env terisi).
+      responses:
+        '200':
+          description: Status sistem.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminSystemStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/consultations:
+    get:
+      tags: [Admin]
+      summary: Daftar konsultasi untuk admin (metadata saja)
+      description: Tanpa keluhan, alasan batal, dan rekam medis; data kesehatan hanya untuk pasien dan dokter terkait.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [REQUESTED, CONFIRMED, COMPLETED, CANCELLED]
+        - name: stale
+          in: query
+          description: true = permintaan belum dikonfirmasi lebih dari 24 jam (menimpa status).
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Cari nama/email pasien, nama dokter, atau spesialisasi.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Daftar konsultasi.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminConsultation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/email-templates:
+    get:
+      tags: [Admin]
+      summary: Daftar template email beserta isi efektif per audiens
+      description: Isi efektif = override admin bila ada, selain itu teks default.
+      responses:
+        '200':
+          description: Daftar template.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminEmailTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/email-templates/{key}/{audience}:
+    put:
+      tags: [Admin]
+      summary: Simpan override template email
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: audience
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PATIENT, DOCTOR, FACILITY]
+      description: Menolak placeholder yang tidak dikenal atau placeholder wajib yang hilang.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body]
+              properties:
+                subject:
+                  type: string
+                  maxLength: 200
+                body:
+                  type: string
+                  maxLength: 5000
+      responses:
+        '200':
+          description: Template disimpan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminEmailTemplateVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Admin]
+      summary: Kembalikan template email ke default
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: audience
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PATIENT, DOCTOR, FACILITY]
+      responses:
+        '200':
+          description: Override dihapus; mengembalikan teks default.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminEmailTemplateVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/payments/midtrans/webhook:
     post:
       tags: [Payments]
@@ -4236,7 +4415,7 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [checked, expired, idempotencyKeysDeleted]
+                    required: [checked, expired, idempotencyKeysDeleted, auditLogsDeleted]
                     properties:
                       checked:
                         type: integer
@@ -4244,6 +4423,9 @@ paths:
                         type: integer
                       idempotencyKeysDeleted:
                         type: integer
+                      auditLogsDeleted:
+                        type: integer
+                        description: Log aktivitas pengguna yang melewati masa simpan.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -5220,6 +5402,141 @@ components:
         generatedAt:
           type: string
           format: date-time
+    AdminSystemStatus:
+      type: object
+      required: [checkedAt, database, integrations]
+      properties:
+        checkedAt:
+          type: string
+          format: date-time
+        database:
+          type: object
+          required: [latencyMs]
+          properties:
+            latencyMs:
+              type: integer
+        integrations:
+          type: object
+          required: [payment, upload, email, ai, cron]
+          properties:
+            payment:
+              type: boolean
+            upload:
+              type: boolean
+            email:
+              type: boolean
+            ai:
+              type: boolean
+            cron:
+              type: boolean
+    AdminConsultation:
+      type: object
+      required:
+        [id, status, type, scheduledAt, endsAt, durationMinutes, createdAt, patient, doctorProfile]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [REQUESTED, CONFIRMED, COMPLETED, CANCELLED]
+        type:
+          type: string
+          enum: [ONLINE, IN_PERSON]
+        scheduledAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        fee:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        patient:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        doctorProfile:
+          type: object
+          properties:
+            id:
+              type: string
+            slug:
+              type: string
+            specialty:
+              type: string
+            user:
+              type: object
+              properties:
+                name:
+                  type: string
+    AdminEmailTemplateVersion:
+      type: object
+      required: [subject, body, customized]
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        customized:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    AdminEmailTemplate:
+      type: object
+      required: [key, label, group, variables, required, subject, body, audiences]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        group:
+          type: string
+        variables:
+          type: array
+          items:
+            type: object
+            required: [name, label, sample]
+            properties:
+              name:
+                type: string
+              label:
+                type: string
+              sample:
+                type: string
+        required:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+          description: Subjek default.
+        body:
+          type: string
+          description: Isi default.
+        audiences:
+          type: object
+          required: [PATIENT, DOCTOR, FACILITY]
+          properties:
+            PATIENT:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
+            DOCTOR:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
+            FACILITY:
+              $ref: '#/components/schemas/AdminEmailTemplateVersion'
     AiStatus:
       type: object
       required: [available, provider]

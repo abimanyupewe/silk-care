@@ -5,18 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AdminAccountStatusBadge } from '@/components/admin/AdminAccountStatusBadge';
+import { useAdminQuery } from '@/lib/admin-swr';
+import { AdminUserCreateModal } from '@/components/admin/AdminUserCreateModal';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminEmptyState, AdminErrorState } from '@/components/admin/AdminState';
-import {
-  AdminApiError,
-  adminUserRoleLabels,
-  fetchAdmin,
-  type AdminPaginationMeta,
-  type AdminUser,
-  type AdminUserRole
-} from '@/lib/admin-api';
+import { adminUserRoleLabels, type AdminUser, type AdminUserRole } from '@/lib/admin-api';
 import { formatAdminDate } from '@/lib/admin-format';
 
 export type AdminUserFilters = {
@@ -35,11 +30,7 @@ const statusOptions = [
 export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
   const router = useRouter();
   const { q, role, status, page } = filters;
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [meta, setMeta] = useState<AdminPaginationMeta>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(q);
   const [userRole, setUserRole] = useState(role);
   const [accountStatus, setAccountStatus] = useState(status);
@@ -50,42 +41,21 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
     setAccountStatus(status);
   }, [q, role, status]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (q) params.set('q', q);
-    if (role) params.set('role', role);
-    if (status === 'active') params.set('deleted', 'false');
-    if (status === 'deleted') params.set('deleted', 'true');
-    params.set('page', String(page));
+  if (q) params.set('q', q);
+  if (role) params.set('role', role);
+  if (status === 'active') params.set('deleted', 'false');
+  if (status === 'deleted') params.set('deleted', 'true');
+  params.set('page', String(page));
 
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminUser[]>(`/admin/users?${params.toString()}`, {
-      signal: controller.signal
-    })
-      .then((response) => {
-        setUsers(response.data);
-        setMeta(response.meta as AdminPaginationMeta | undefined);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/users';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat data pengguna.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [q, role, status, page, attempt]);
+  const {
+    data: users = [],
+    meta,
+    loading,
+    error,
+    reload
+  } = useAdminQuery<AdminUser[]>(`/admin/users?${params.toString()}`);
 
   const applyFilters = (next: {
     search?: string;
@@ -125,17 +95,11 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setAttempt((value) => value + 1)}
-              className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-            >
-              Muat ulang
-            </button>
-            <Link
-              href="/admin/users/new"
+              onClick={() => setCreateOpen(true)}
               className="btn btn-primary min-h-11 border border-primary"
             >
               Buat pengguna
-            </Link>
+            </button>
           </div>
         }
       />
@@ -159,7 +123,7 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Nama, email, atau telepon"
-              className="h-11 w-full rounded-md border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
             />
           </span>
         </label>
@@ -172,7 +136,7 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
               setUserRole(event.target.value);
               applyFilters({ role: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Semua peran</option>
             {Object.entries(adminUserRoleLabels).map(([value, label]) => (
@@ -191,7 +155,7 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
               setAccountStatus(event.target.value);
               applyFilters({ status: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -204,14 +168,14 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="inline-flex h-11 items-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Terapkan
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            className="inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
           >
             Reset
           </button>
@@ -228,7 +192,7 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
         {loading ? (
           <AdminTableSkeleton rows={7} columns={6} />
         ) : error ? (
-          <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />
+          <AdminErrorState message={error} onRetry={reload} />
         ) : users.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada pengguna"
@@ -265,7 +229,7 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/users/${user.id}`}
-                        className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+                        className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
                       >
                         Kelola
                       </Link>
@@ -290,6 +254,14 @@ export function AdminUsers({ filters }: { filters: AdminUserFilters }) {
           />
         </div>
       ) : null}
+      <AdminUserCreateModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => {
+          setCreateOpen(false);
+          reload();
+        }}
+      />
     </div>
   );
 }

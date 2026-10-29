@@ -1,3 +1,4 @@
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import type { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -249,6 +250,17 @@ export async function POST(request: Request) {
           }
         }
       });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.orderCreate,
+          targetType: 'ORDER',
+          targetId: created.id,
+          request
+        },
+        tx
+      );
 
       await tx.cartItem.deleteMany({
         where: {

@@ -1,3 +1,4 @@
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
@@ -10,7 +11,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const auth = await requireUser();
 
@@ -100,6 +101,18 @@ export async function POST(_request: Request, context: RouteContext) {
           }
         }
       });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.orderCancel,
+          targetType: 'ORDER',
+          targetId: order.id,
+          metadata: { by: auth.user.role === 'ADMIN' ? 'admin' : 'pengguna' },
+          request
+        },
+        tx
+      );
 
       return tx.order.findUniqueOrThrow({
         where: {

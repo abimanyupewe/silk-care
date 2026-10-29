@@ -1,3 +1,4 @@
+import { auditActions, recordActivity } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -41,6 +42,14 @@ export async function POST(request: Request) {
         role: true,
         createdAt: true
       }
+    });
+
+    await recordActivity({
+      actorId: user.id,
+      action: auditActions.userRegister,
+      targetType: 'USER',
+      targetId: user.id,
+      request
     });
 
     try {

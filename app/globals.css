@@ -68,7 +68,7 @@
   --color-accent-foreground: var(--ink);
   --color-destructive: var(--danger);
   --color-destructive-foreground: var(--bg);
-  --color-border: var(--border);
+  --color-border: var(--line);
   --color-input: var(--border-strong);
   --color-ring: var(--primary);
   --radius-none: 0px;
@@ -105,7 +105,7 @@
     --ink: #111114;
     --ink-muted: #4b4b55;
     --ink-faint: #6b6b75;
-    --border: #d8dedd;
+    --line: #d8dedd;
     --border-strong: #c3cfcc;
     --danger: #b91c1c;
     --warning: #8a4600;

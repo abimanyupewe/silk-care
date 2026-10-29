@@ -11,7 +11,7 @@ export function AdminErrorState({ message, onRetry }: { message: string; onRetry
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+          className="mt-3 inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
         >
           Coba lagi
         </button>

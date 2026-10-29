@@ -1,6 +1,7 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { getClientIp } from '@/lib/api';
+import { logError } from '@/lib/logger';
 
 export const auditActions = {
   userCreate: 'USER_CREATE',
@@ -19,7 +20,18 @@ export const auditActions = {
   orderStatusUpdate: 'ORDER_STATUS_UPDATE',
   reviewModerate: 'REVIEW_MODERATE',
   reviewDelete: 'REVIEW_DELETE',
-  notificationBroadcast: 'NOTIFICATION_BROADCAST'
+  notificationBroadcast: 'NOTIFICATION_BROADCAST',
+  emailTemplateUpdate: 'EMAIL_TEMPLATE_UPDATE',
+  emailTemplateReset: 'EMAIL_TEMPLATE_RESET',
+  // Aktivitas yang dilakukan pengguna sendiri.
+  userRegister: 'USER_REGISTER',
+  userLogin: 'USER_LOGIN',
+  userPasswordChange: 'USER_PASSWORD_CHANGE',
+  orderCreate: 'ORDER_CREATE',
+  orderCancel: 'ORDER_CANCEL',
+  consultationCreate: 'CONSULTATION_CREATE',
+  consultationCancel: 'CONSULTATION_CANCEL',
+  reviewCreate: 'REVIEW_CREATE'
 } as const;
 
 export const auditTargetTypes = [
@@ -29,7 +41,9 @@ export const auditTargetTypes = [
   'ARTICLE',
   'ORDER',
   'REVIEW',
-  'NOTIFICATION'
+  'NOTIFICATION',
+  'CONSULTATION',
+  'EMAIL_TEMPLATE'
 ] as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
@@ -59,4 +73,44 @@ export async function writeAuditLog(input: AuditLogInput, tx?: Prisma.Transactio
       userAgent
     }
   });
+}
+
+// Untuk aktivitas di luar transaksi: gagal mencatat tidak boleh menggagalkan aksi pengguna.
+export async function recordActivity(input: AuditLogInput) {
+  try {
+    await writeAuditLog(input);
+  } catch (error) {
+    logError('audit.activity_failed', error, { action: input.action, actorId: input.actorId });
+  }
+}
+
+// Aktivitas pengguna (bukan tindakan admin) berisi IP dan jejak perilaku, jadi dihapus setelah
+// masa simpan. Tindakan admin tidak pernah dihapus otomatis.
+const activityAuditActions: AuditAction[] = [
+  auditActions.userRegister,
+  auditActions.userLogin,
+  auditActions.userPasswordChange,
+  auditActions.orderCreate,
+  auditActions.orderCancel,
+  auditActions.consultationCreate,
+  auditActions.consultationCancel,
+  auditActions.reviewCreate
+];
+
+function activityRetentionDays() {
+  const days = Number.parseInt(process.env.AUDIT_ACTIVITY_RETENTION_DAYS ?? '', 10);
+
+  return Number.isFinite(days) && days > 0 ? days : 90;
+}
+
+export async function cleanupActivityAuditLogs() {
+  const cutoff = new Date(Date.now() - activityRetentionDays() * 24 * 60 * 60 * 1000);
+  const result = await prisma.auditLog.deleteMany({
+    where: {
+      action: { in: activityAuditActions },
+      createdAt: { lt: cutoff }
+    }
+  });
+
+  return result.count;
 }

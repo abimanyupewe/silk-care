@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { AdminActionPanel } from '@/components/admin/AdminActionPanel';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
 import {
-  AdminApiError,
   adminFacilityTypeLabels,
   fetchAdmin,
   type AdminFacilityDetail as AdminFacilityDetailData
@@ -211,41 +211,16 @@ function FacilityEditPanel({
 }
 
 export function AdminFacilityDetail({ id }: { id: string }) {
-  const [facility, setFacility] = useState<AdminFacilityDetailData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminFacilityDetailData>(`/admin/facilities/${id}`, {
-      signal: controller.signal
-    })
-      .then((response) => setFacility(response.data))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/facilities';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat detail fasilitas.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id, attempt]);
+  const {
+    data: facility,
+    loading,
+    error,
+    reload,
+    update: setFacility
+  } = useAdminQuery<AdminFacilityDetailData>(`/admin/facilities/${id}`, 30000);
 
   if (loading) return <AdminDetailSkeleton />;
-  if (error)
-    return <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />;
+  if (error) return <AdminErrorState message={error} onRetry={reload} />;
   if (!facility) return null;
 
   return (
@@ -391,7 +366,7 @@ export function AdminFacilityDetail({ id }: { id: string }) {
             noteMaxLength={500}
             approveLabel="Setujui fasilitas"
             rejectLabel="Tolak fasilitas"
-            onUpdated={() => setAttempt((value) => value + 1)}
+            onUpdated={reload}
           />
         </div>
       </div>

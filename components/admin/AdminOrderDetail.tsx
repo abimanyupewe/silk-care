@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import {
   AdminOrderStatusBadge,
   AdminPaymentStatusBadge
 } from '@/components/admin/AdminOrderBadges';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import {
@@ -107,7 +108,7 @@ function AdminOrderStatusPanel({
         maxLength={500}
         rows={3}
         placeholder="Opsional, misalnya nomor resi atau informasi pengiriman..."
-        className="mt-1 w-full rounded-md border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+        className="mt-1 w-full border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
       />
 
       {error ? (
@@ -134,8 +135,8 @@ function AdminOrderStatusPanel({
             aria-busy={pending === nextStatus}
             className={
               nextStatus === 'CANCELLED'
-                ? 'inline-flex min-h-11 items-center justify-center rounded-md border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50'
-                : 'inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50'
+                ? 'inline-flex min-h-11 items-center justify-center border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50'
+                : 'inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50'
             }
           >
             {pending === nextStatus ? 'Memproses...' : actionLabels[nextStatus]}
@@ -147,39 +148,16 @@ function AdminOrderStatusPanel({
 }
 
 export function AdminOrderDetail({ id }: { id: string }) {
-  const [order, setOrder] = useState<AdminOrderDetailData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminOrderDetailData>(`/admin/orders/${id}`, { signal: controller.signal })
-      .then((response) => setOrder(response.data))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/orders';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat detail pesanan.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id, attempt]);
+  const {
+    data: order,
+    loading,
+    error,
+    reload,
+    update: setOrder
+  } = useAdminQuery<AdminOrderDetailData>(`/admin/orders/${id}`, 30000);
 
   if (loading) return <AdminDetailSkeleton />;
-  if (error)
-    return <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />;
+  if (error) return <AdminErrorState message={error} onRetry={reload} />;
   if (!order) return null;
 
   return (
@@ -326,7 +304,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
             </p>
             <Link
               href={`/admin/facilities/${order.facility.id}`}
-              className="mt-3 inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+              className="mt-3 inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
             >
               Tinjau fasilitas
             </Link>

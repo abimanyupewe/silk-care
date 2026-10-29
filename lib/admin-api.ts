@@ -1,68 +1,18 @@
-export type AdminPaginationMeta = {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-};
+import {
+  ApiError,
+  fetchApi,
+  type ApiEnvelope,
+  type ApiErrorBody,
+  type PaginationMeta
+} from '@/lib/api-client';
 
-export type AdminApiEnvelope<T> = {
-  data: T;
-  meta?: AdminPaginationMeta | Record<string, unknown>;
-};
-
-export type AdminApiErrorBody = {
-  error?: string;
-  code?: string;
-  details?: unknown;
-};
-
-export class AdminApiError extends Error {
-  status: number;
-  code?: string;
-  details?: unknown;
-
-  constructor(message: string, status: number, code?: string, details?: unknown) {
-    super(message);
-    this.name = 'AdminApiError';
-    this.status = status;
-    this.code = code;
-    this.details = details;
-  }
-}
-
-export async function fetchAdmin<T>(path: string, init: RequestInit = {}) {
-  const headers = new Headers(init.headers);
-
-  if (init.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const response = await fetch(path.startsWith('/api/') ? path : `/api/v1${path}`, {
-    ...init,
-    headers,
-    credentials: 'same-origin',
-    cache: 'no-store'
-  });
-
-  const body = (await response.json().catch(() => null)) as
-    | (AdminApiEnvelope<T> & AdminApiErrorBody)
-    | null;
-
-  if (!response.ok) {
-    throw new AdminApiError(
-      body?.error ?? 'Permintaan admin gagal diproses.',
-      response.status,
-      body?.code,
-      body?.details
-    );
-  }
-
-  if (!body || typeof body !== 'object' || !('data' in body)) {
-    throw new AdminApiError('Respons admin tidak valid.', response.status);
-  }
-
-  return body as AdminApiEnvelope<T>;
-}
+// Nama lama dipertahankan agar kode admin tidak perlu berubah; inti ada di lib/api-client.ts.
+export type AdminPaginationMeta = PaginationMeta;
+export type AdminApiEnvelope<T> = ApiEnvelope<T>;
+export type AdminApiErrorBody = ApiErrorBody;
+export const AdminApiError = ApiError;
+export type AdminApiError = ApiError;
+export const fetchAdmin = fetchApi;
 
 export type AdminStats = {
   generatedAt: string;
@@ -121,6 +71,24 @@ export type AdminStats = {
     pendingArticles: number;
     totalPending: number;
   };
+  consultations: {
+    total: number;
+    REQUESTED: number;
+    CONFIRMED: number;
+    COMPLETED: number;
+    CANCELLED: number;
+  };
+  attention: {
+    refundNeeded: number;
+    stuckPaidOrders: number;
+    negativePendingReviews: number;
+    staleConsultations: number;
+  };
+  daily: Array<{
+    date: string;
+    orders: number;
+    revenue: number;
+  }>;
   recentOrders: Array<{
     id: string;
     status: AdminOrderStatus;
@@ -137,6 +105,66 @@ export type AdminStats = {
       name: string;
     };
   }>;
+};
+
+export type AdminConsultationStatus = 'REQUESTED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+
+export const adminConsultationStatusLabels: Record<AdminConsultationStatus, string> = {
+  REQUESTED: 'Menunggu konfirmasi',
+  CONFIRMED: 'Dikonfirmasi',
+  COMPLETED: 'Selesai',
+  CANCELLED: 'Dibatalkan'
+};
+
+export type AdminConsultation = {
+  id: string;
+  status: AdminConsultationStatus;
+  type: 'ONLINE' | 'IN_PERSON';
+  scheduledAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  fee: number | null;
+  createdAt: string;
+  patient: { id: string; name: string; email: string };
+  doctorProfile: {
+    id: string;
+    slug: string;
+    specialty: string;
+    user: { name: string };
+  };
+};
+
+export type AdminEmailTemplateVersion = {
+  subject: string;
+  body: string;
+  customized: boolean;
+  updatedAt: string | null;
+};
+
+export type AdminEmailTemplate = {
+  key: string;
+  label: string;
+  description: string;
+  group: string;
+  variables: Array<{ name: string; label: string; sample: string }>;
+  required: string[];
+  subject: string;
+  body: string;
+  audiences: Record<'PATIENT' | 'DOCTOR' | 'FACILITY', AdminEmailTemplateVersion>;
+};
+
+export type AdminSystemStatus = {
+  checkedAt: string;
+  database: {
+    latencyMs: number;
+  };
+  integrations: {
+    payment: boolean;
+    upload: boolean;
+    email: boolean;
+    ai: boolean;
+    cron: boolean;
+  };
 };
 
 export type AdminUserRole = 'PATIENT' | 'DOCTOR' | 'FACILITY' | 'PHARMACY' | 'ADMIN';
@@ -378,7 +406,9 @@ export type AdminAuditTargetType =
   | 'ARTICLE'
   | 'ORDER'
   | 'REVIEW'
-  | 'NOTIFICATION';
+  | 'NOTIFICATION'
+  | 'CONSULTATION'
+  | 'EMAIL_TEMPLATE';
 
 export type AdminAuditLog = {
   id: string;
@@ -404,7 +434,29 @@ export const adminAuditTargetLabels: Record<AdminAuditTargetType, string> = {
   ARTICLE: 'Artikel',
   ORDER: 'Pesanan',
   REVIEW: 'Ulasan',
-  NOTIFICATION: 'Notifikasi'
+  NOTIFICATION: 'Notifikasi',
+  CONSULTATION: 'Konsultasi',
+  EMAIL_TEMPLATE: 'Template email'
+};
+
+export const adminAuditActionLabels: Record<string, string> = {
+  USER_REGISTER: 'Mendaftar akun',
+  USER_LOGIN: 'Masuk (login)',
+  USER_PASSWORD_CHANGE: 'Mengganti password',
+  USER_CREATE: 'Akun dibuat admin',
+  USER_UPDATE: 'Data akun diubah admin',
+  USER_DELETE: 'Akun dinonaktifkan admin',
+  USER_RESTORE: 'Akun dipulihkan admin',
+  ORDER_CREATE: 'Membuat pesanan',
+  ORDER_CANCEL: 'Membatalkan pesanan',
+  ORDER_STATUS_UPDATE: 'Status pesanan diubah',
+  CONSULTATION_CREATE: 'Mengajukan konsultasi',
+  CONSULTATION_CANCEL: 'Membatalkan konsultasi',
+  REVIEW_CREATE: 'Menulis ulasan',
+  REVIEW_MODERATE: 'Ulasan dimoderasi',
+  REVIEW_DELETE: 'Ulasan dihapus',
+  EMAIL_TEMPLATE_UPDATE: 'Template email diubah',
+  EMAIL_TEMPLATE_RESET: 'Template email dikembalikan ke default'
 };
 
 export type AdminArticleStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'REJECTED';

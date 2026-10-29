@@ -4,17 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminEmptyState, AdminErrorState } from '@/components/admin/AdminState';
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge';
-import {
-  AdminApiError,
-  fetchAdmin,
-  type AdminDoctor,
-  type AdminPaginationMeta
-} from '@/lib/admin-api';
+import { type AdminDoctor } from '@/lib/admin-api';
 import { formatAdminDate } from '@/lib/admin-format';
 
 export type AdminDoctorFilters = {
@@ -33,11 +29,6 @@ const statusOptions = [
 export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
   const router = useRouter();
   const { q, verificationStatus, page } = filters;
-  const [doctors, setDoctors] = useState<AdminDoctor[]>([]);
-  const [meta, setMeta] = useState<AdminPaginationMeta>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
   const [search, setSearch] = useState(q);
   const [status, setStatus] = useState(verificationStatus);
 
@@ -46,40 +37,19 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
     setStatus(verificationStatus);
   }, [q, verificationStatus]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (q) params.set('q', q);
-    if (verificationStatus) params.set('verificationStatus', verificationStatus);
-    params.set('page', String(page));
+  if (q) params.set('q', q);
+  if (verificationStatus) params.set('verificationStatus', verificationStatus);
+  params.set('page', String(page));
 
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminDoctor[]>(`/admin/doctors?${params.toString()}`, {
-      signal: controller.signal
-    })
-      .then((response) => {
-        setDoctors(response.data);
-        setMeta(response.meta as AdminPaginationMeta | undefined);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/doctors';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat data dokter.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [q, verificationStatus, page, attempt]);
+  const {
+    data: doctors = [],
+    meta,
+    loading,
+    error,
+    reload
+  } = useAdminQuery<AdminDoctor[]>(`/admin/doctors?${params.toString()}`);
 
   const applyFilters = (next: { search?: string; status?: string; page?: number }) => {
     const nextSearch = next.search ?? search;
@@ -107,15 +77,6 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
         eyebrow="Verifikasi"
         title="Dokter"
         description="Tinjau profil dokter dan tentukan status verifikasi mitra."
-        action={
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Muat ulang
-          </button>
-        }
       />
 
       <form
@@ -137,7 +98,7 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Nama, email, spesialis, atau kota"
-              className="h-11 w-full rounded-md border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
             />
           </span>
         </label>
@@ -150,7 +111,7 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
               setStatus(event.target.value);
               applyFilters({ status: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -163,14 +124,14 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="inline-flex h-11 items-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Terapkan
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            className="inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
           >
             Reset
           </button>
@@ -189,7 +150,7 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
         {loading ? (
           <AdminTableSkeleton rows={7} columns={6} />
         ) : error ? (
-          <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />
+          <AdminErrorState message={error} onRetry={reload} />
         ) : doctors.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada dokter"
@@ -228,7 +189,7 @@ export function AdminDoctors({ filters }: { filters: AdminDoctorFilters }) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/doctors/${doctor.id}`}
-                        className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+                        className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
                       >
                         Tinjau
                       </Link>

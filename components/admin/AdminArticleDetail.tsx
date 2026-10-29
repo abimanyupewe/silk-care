@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
+import { AdminConfirmDialog } from '@/components/admin/AdminModal';
 import { AdminActionPanel } from '@/components/admin/AdminActionPanel';
 import { AdminArticleStatusBadge } from '@/components/admin/AdminArticleBadges';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { AdminApiError, fetchAdmin, type AdminArticle } from '@/lib/admin-api';
@@ -75,6 +77,7 @@ function AdminArticleStatusPanel({
       setError(cause instanceof Error ? cause.message : 'Gagal menghapus artikel.');
     } finally {
       setPending(null);
+      setConfirming(false);
     }
   };
 
@@ -105,7 +108,7 @@ function AdminArticleStatusPanel({
           onClick={toggleStatus}
           disabled={pending !== null}
           aria-busy={pending === 'status'}
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending === 'status'
             ? 'Menyimpan...'
@@ -114,42 +117,27 @@ function AdminArticleStatusPanel({
               : 'Jadikan draf'}
         </button>
 
-        {confirming ? (
-          <div className="border border-destructive bg-surface p-3">
-            <p className="text-sm text-ink">Yakin menghapus artikel ini?</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={deleteArticle}
-                disabled={pending !== null}
-                aria-busy={pending === 'delete'}
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-destructive px-4 text-sm font-semibold text-white hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pending === 'delete' ? 'Menghapus...' : 'Ya, hapus'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirming(false)}
-                disabled={pending !== null}
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Batal
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setConfirming(true);
-              setError('');
-              setSuccess('');
-            }}
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface"
-          >
-            Hapus artikel
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            setConfirming(true);
+            setError('');
+            setSuccess('');
+          }}
+          className="inline-flex min-h-11 items-center justify-center border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-surface"
+        >
+          Hapus artikel
+        </button>
+        <AdminConfirmDialog
+          open={confirming}
+          title="Hapus artikel ini?"
+          description="Artikel disembunyikan dari halaman publik. Anda masih bisa memulihkannya dari filter Dihapus."
+          confirmLabel="Ya, hapus"
+          pendingLabel="Menghapus..."
+          pending={pending === 'delete'}
+          onConfirm={deleteArticle}
+          onCancel={() => setConfirming(false)}
+        />
       </div>
     </section>
   );
@@ -203,7 +191,7 @@ function AdminArticleRestorePanel({
         onClick={restore}
         disabled={pending}
         aria-busy={pending}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? 'Memulihkan...' : 'Pulihkan artikel'}
       </button>
@@ -212,39 +200,16 @@ function AdminArticleRestorePanel({
 }
 
 export function AdminArticleDetail({ id }: { id: string }) {
-  const [article, setArticle] = useState<AdminArticle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError('');
-
-    fetchAdmin<AdminArticle>(`/admin/articles/${id}`, { signal: controller.signal })
-      .then((response) => setArticle(response.data))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/articles';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat detail artikel.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id, attempt]);
+  const {
+    data: article,
+    loading,
+    error,
+    reload,
+    update: setArticle
+  } = useAdminQuery<AdminArticle>(`/admin/articles/${id}`, 30000);
 
   if (loading) return <AdminDetailSkeleton />;
-  if (error)
-    return <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />;
+  if (error) return <AdminErrorState message={error} onRetry={reload} />;
   if (!article) return null;
 
   return (
@@ -354,7 +319,7 @@ export function AdminArticleDetail({ id }: { id: string }) {
               approveLabel="Setujui & terbitkan"
               rejectLabel="Tolak artikel"
               method="POST"
-              onUpdated={() => setAttempt((value) => value + 1)}
+              onUpdated={reload}
             />
           ) : (
             <AdminArticleStatusPanel article={article} onUpdated={setArticle} />

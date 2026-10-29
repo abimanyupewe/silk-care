@@ -1,3 +1,4 @@
+import { auditActions, writeAuditLog } from '@/lib/audit';
 import type { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -244,6 +245,17 @@ export async function POST(request: Request) {
           }
         }
       });
+
+      await writeAuditLog(
+        {
+          actorId: auth.user.id,
+          action: auditActions.consultationCreate,
+          targetType: 'CONSULTATION',
+          targetId: created.id,
+          request
+        },
+        tx
+      );
 
       if (idempotencyRecordId) {
         await completeIdempotencyRecord(tx, idempotencyRecordId, {

@@ -1,7 +1,9 @@
+import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonOk } from '@/lib/api';
 import { userRoles, verificationStatuses } from '@/lib/admin';
+import { consultationStatuses } from '@/lib/consultation';
 import { orderStatuses, paymentStatuses } from '@/lib/order';
 import { reviewStatuses } from '@/lib/reviews';
 
@@ -19,14 +21,18 @@ function toCountMap<T extends string>(
   ) as Record<T, number>;
 }
 
-export async function GET() {
-  try {
-    const auth = await requireRole(['ADMIN']);
+const trendDays = 14;
+const jakartaOffsetMs = 7 * 60 * 60 * 1000;
 
-    if (!auth.ok) {
-      return auth.error;
-    }
+// Tanggal kalender Asia/Jakarta (UTC+7, tanpa DST) dalam format YYYY-MM-DD.
+function jakartaDate(date: Date) {
+  return new Date(date.getTime() + jakartaOffsetMs).toISOString().slice(0, 10);
+}
 
+// Agregat berat (14 query) dibagikan ke semua admin dan polling; TTL pendek menjaga angka tetap segar.
+// shortcut: stale hingga 15 dtk setelah mutasi admin, tambahkan revalidateTag('admin-stats') bila perlu instan.
+const loadAdminStats = unstable_cache(
+  async () => {
     const [
       usersDeleted,
       usersByRole,
@@ -40,7 +46,13 @@ export async function GET() {
       ordersByPaymentStatus,
       revenue,
       reviewsByStatus,
-      recentOrders
+      recentOrders,
+      trendOrders,
+      consultationsByStatus,
+      refundNeeded,
+      stuckPaidOrders,
+      negativePendingReviews,
+      staleConsultations
     ] = await Promise.all([
       prisma.user.count({
         where: {
@@ -166,8 +178,74 @@ export async function GET() {
             }
           }
         }
+      }),
+      prisma.order.findMany({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - trendDays * 24 * 60 * 60 * 1000)
+          }
+        },
+        select: {
+          createdAt: true,
+          total: true,
+          status: true,
+          paymentStatus: true
+        }
+      }),
+      prisma.consultation.groupBy({
+        by: ['status'],
+        _count: {
+          _all: true
+        }
+      }),
+      // Dibayar setelah pesanan dibatalkan: perlu refund manual.
+      prisma.order.count({
+        where: {
+          status: 'CANCELLED',
+          paymentStatus: 'PAID'
+        }
+      }),
+      prisma.order.count({
+        where: {
+          status: 'PAID',
+          paidAt: {
+            lt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+      prisma.review.count({
+        where: {
+          status: 'PENDING',
+          isNegative: true
+        }
+      }),
+      prisma.consultation.count({
+        where: {
+          status: 'REQUESTED',
+          createdAt: {
+            lt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+          }
+        }
       })
     ]);
+
+    const daily = Array.from({ length: trendDays }, (_, index) => ({
+      date: jakartaDate(new Date(Date.now() - (trendDays - 1 - index) * 24 * 60 * 60 * 1000)),
+      orders: 0,
+      revenue: 0
+    }));
+
+    for (const order of trendOrders) {
+      const day = daily.find((row) => row.date === jakartaDate(order.createdAt));
+
+      if (!day) continue;
+
+      day.orders += 1;
+
+      if (order.paymentStatus === 'PAID' && order.status !== 'CANCELLED') {
+        day.revenue += order.total;
+      }
+    }
 
     const usersByRoleMap = toCountMap(
       userRoles,
@@ -212,6 +290,13 @@ export async function GET() {
       }))
     );
 
+    const consultationsByStatusMap = toCountMap(
+      consultationStatuses,
+      consultationsByStatus.map((row) => ({
+        key: row.status,
+        count: row._count._all
+      }))
+    );
     const articlesByStatusMap = toCountMap(
       articleStatusKeys,
       articlesByStatus.map((row) => ({
@@ -245,7 +330,7 @@ export async function GET() {
       0
     );
 
-    return jsonOk({
+    return {
       generatedAt: new Date().toISOString(),
       users: {
         total: usersActive + usersDeleted,
@@ -300,8 +385,36 @@ export async function GET() {
           reviewsByStatusMap.PENDING +
           articlesPending
       },
-      recentOrders
-    });
+      consultations: {
+        total: consultationStatuses.reduce(
+          (total, status) => total + consultationsByStatusMap[status],
+          0
+        ),
+        ...consultationsByStatusMap
+      },
+      attention: {
+        refundNeeded,
+        stuckPaidOrders,
+        negativePendingReviews,
+        staleConsultations
+      },
+      recentOrders,
+      daily
+    };
+  },
+  ['admin-stats'],
+  { revalidate: 15, tags: ['admin-stats'] }
+);
+
+export async function GET() {
+  try {
+    const auth = await requireRole(['ADMIN']);
+
+    if (!auth.ok) {
+      return auth.error;
+    }
+
+    return jsonOk(await loadAdminStats());
   } catch (error) {
     return handleRouteError(error);
   }

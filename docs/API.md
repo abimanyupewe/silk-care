@@ -103,7 +103,8 @@ Header opsional `Idempotency-Key` (1–100 karakter, `A-Z a-z 0-9 . _ : -`).
 - Key berlaku 24 jam.
 - Replay tidak memakai kuota rate limit; request baru tetap memakai.
 - Record ditulis dalam transaksi yang sama dengan order/konsultasi.
-- Cron `GET /api/v1/cron/orders/expire` juga menghapus key kedaluwarsa.
+- Cron `GET /api/v1/cron/orders/expire` juga menghapus key kedaluwarsa dan log aktivitas pengguna
+  yang melewati `AUDIT_ACTIVITY_RETENTION_DAYS` (default 90 hari). Log tindakan admin tidak dihapus.
 
 ## Rate limit
 
@@ -263,37 +264,54 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 
 ### Admin
 
-| Method | Path                                         | Sukses |
-| ------ | -------------------------------------------- | ------ |
-| GET    | `/api/v1/admin/users`                        | 200    |
-| GET    | `/api/v1/admin/users/{id}`                   | 200    |
-| PATCH  | `/api/v1/admin/users/{id}`                   | 200    |
-| DELETE | `/api/v1/admin/users/{id}`                   | 200    |
-| POST   | `/api/v1/admin/users/{id}/restore`           | 200    |
-| GET    | `/api/v1/admin/doctors`                      | 200    |
-| GET    | `/api/v1/admin/doctors/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/doctors/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/doctors/{id}/verification`    | 200    |
-| GET    | `/api/v1/admin/facilities`                   | 200    |
-| GET    | `/api/v1/admin/facilities/{id}`              | 200    |
-| PATCH  | `/api/v1/admin/facilities/{id}`              | 200    |
-| PATCH  | `/api/v1/admin/facilities/{id}/verification` | 200    |
-| GET    | `/api/v1/admin/orders`                       | 200    |
-| GET    | `/api/v1/admin/orders/{id}`                  | 200    |
-| PATCH  | `/api/v1/admin/orders/{id}/status`           | 200    |
-| GET    | `/api/v1/admin/articles`                     | 200    |
-| POST   | `/api/v1/admin/articles`                     | 201    |
-| GET    | `/api/v1/admin/articles/{id}`                | 200    |
-| PATCH  | `/api/v1/admin/articles/{id}`                | 200    |
-| DELETE | `/api/v1/admin/articles/{id}`                | 200    |
-| POST   | `/api/v1/admin/articles/{id}/moderate`       | 200    |
-| POST   | `/api/v1/admin/articles/{id}/restore`        | 200    |
-| GET    | `/api/v1/admin/reviews`                      | 200    |
-| GET    | `/api/v1/admin/reviews/{id}`                 | 200    |
-| PATCH  | `/api/v1/admin/reviews/{id}/moderate`        | 200    |
-| GET    | `/api/v1/admin/audit-logs`                   | 200    |
-| POST   | `/api/v1/admin/notifications/broadcast`      | 201    |
-| GET    | `/api/v1/admin/stats`                        | 200    |
+| Method | Path                                             | Sukses |
+| ------ | ------------------------------------------------ | ------ |
+| GET    | `/api/v1/admin/users`                            | 200    |
+| GET    | `/api/v1/admin/users/{id}`                       | 200    |
+| PATCH  | `/api/v1/admin/users/{id}`                       | 200    |
+| DELETE | `/api/v1/admin/users/{id}`                       | 200    |
+| POST   | `/api/v1/admin/users/{id}/restore`               | 200    |
+| GET    | `/api/v1/admin/doctors`                          | 200    |
+| GET    | `/api/v1/admin/doctors/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/doctors/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/doctors/{id}/verification`        | 200    |
+| GET    | `/api/v1/admin/facilities`                       | 200    |
+| GET    | `/api/v1/admin/facilities/{id}`                  | 200    |
+| PATCH  | `/api/v1/admin/facilities/{id}`                  | 200    |
+| PATCH  | `/api/v1/admin/facilities/{id}/verification`     | 200    |
+| GET    | `/api/v1/admin/orders`                           | 200    |
+| GET    | `/api/v1/admin/consultations`                    | 200    |
+| GET    | `/api/v1/admin/orders/{id}`                      | 200    |
+| PATCH  | `/api/v1/admin/orders/{id}/status`               | 200    |
+| GET    | `/api/v1/admin/articles`                         | 200    |
+| POST   | `/api/v1/admin/articles`                         | 201    |
+| GET    | `/api/v1/admin/articles/{id}`                    | 200    |
+| PATCH  | `/api/v1/admin/articles/{id}`                    | 200    |
+| DELETE | `/api/v1/admin/articles/{id}`                    | 200    |
+| POST   | `/api/v1/admin/articles/{id}/moderate`           | 200    |
+| POST   | `/api/v1/admin/articles/{id}/restore`            | 200    |
+| GET    | `/api/v1/admin/reviews`                          | 200    |
+| GET    | `/api/v1/admin/reviews/{id}`                     | 200    |
+| PATCH  | `/api/v1/admin/reviews/{id}/moderate`            | 200    |
+| GET    | `/api/v1/admin/audit-logs`                       | 200    |
+| POST   | `/api/v1/admin/notifications/broadcast`          | 201    |
+| GET    | `/api/v1/admin/stats`                            | 200    |
+| GET    | `/api/v1/admin/system`                           | 200    |
+| GET    | `/api/v1/admin/email-templates`                  | 200    |
+| PUT    | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
+| DELETE | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
+
+## Akun uji panel
+
+Untuk menguji login dan panel per peran tanpa menyentuh akun demo:
+
+```bash
+npm run db:seed:test
+```
+
+Kredensial dibaca dari `.env` (`TEST_DOCTOR_*`, `TEST_FACILITY_*`, `TEST_PATIENT_*`; contoh kunci di
+`.env.example`). Seed ini idempoten, memulihkan akun yang dinonaktifkan, menolak jalan di
+production, dan membuat dokter serta fasilitas berstatus `VERIFIED` (muncul di katalog publik).
 
 ## Fixtures demo deterministik
 

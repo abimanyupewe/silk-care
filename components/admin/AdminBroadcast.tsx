@@ -143,7 +143,7 @@ export function AdminBroadcast() {
                 }}
                 maxLength={200}
                 placeholder="Contoh: Pemeliharaan layanan 30 Oktober"
-                className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+                className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
               />
               <span className="mt-1 block text-xs text-ink-faint">{title.length}/200 karakter</span>
             </label>
@@ -159,7 +159,7 @@ export function AdminBroadcast() {
                 maxLength={2000}
                 rows={6}
                 placeholder="Tulis informasi yang akan diterima pengguna..."
-                className="mt-1 w-full rounded-md border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+                className="mt-1 w-full border border-border-strong bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
               />
               <span className="mt-1 block text-xs text-ink-faint">{body.length}/2000 karakter</span>
             </label>
@@ -170,7 +170,7 @@ export function AdminBroadcast() {
                 {(Object.keys(audienceLabels) as Audience[]).map((value) => (
                   <label
                     key={value}
-                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-border-strong px-3 text-sm text-ink hover:border-primary hover:bg-primary-tint"
+                    className="flex min-h-11 cursor-pointer items-center gap-2 border border-border-strong px-3 text-sm text-ink hover:border-primary hover:bg-primary-tint"
                   >
                     <input
                       type="radio"
@@ -197,7 +197,7 @@ export function AdminBroadcast() {
                   {(Object.keys(adminUserRoleLabels) as AdminUserRole[]).map((role) => (
                     <label
                       key={role}
-                      className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-border-strong px-3 text-sm text-ink hover:border-primary hover:bg-primary-tint"
+                      className="flex min-h-11 cursor-pointer items-center gap-2 border border-border-strong px-3 text-sm text-ink hover:border-primary hover:bg-primary-tint"
                     >
                       <input
                         type="checkbox"
@@ -223,7 +223,7 @@ export function AdminBroadcast() {
                   }}
                   rows={3}
                   placeholder="Pisahkan dengan koma atau baris baru"
-                  className="mt-1 w-full rounded-md border border-border-strong bg-white px-3 py-2 font-mono text-sm text-ink outline-none placeholder:font-sans placeholder:text-ink-faint focus:border-primary"
+                  className="mt-1 w-full border border-border-strong bg-white px-3 py-2 font-mono text-sm text-ink outline-none placeholder:font-sans placeholder:text-ink-faint focus:border-primary"
                 />
                 <span className="mt-1 block text-xs text-ink-faint">
                   {selectedUserIds.length} ID terdeteksi
@@ -267,7 +267,7 @@ export function AdminBroadcast() {
                   onClick={send}
                   disabled={pending}
                   aria-busy={pending}
-                  className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {pending ? 'Mengirim...' : 'Ya, kirim broadcast'}
                 </button>
@@ -275,7 +275,7 @@ export function AdminBroadcast() {
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={pending}
-                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Batal
                 </button>
@@ -285,7 +285,7 @@ export function AdminBroadcast() {
             <button
               type="button"
               onClick={prepare}
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+              className="mt-4 inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
             >
               Kirim broadcast
             </button>

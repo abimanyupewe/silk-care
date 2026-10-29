@@ -13,7 +13,7 @@ export function AdminAccountStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1.5 border px-2 py-1 text-xs font-medium',
         active
           ? 'border-primary bg-primary-tint text-primary-hover'
           : 'border-destructive bg-white text-destructive',

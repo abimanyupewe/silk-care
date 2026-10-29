@@ -14,6 +14,33 @@ export type SessionUser = {
 
 type AuthResult = { ok: true; user: SessionUser } | { ok: false; error: NextResponse };
 
+// Untuk halaman (bukan API): sesi hanya valid jika akunnya masih ada, aktif, dan sessionVersion
+// cocok. Tanpa ini cookie lama membuat /admin dan /login saling melempar tanpa henti.
+export async function getActiveSession() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id
+    },
+    select: {
+      role: true,
+      sessionVersion: true,
+      deletedAt: true
+    }
+  });
+
+  if (!user || user.deletedAt || user.sessionVersion !== session.user.sessionVersion) {
+    return null;
+  }
+
+  return { user: { ...session.user, role: user.role } };
+}
+
 export async function requireUser(): Promise<AuthResult> {
   const session = await auth();
 

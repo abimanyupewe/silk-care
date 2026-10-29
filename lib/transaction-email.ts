@@ -1,5 +1,6 @@
 import { getAppUrl } from '@/lib/app-url';
-import { sendEmail } from '@/lib/email';
+import { sendTemplatedEmail } from '@/lib/email-template-store';
+import type { EmailAudience } from '@/lib/email-templates';
 import { logError } from '@/lib/logger';
 
 type EmailRecipient = {
@@ -41,9 +42,14 @@ function orderCode(orderId: string) {
   return `#${orderId.slice(-8).toUpperCase()}`;
 }
 
-async function sendSafe(input: { to: string; subject: string; text: string }) {
+async function sendSafe(input: {
+  key: string;
+  to: string;
+  vars: Record<string, string>;
+  audience?: EmailAudience;
+}) {
   try {
-    await sendEmail(input);
+    await sendTemplatedEmail(input);
   } catch (error) {
     logError('email.transaction_failed', error);
   }
@@ -61,19 +67,15 @@ export async function sendOrderCreatedEmail({
   facilityName: string;
 }) {
   await sendSafe({
+    key: 'ORDER_CREATED',
     to,
-    subject: `Pesanan ${orderCode(orderId)} dibuat`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `Pesanan ${orderCode(orderId)} dari ${facilityName} berhasil dibuat.`,
-      `Total: ${rupiah.format(total)}`,
-      '',
-      'Selesaikan pembayaran sebelum batas waktu agar pesanan tidak dibatalkan otomatis.',
-      `${getAppUrl()}/orders/${orderId}`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ].join('\n')
+    vars: {
+      nama: name,
+      kode_pesanan: orderCode(orderId),
+      fasilitas: facilityName,
+      total: rupiah.format(total),
+      link: `${getAppUrl()}/orders/${orderId}`
+    }
   });
 }
 
@@ -89,20 +91,15 @@ export async function sendOrderStatusEmail({
   note?: string | null;
 }) {
   await sendSafe({
+    key: 'ORDER_STATUS',
     to,
-    subject: `Status pesanan ${orderCode(orderId)}: ${orderStatusLabels[status] ?? status}`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `Status pesanan ${orderCode(orderId)} sekarang: ${orderStatusLabels[status] ?? status}.`,
-      note ? `Catatan: ${note}` : '',
-      '',
-      `${getAppUrl()}/orders/${orderId}`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    vars: {
+      nama: name,
+      kode_pesanan: orderCode(orderId),
+      status: orderStatusLabels[status] ?? status,
+      catatan: note ?? '',
+      link: `${getAppUrl()}/orders/${orderId}`
+    }
   });
 }
 
@@ -115,34 +112,14 @@ export async function sendPaymentEmail({
   orderId: string;
   outcome: 'PAID' | 'LATE_PAID' | 'FAILED' | 'EXPIRED' | 'REFUNDED';
 }) {
-  const subjects = {
-    PAID: `Pembayaran ${orderCode(orderId)} diterima`,
-    LATE_PAID: `Pembayaran ${orderCode(orderId)} diterima setelah pembatalan`,
-    FAILED: `Pembayaran ${orderCode(orderId)} gagal`,
-    EXPIRED: `Pembayaran ${orderCode(orderId)} kedaluwarsa`,
-    REFUNDED: `Pembayaran ${orderCode(orderId)} direfund`
-  };
-  const messages = {
-    PAID: 'Pembayaran Anda telah kami terima. Pesanan akan segera diproses.',
-    LATE_PAID:
-      'Pembayaran Anda diterima setelah pesanan dibatalkan. Tim SILK akan menghubungi Anda untuk proses pengembalian dana.',
-    FAILED: 'Pembayaran tidak berhasil. Anda dapat mencoba pembayaran kembali.',
-    EXPIRED: 'Batas waktu pembayaran telah habis dan pesanan dibatalkan.',
-    REFUNDED: 'Pembayaran pesanan Anda telah direfund.'
-  };
-
   await sendSafe({
+    key: `PAYMENT_${outcome}`,
     to,
-    subject: subjects[outcome],
-    text: [
-      `Halo ${name},`,
-      '',
-      `${messages[outcome]} (${orderCode(orderId)})`,
-      '',
-      `${getAppUrl()}/orders/${orderId}`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ].join('\n')
+    vars: {
+      nama: name,
+      kode_pesanan: orderCode(orderId),
+      link: `${getAppUrl()}/orders/${orderId}`
+    }
   });
 }
 
@@ -160,22 +137,17 @@ export async function sendConsultationStatusEmail({
   note?: string | null;
 }) {
   await sendSafe({
+    key: 'CONSULTATION_STATUS',
     to,
-    subject: `Konsultasi dengan ${doctorName}: ${consultationStatusLabels[status] ?? status}`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `Status konsultasi Anda dengan ${doctorName} pada ${formatDateTime(scheduledAt)} sekarang: ${
-        consultationStatusLabels[status] ?? status
-      }.`,
-      note ? `Catatan: ${note}` : '',
-      '',
-      `${getAppUrl()}/consultations`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    audience: 'PATIENT',
+    vars: {
+      nama: name,
+      nama_dokter: doctorName,
+      jadwal: formatDateTime(scheduledAt),
+      status: consultationStatusLabels[status] ?? status,
+      catatan: note ?? '',
+      link: `${getAppUrl()}/consultations`
+    }
   });
 }
 
@@ -191,18 +163,16 @@ export async function sendConsultationRequestEmail({
   complaint: string;
 }) {
   await sendSafe({
+    key: 'CONSULTATION_REQUEST',
     to,
-    subject: `Permintaan konsultasi baru dari ${patientName}`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `${patientName} mengajukan konsultasi pada ${formatDateTime(scheduledAt)}.`,
-      `Keluhan: ${complaint}`,
-      '',
-      `${getAppUrl()}/doctor/consultations`,
-      '',
-      'Silakan konfirmasi atau batalkan jadwal melalui dashboard dokter.'
-    ].join('\n')
+    audience: 'DOCTOR',
+    vars: {
+      nama: name,
+      nama_pasien: patientName,
+      jadwal: formatDateTime(scheduledAt),
+      keluhan: complaint,
+      link: `${getAppUrl()}/dashboard/dokter/konsultasi`
+    }
   });
 }
 
@@ -218,20 +188,16 @@ export async function sendConsultationCancelledToDoctorEmail({
   reason?: string | null;
 }) {
   await sendSafe({
+    key: 'CONSULTATION_CANCELLED',
     to,
-    subject: `Konsultasi dibatalkan oleh ${patientName}`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `${patientName} membatalkan konsultasi pada ${formatDateTime(scheduledAt)}.`,
-      reason ? `Alasan: ${reason}` : '',
-      '',
-      `${getAppUrl()}/doctor/consultations`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    audience: 'DOCTOR',
+    vars: {
+      nama: name,
+      nama_pasien: patientName,
+      jadwal: formatDateTime(scheduledAt),
+      alasan: reason ?? '',
+      link: `${getAppUrl()}/dashboard/dokter/konsultasi`
+    }
   });
 }
 
@@ -243,18 +209,14 @@ export async function sendMedicalRecordEmail({
   doctorName: string;
 }) {
   await sendSafe({
+    key: 'MEDICAL_RECORD',
     to,
-    subject: 'Rekam medis konsultasi Anda tersedia',
-    text: [
-      `Halo ${name},`,
-      '',
-      `Dokter ${doctorName} telah mengisi rekam medis konsultasi Anda.`,
-      'Buka halaman riwayat konsultasi untuk melihat diagnosis, catatan, dan resep.',
-      '',
-      `${getAppUrl()}/medical-records`,
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ].join('\n')
+    audience: 'PATIENT',
+    vars: {
+      nama: name,
+      nama_dokter: doctorName,
+      link: `${getAppUrl()}/medical-records`
+    }
   });
 }
 
@@ -271,23 +233,15 @@ export async function sendArticleModerationEmail({
   note?: string | null;
   slug: string;
 }) {
-  const approved = status === 'PUBLISHED';
-
   await sendSafe({
+    key: status === 'PUBLISHED' ? 'ARTICLE_APPROVED' : 'ARTICLE_REJECTED',
     to,
-    subject: approved ? 'Artikel Anda disetujui' : 'Artikel Anda perlu diperbaiki',
-    text: [
-      `Halo ${name},`,
-      '',
-      `Artikel "${articleTitle}" ${approved ? 'telah diterbitkan.' : 'belum disetujui.'}`,
-      note ? `Catatan moderator: ${note}` : '',
-      '',
-      `${getAppUrl()}/article/${slug}`,
-      '',
-      'Terima kasih telah berkontribusi di SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    vars: {
+      nama: name,
+      judul_artikel: articleTitle,
+      catatan: note ?? '',
+      link: `${getAppUrl()}/article/${slug}`
+    }
   });
 }
 
@@ -302,21 +256,14 @@ export async function sendReviewModerationEmail({
   status: 'APPROVED' | 'REJECTED';
   note?: string | null;
 }) {
-  const approved = status === 'APPROVED';
-
   await sendSafe({
+    key: status === 'APPROVED' ? 'REVIEW_APPROVED' : 'REVIEW_REJECTED',
     to,
-    subject: approved ? 'Ulasan Anda telah ditayangkan' : 'Ulasan Anda belum disetujui',
-    text: [
-      `Halo ${name},`,
-      '',
-      `Ulasan Anda dengan rating ${rating}/5 ${approved ? 'telah ditayangkan.' : 'belum disetujui.'}`,
-      note ? `Catatan moderator: ${note}` : '',
-      '',
-      'Terima kasih telah membantu pengguna lain memilih layanan di SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    vars: {
+      nama: name,
+      rating: String(rating),
+      catatan: note ?? ''
+    }
   });
 }
 
@@ -328,16 +275,12 @@ export async function sendReviewReceivedEmail({
   rating: number;
 }) {
   await sendSafe({
+    key: 'REVIEW_RECEIVED',
     to,
-    subject: 'Ulasan baru untuk layanan Anda',
-    text: [
-      `Halo ${name},`,
-      '',
-      `Ada ulasan baru dengan rating ${rating}/5 untuk layanan Anda.`,
-      'Ulasan akan ditayangkan setelah melewati moderasi.',
-      '',
-      'Terima kasih telah menggunakan SILK.'
-    ].join('\n')
+    vars: {
+      nama: name,
+      rating: String(rating)
+    }
   });
 }
 
@@ -359,19 +302,15 @@ export async function sendPartnerVerificationEmail({
   };
 
   await sendSafe({
+    key: 'PARTNER_VERIFICATION',
     to,
-    subject: `Verifikasi ${partnerType.toLowerCase()} ${labels[status]}`,
-    text: [
-      `Halo ${name},`,
-      '',
-      `Status verifikasi ${partnerType.toLowerCase()} Anda ${labels[status]}.`,
-      note ? `Catatan: ${note}` : '',
-      '',
-      `${getAppUrl()}/partner`,
-      '',
-      'Terima kasih telah bergabung dengan SILK.'
-    ]
-      .filter(Boolean)
-      .join('\n')
+    audience: partnerType === 'DOKTER' ? 'DOCTOR' : 'FACILITY',
+    vars: {
+      nama: name,
+      jenis_mitra: partnerType.toLowerCase(),
+      status: labels[status],
+      catatan: note ?? '',
+      link: `${getAppUrl()}${partnerType === 'DOKTER' ? '/dashboard/dokter' : '/dashboard/fasilitas'}`
+    }
   });
 }

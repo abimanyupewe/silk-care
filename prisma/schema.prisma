@@ -99,6 +99,12 @@ enum NotificationType {
   SYSTEM
 }
 
+enum EmailAudience {
+  PATIENT
+  DOCTOR
+  FACILITY
+}
+
 enum IdempotencyScope {
   CHECKOUT
   CONSULTATION_CREATE
@@ -132,6 +138,7 @@ model User {
   medicalRecords       MedicalRecord[]      @relation("PatientMedicalRecords")
   auditLogs            AuditLog[]           @relation("AuditLogs")
   idempotencyKeys      IdempotencyKey[]
+  emailTemplates       EmailTemplate[]      @relation("EmailTemplateEditor")
 
   @@index([role])
   @@index([deletedAt])
@@ -534,4 +541,21 @@ model IdempotencyKey {
 
   @@unique([userId, scope, key])
   @@index([expiresAt])
+}
+
+// Override template email dari admin. Tanpa baris di sini, kode memakai teks default
+// (lihat lib/email-templates.ts).
+model EmailTemplate {
+  id          String        @id @default(cuid())
+  key         String
+  audience    EmailAudience
+  subject     String
+  body        String
+  updatedById String?
+  updatedBy   User?         @relation("EmailTemplateEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([key, audience])
+  @@index([updatedById])
 }

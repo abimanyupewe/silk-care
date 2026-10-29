@@ -3,27 +3,27 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Search } from 'lucide-react';
 import {
   AdminOrderStatusBadge,
   AdminPaymentStatusBadge
 } from '@/components/admin/AdminOrderBadges';
+import { useAdminQuery } from '@/lib/admin-swr';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminPagination } from '@/components/admin/AdminPagination';
 import { AdminTableSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminEmptyState, AdminErrorState } from '@/components/admin/AdminState';
 import {
-  AdminApiError,
   adminOrderStatusLabels,
   adminPaymentStatusLabels,
-  fetchAdmin,
   type AdminOrder,
   type AdminOrderStatus,
-  type AdminPaginationMeta,
   type AdminPaymentStatus
 } from '@/lib/admin-api';
 import { formatAdminCurrency, formatAdminDate } from '@/lib/admin-format';
 
 export type AdminOrderFilters = {
+  q: string;
   status: string;
   paymentStatus: string;
   page: number;
@@ -35,61 +35,45 @@ function shortId(value: string) {
 
 export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
   const router = useRouter();
-  const { status, paymentStatus, page } = filters;
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [meta, setMeta] = useState<AdminPaginationMeta>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
+  const { q, status, paymentStatus, page } = filters;
+  const [search, setSearch] = useState(q);
   const [orderStatus, setOrderStatus] = useState(status);
   const [payment, setPayment] = useState(paymentStatus);
 
   useEffect(() => {
+    setSearch(q);
     setOrderStatus(status);
     setPayment(paymentStatus);
-  }, [status, paymentStatus]);
+  }, [q, status, paymentStatus]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (status) params.set('status', status);
-    if (paymentStatus) params.set('paymentStatus', paymentStatus);
-    params.set('page', String(page));
+  if (q) params.set('q', q);
+  if (status) params.set('status', status);
+  if (paymentStatus) params.set('paymentStatus', paymentStatus);
+  params.set('page', String(page));
 
-    setLoading(true);
-    setError('');
+  const {
+    data: orders = [],
+    meta,
+    loading,
+    error,
+    reload
+  } = useAdminQuery<AdminOrder[]>(`/admin/orders?${params.toString()}`);
 
-    fetchAdmin<AdminOrder[]>(`/admin/orders?${params.toString()}`, {
-      signal: controller.signal
-    })
-      .then((response) => {
-        setOrders(response.data);
-        setMeta(response.meta as AdminPaginationMeta | undefined);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === 'AbortError') return;
-
-        if (cause instanceof AdminApiError && cause.status === 401) {
-          window.location.href = '/login?callbackUrl=/admin/orders';
-          return;
-        }
-
-        setError(cause instanceof Error ? cause.message : 'Gagal memuat data pesanan.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [status, paymentStatus, page, attempt]);
-
-  const applyFilters = (next: { status?: string; paymentStatus?: string; page?: number }) => {
+  const applyFilters = (next: {
+    search?: string;
+    status?: string;
+    paymentStatus?: string;
+    page?: number;
+  }) => {
+    const nextSearch = next.search ?? search;
     const nextStatus = next.status ?? orderStatus;
     const nextPayment = next.paymentStatus ?? payment;
     const nextPage = next.page ?? 1;
     const params = new URLSearchParams();
 
+    if (nextSearch.trim()) params.set('q', nextSearch.trim());
     if (nextStatus) params.set('status', nextStatus);
     if (nextPayment) params.set('paymentStatus', nextPayment);
     if (nextPage > 1) params.set('page', String(nextPage));
@@ -99,6 +83,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
   };
 
   const resetFilters = () => {
+    setSearch('');
     setOrderStatus('');
     setPayment('');
     router.push('/admin/orders');
@@ -110,15 +95,6 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         eyebrow="Transaksi"
         title="Pesanan"
         description="Pantau pesanan masuk dan perbarui status pemenuhan pesanan."
-        action={
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-            className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
-          >
-            Muat ulang
-          </button>
-        }
       />
 
       <form
@@ -128,6 +104,23 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         }}
         className="mt-6 flex flex-col gap-3 border border-border bg-white p-4 md:flex-row md:items-end"
       >
+        <label className="flex-1 text-sm font-medium text-ink">
+          Cari pesanan
+          <span className="relative mt-1 block">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="ID, penerima, pembeli, atau fasilitas"
+              className="h-11 w-full border border-border-strong bg-white pl-9 pr-3 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-primary"
+            />
+          </span>
+        </label>
+
         <label className="text-sm font-medium text-ink md:w-52">
           Status pesanan
           <select
@@ -136,7 +129,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
               setOrderStatus(event.target.value);
               applyFilters({ status: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Semua status</option>
             {(Object.keys(adminOrderStatusLabels) as AdminOrderStatus[]).map((value) => (
@@ -155,7 +148,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
               setPayment(event.target.value);
               applyFilters({ paymentStatus: event.target.value, page: 1 });
             }}
-            className="mt-1 h-11 w-full rounded-md border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
+            className="mt-1 h-11 w-full border border-border-strong bg-white px-3 text-sm text-ink outline-none focus:border-primary"
           >
             <option value="">Semua pembayaran</option>
             {(Object.keys(adminPaymentStatusLabels) as AdminPaymentStatus[]).map((value) => (
@@ -169,14 +162,14 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="inline-flex h-11 items-center bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Terapkan
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
+            className="inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint"
           >
             Reset
           </button>
@@ -193,11 +186,11 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
         {loading ? (
           <AdminTableSkeleton rows={7} columns={8} />
         ) : error ? (
-          <AdminErrorState message={error} onRetry={() => setAttempt((value) => value + 1)} />
+          <AdminErrorState message={error} onRetry={reload} />
         ) : orders.length === 0 ? (
           <AdminEmptyState
             title="Tidak ada pesanan"
-            description="Coba ubah filter status pesanan atau pembayaran."
+            description="Coba ubah kata kunci atau filter status pesanan dan pembayaran."
           />
         ) : (
           <div className="overflow-x-auto border border-border bg-white">
@@ -244,7 +237,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="inline-flex min-h-11 items-center rounded-md border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
+                        className="inline-flex min-h-11 items-center border border-border-strong px-3 text-sm font-semibold text-primary-hover hover:border-primary hover:bg-primary-tint"
                       >
                         Kelola
                       </Link>
@@ -265,7 +258,7 @@ export function AdminOrders({ filters }: { filters: AdminOrderFilters }) {
             totalPages={meta.totalPages}
             total={meta.total}
             limit={meta.limit}
-            query={{ status, paymentStatus }}
+            query={{ q, status, paymentStatus }}
           />
         </div>
       ) : null}

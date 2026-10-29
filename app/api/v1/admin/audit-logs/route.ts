@@ -23,6 +23,7 @@ export async function GET(request: Request) {
     const searchParams = new URL(request.url).searchParams;
     const q = getString(searchParams, 'q', 100);
     const actorId = getString(searchParams, 'actorId', 100);
+    const userId = getString(searchParams, 'userId', 100);
     const action = getString(searchParams, 'action', 100)?.toUpperCase();
     const targetTypeParam = getString(searchParams, 'targetType', 30);
     const targetType = getEnum(searchParams, 'targetType', auditTargetTypes);
@@ -62,6 +63,11 @@ export async function GET(request: Request) {
 
     if (actorId) {
       where.actorId = actorId;
+    }
+
+    // Aktivitas satu pengguna: yang ia lakukan sendiri atau yang dilakukan admin terhadapnya.
+    if (userId) {
+      where.AND = [{ OR: [{ actorId: userId }, { targetType: 'USER', targetId: userId }] }];
     }
 
     if (action) {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
+import { getActiveSession } from '@/lib/auth-guard';
+import { panelHomeForRole } from '@/lib/roles';
 import { AdminShell } from '@/components/admin/AdminShell';
 
 export const metadata: Metadata = {
@@ -9,14 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
+  const session = await getActiveSession();
 
-  if (!session?.user) {
+  if (!session) {
     redirect('/login?callbackUrl=/admin');
   }
 
   if (session.user.role !== 'ADMIN') {
-    redirect('/');
+    redirect(panelHomeForRole(session.user.role));
   }
 
   return (

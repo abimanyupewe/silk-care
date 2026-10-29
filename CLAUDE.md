@@ -33,11 +33,21 @@ Route handlers under `app/api/v1/**/route.ts` follow one shape, e.g.
 6. Admin mutations call `writeAuditLog(input, tx)` from `lib/audit.ts` (action names come
    from `auditActions`) inside the same `prisma.$transaction` as the change.
 
+## Panels
+
+Three role-based panels share one login (`/login`) and one shell (`components/panel/PanelShell.tsx`):
+`/admin` (ADMIN), `/dashboard/dokter` (DOCTOR), `/dashboard/fasilitas` (FACILITY, PHARMACY).
+`lib/roles.ts` maps role to home and sanitizes `callbackUrl`; `getActiveSession()` in
+`lib/auth-guard.ts` re-checks the account against the DB in each panel's `layout.tsx`, and a wrong
+role is redirected to its own panel. Client code uses `fetchApi` (`lib/api-client.ts`, which sends
+401 to `/login` and 403 to `/`) and `useApiQuery` (`lib/api-swr.ts`); `fetchAdmin`/`useAdminQuery`
+are aliases kept for admin code. `/doctor` and `/apotek` are the public catalog, not panels.
+
 ## Admin panel (`/admin`)
 
-- `app/admin/layout.tsx` is a server component: it calls `auth()`, redirects anonymous users
-  to `/login?callbackUrl=/admin` and non-admins to `/`, then renders `AdminShell`.
-  `app/login` is the admin credentials login page.
+- `app/admin/layout.tsx` is a server component: it calls `getActiveSession()`, redirects anonymous
+  users to `/login?callbackUrl=/admin` and other roles to their own panel, then renders
+  `AdminShell` (a thin wrapper that gives `PanelShell` the admin nav and moderation badges).
 - Each `app/admin/**/page.tsx` stays thin: it awaits `searchParams`, normalizes them with
   `adminParam`/`adminPage` from `lib/admin-query.ts`, and passes a `filters` object to a
   `'use client'` component in `components/admin/`.
