@@ -1,9 +1,10 @@
 'use client';
 
-import { getSession, signIn, signOut } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { safeCallbackUrl } from '@/lib/roles';
 
 type LoginFormProps = {
   callbackUrl: string;
@@ -25,8 +26,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
-        redirectTo: callbackUrl
+        redirect: false
       });
 
       if (!result?.ok) {
@@ -36,13 +36,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
 
       const session = await getSession();
 
-      if (session?.user?.role !== 'ADMIN') {
-        await signOut({ redirect: false });
-        setError('Akun ini tidak memiliki akses ke panel admin.');
-        return;
-      }
-
-      router.replace(callbackUrl);
+      router.replace(safeCallbackUrl(callbackUrl, session?.user?.role));
       router.refresh();
     } catch {
       setError('Tidak dapat menghubungi server. Coba lagi beberapa saat lagi.');
@@ -65,7 +59,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           className="mt-2 h-12 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary"
-          placeholder="admin@silk.local"
+          placeholder="nama@email.com"
         />
       </div>
 
@@ -97,7 +91,7 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
         disabled={submitting}
         className="inline-flex min-h-12 w-full items-center justify-center bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? 'Memeriksa...' : 'Masuk ke panel admin'}
+        {submitting ? 'Memeriksa...' : 'Masuk'}
       </button>
     </form>
   );

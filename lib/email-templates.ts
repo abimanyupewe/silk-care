@@ -115,7 +115,7 @@ Jika Anda tidak meminta reset password, abaikan email ini. Password Anda tidak b
       { name: 'jenis_mitra', label: 'Jenis mitra', sample: 'dokter' },
       { name: 'status', label: 'Status verifikasi', sample: 'telah diverifikasi' },
       catatan('Catatan admin (opsional)', 'Dokumen sudah lengkap.'),
-      link('Tautan dashboard mitra', 'https://silk.example/partner')
+      link('Tautan dashboard mitra', 'https://silk.example/dashboard/dokter')
     ],
     required: [],
     subject: 'Verifikasi {{jenis_mitra}} {{status}}',
@@ -237,7 +237,7 @@ ${thanks}`
       { name: 'nama_pasien', label: 'Nama pasien', sample: 'Budi Santoso' },
       { name: 'jadwal', label: 'Jadwal konsultasi', sample: 'Senin, 3 November 2026 pukul 10.00' },
       { name: 'keluhan', label: 'Keluhan pasien', sample: 'Demam tiga hari.' },
-      link('Tautan konsultasi dokter', 'https://silk.example/doctor/consultations')
+      link('Tautan konsultasi dokter', 'https://silk.example/dashboard/dokter/konsultasi')
     ],
     required: [],
     subject: 'Permintaan konsultasi baru dari {{nama_pasien}}',
@@ -260,7 +260,7 @@ Silakan konfirmasi atau batalkan jadwal melalui dashboard dokter.`
       { name: 'nama_pasien', label: 'Nama pasien', sample: 'Budi Santoso' },
       { name: 'jadwal', label: 'Jadwal konsultasi', sample: 'Senin, 3 November 2026 pukul 10.00' },
       { name: 'alasan', label: 'Alasan (opsional)', sample: 'Berhalangan hadir.' },
-      link('Tautan konsultasi dokter', 'https://silk.example/doctor/consultations')
+      link('Tautan konsultasi dokter', 'https://silk.example/dashboard/dokter/konsultasi')
     ],
     required: [],
     subject: 'Konsultasi dibatalkan oleh {{nama_pasien}}',

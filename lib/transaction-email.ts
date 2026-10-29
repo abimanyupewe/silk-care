@@ -171,7 +171,7 @@ export async function sendConsultationRequestEmail({
       nama_pasien: patientName,
       jadwal: formatDateTime(scheduledAt),
       keluhan: complaint,
-      link: `${getAppUrl()}/doctor/consultations`
+      link: `${getAppUrl()}/dashboard/dokter/konsultasi`
     }
   });
 }
@@ -196,7 +196,7 @@ export async function sendConsultationCancelledToDoctorEmail({
       nama_pasien: patientName,
       jadwal: formatDateTime(scheduledAt),
       alasan: reason ?? '',
-      link: `${getAppUrl()}/doctor/consultations`
+      link: `${getAppUrl()}/dashboard/dokter/konsultasi`
     }
   });
 }
@@ -310,7 +310,7 @@ export async function sendPartnerVerificationEmail({
       jenis_mitra: partnerType.toLowerCase(),
       status: labels[status],
       catatan: note ?? '',
-      link: `${getAppUrl()}/partner`
+      link: `${getAppUrl()}${partnerType === 'DOKTER' ? '/dashboard/dokter' : '/dashboard/fasilitas'}`
     }
   });
 }

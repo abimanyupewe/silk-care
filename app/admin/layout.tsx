@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getActiveSession } from '@/lib/auth-guard';
+import { panelHomeForRole } from '@/lib/roles';
 import { AdminShell } from '@/components/admin/AdminShell';
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
   }
 
   if (session.user.role !== 'ADMIN') {
-    redirect('/');
+    redirect(panelHomeForRole(session.user.role));
   }
 
   return (

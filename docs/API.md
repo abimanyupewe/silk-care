@@ -301,6 +301,18 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | PUT    | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
 | DELETE | `/api/v1/admin/email-templates/{key}/{audience}` | 200    |
 
+## Akun uji panel
+
+Untuk menguji login dan panel per peran tanpa menyentuh akun demo:
+
+```bash
+npm run db:seed:test
+```
+
+Kredensial dibaca dari `.env` (`TEST_DOCTOR_*`, `TEST_FACILITY_*`, `TEST_PATIENT_*`; contoh kunci di
+`.env.example`). Seed ini idempoten, memulihkan akun yang dinonaktifkan, menolak jalan di
+production, dan membuat dokter serta fasilitas berstatus `VERIFIED` (muncul di katalog publik).
+
 ## Fixtures demo deterministik
 
 Jalankan:

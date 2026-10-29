@@ -1,0 +1,28 @@
+import { useCallback } from 'react';
+import useSWR from 'swr';
+import { fetchApi, type PaginationMeta } from '@/lib/api-client';
+
+// Data panel dibaca lewat SWR: cache per URL, polling saat tab terlihat, dan revalidasi saat
+// fokus kembali. Revalidasi gagal tidak menghapus data lama; error hanya tampil bila belum ada data.
+export function useApiQuery<T>(path: string | null, refreshInterval = 15000) {
+  const { data, error, isLoading, mutate } = useSWR(path, (key: string) => fetchApi<T>(key), {
+    refreshInterval,
+    shouldRetryOnError: false
+  });
+
+  const reload = useCallback(() => void mutate(), [mutate]);
+  // Tulis data hasil mutasi ke cache tanpa fetch ulang; polling berikutnya tetap menyegarkan.
+  const update = useCallback(
+    (next: T) => void mutate({ data: next }, { revalidate: false }),
+    [mutate]
+  );
+
+  return {
+    data: data?.data,
+    meta: data?.meta as PaginationMeta | undefined,
+    loading: isLoading,
+    error: !data && error instanceof Error ? error.message : '',
+    reload,
+    update
+  };
+}
