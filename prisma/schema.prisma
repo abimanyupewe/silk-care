@@ -628,6 +628,8 @@ enum AnnouncementTone {
   IMPORTANT
 }
 
+// Indeks unik parsial "Announcement_single_active_idx" (satu banner aktif) ada di migrasi
+// 20261030150000_announcements dan tidak bisa ditulis di schema Prisma. Jangan dihapus.
 model Announcement {
   id          String           @id @default(cuid())
   message     String

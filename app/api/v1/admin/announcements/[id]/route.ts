@@ -3,11 +3,8 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import { auditActions, writeAuditLog } from '@/lib/audit';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
-import {
-  announcementSelect,
-  announcementUpdateSchema,
-  validateAnnouncementState
-} from '@/lib/announcement';
+import { announcementSelect, validateAnnouncementState } from '@/lib/announcement';
+import { announcementUpdateSchema } from '@/lib/announcement-schema';
 
 type RouteContext = {
   params: Promise<{

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronRight, Handshake, Pill, Stethoscope, type LucideIcon } from 'lucide-react';
+import { Building2, ChevronRight, Handshake, Stethoscope, type LucideIcon } from 'lucide-react';
 import { facilityTypeLabels, type FacilityTypeValue } from '@/lib/facility-types';
 import { facilityTypeIcons } from './PartnerMenu';
 
@@ -31,6 +31,7 @@ const facilityLink = (type: FacilityTypeValue): MenuLink => ({
   icon: facilityTypeIcons[type]
 });
 
+// Dokter dan Apotek punya menu utama sendiri, jadi tidak diulang di sini.
 export const serviceMenuSections: { label: string; items: MenuLink[] }[] = [
   {
     label: 'Fasilitas medis',
@@ -39,21 +40,15 @@ export const serviceMenuSections: { label: string; items: MenuLink[] }[] = [
     )
   },
   {
-    label: 'Layanan lainnya',
+    label: 'Perawatan dan lainnya',
     items: [
+      ...(['AMBULANCE', 'WELLNESS', 'MASSAGE', 'FUNERAL_HOME'] as const).map(facilityLink),
       {
-        title: 'Dokter',
-        description: 'Cari dokter dan lihat jadwal praktiknya.',
-        href: '/doctor',
-        icon: Stethoscope
-      },
-      {
-        title: 'Apotek',
-        description: facilityTypeDescriptions.PHARMACY,
-        href: '/apotek',
-        icon: Pill
-      },
-      ...(['AMBULANCE', 'WELLNESS', 'MASSAGE', 'FUNERAL_HOME'] as const).map(facilityLink)
+        title: 'Semua fasilitas',
+        description: 'Telusuri seluruh fasilitas yang sudah diverifikasi.',
+        href: '/fasilitas',
+        icon: Building2
+      }
     ]
   }
 ];
@@ -71,7 +66,7 @@ const MenuItem = ({ item }: { item: MenuLink }) => {
   return (
     <li>
       <Link href={item.href} className="flex items-start gap-3 rounded-md p-3 hover:bg-surface">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-white text-primary">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-tint text-primary">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
@@ -99,7 +94,7 @@ const PromoCard = ({
   ctaLabel: string;
   ctaHref: string;
 }) => (
-  <div className="flex flex-col rounded-md border border-border p-4">
+  <div className="flex flex-col rounded-md bg-surface p-4">
     <p className="text-sm font-semibold text-ink">{title}</p>
     <p className="mt-1 text-sm text-ink-muted">{body}</p>
     <div className="mt-4 flex flex-1 flex-col justify-center rounded-md bg-primary-tint p-4">
@@ -108,7 +103,7 @@ const PromoCard = ({
     </div>
     <Link
       href={ctaHref}
-      className="mt-4 flex h-11 items-center justify-center gap-1 rounded-md border border-border-strong text-sm font-semibold text-ink hover:border-primary hover:text-primary-deep"
+      className="mt-4 flex h-11 items-center justify-center gap-1 rounded-md bg-white text-sm font-semibold text-ink hover:text-primary-deep"
     >
       {ctaLabel}
       <ChevronRight className="h-4 w-4" aria-hidden="true" />

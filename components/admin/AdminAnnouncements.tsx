@@ -180,13 +180,30 @@ function AnnouncementForm({
     setSaving(true);
     setError('');
     try {
+      // Placeholder belum diisi: simpan sebagai draf, server juga menolak mengaktifkannya.
+      const next = payloadFrom({ ...values, active: placeholder ? false : values.active });
+      let body: Partial<typeof next> = next;
+
+      if (editingId) {
+        // Hanya kirim yang berubah: daftar bisa basi, dan `active` yang ikut terkirim akan
+        // mengaktifkan ulang banner lama lalu menonaktifkan banner yang sedang tampil.
+        const before = payloadFrom(initial);
+        body = Object.fromEntries(
+          Object.entries(next).filter(
+            ([key, value]) =>
+              JSON.stringify(value) !== JSON.stringify(before[key as keyof typeof before])
+          )
+        );
+
+        if (Object.keys(body).length === 0) {
+          onDone();
+          return;
+        }
+      }
+
       await fetchAdmin(editingId ? `/admin/announcements/${editingId}` : '/admin/announcements', {
         method: editingId ? 'PATCH' : 'POST',
-        // Placeholder belum diisi: simpan sebagai draf, server juga menolak mengaktifkannya.
-        body: JSON.stringify({
-          ...payloadFrom(values),
-          active: placeholder ? false : values.active
-        })
+        body: JSON.stringify(body)
       });
       onDone();
     } catch (err) {

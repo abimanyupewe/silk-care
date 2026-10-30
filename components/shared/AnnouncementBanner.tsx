@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useApiQuery } from '@/lib/api-swr';
 import type { PublicAnnouncement } from '@/lib/announcement';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -11,15 +11,16 @@ const DISMISSED_KEY = 'silk-announcement-dismissed';
 export function AnnouncementBanner() {
   // Admin mengubah banner lewat panel; pengunjung cukup menyegarkan tiap 5 menit.
   const { data } = useApiQuery<PublicAnnouncement | null>('/announcements/active', 300000);
-  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
-
-  useEffect(() => {
+  // Dibaca saat inisialisasi, bukan di efek: banner yang sudah ditutup tidak sempat tampil sekilas
+  // saat berpindah halaman. Aman untuk hidrasi karena data kosong di server dan render pertama.
+  const [dismissedKey, setDismissedKey] = useState<string | null>(() => {
     try {
-      setDismissedKey(localStorage.getItem(DISMISSED_KEY));
+      return localStorage.getItem(DISMISSED_KEY);
     } catch {
-      // Penyimpanan diblokir: banner tetap tampil sampai ditutup di halaman ini.
+      // Penyimpanan diblokir (atau di server): banner tetap tampil sampai ditutup di halaman ini.
+      return null;
     }
-  }, []);
+  });
 
   if (!data) {
     return null;

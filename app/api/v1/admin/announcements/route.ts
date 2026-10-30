@@ -12,11 +12,8 @@ import {
   paginationMeta,
   parseJson
 } from '@/lib/api';
-import {
-  announcementCreateSchema,
-  announcementSelect,
-  validateAnnouncementState
-} from '@/lib/announcement';
+import { announcementSelect, validateAnnouncementState } from '@/lib/announcement';
+import { announcementCreateSchema } from '@/lib/announcement-schema';
 
 export async function GET(request: Request) {
   try {

@@ -1,5 +1,4 @@
 // Tanpa import server supaya aman dipakai komponen klien (status, label) maupun route API.
-import { z } from 'zod';
 import type { Prisma } from '@/lib/generated/prisma';
 
 export const announcementTones = ['INFO', 'PROMO', 'IMPORTANT'] as const;
@@ -45,34 +44,6 @@ export function isSafeLinkUrl(url: string) {
 export function hasPlaceholder(message: string) {
   return /[[\]]/.test(message);
 }
-
-const fields = {
-  message: z.string().trim().min(1).max(200),
-  linkLabel: z.string().trim().min(1).max(40).nullable().optional(),
-  linkUrl: z.string().trim().min(1).max(500).nullable().optional(),
-  startsAt: z.coerce.date().nullable().optional(),
-  endsAt: z.coerce.date().nullable().optional()
-};
-
-export const announcementCreateSchema = z.object({
-  ...fields,
-  tone: z.enum(announcementTones).default('INFO'),
-  // Banner baru berupa draf: mengaktifkan menonaktifkan banner lain, jadi harus disengaja.
-  active: z.boolean().default(false),
-  dismissible: z.boolean().default(true)
-});
-
-export const announcementUpdateSchema = z
-  .object({
-    ...fields,
-    message: fields.message.optional(),
-    tone: z.enum(announcementTones).optional(),
-    active: z.boolean().optional(),
-    dismissible: z.boolean().optional()
-  })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: 'Minimal satu field harus diisi.'
-  });
 
 export type AnnouncementState = {
   message: string;

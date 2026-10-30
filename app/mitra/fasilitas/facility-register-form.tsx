@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { ApiError, fetchApi } from '@/lib/api-client';
-import { facilityTypeLabels, facilityTypes } from '@/lib/facility-types';
+import { facilityTypeLabels, facilityTypes, type FacilityTypeValue } from '@/lib/facility-types';
 
 const fieldClass =
   'mt-2 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary';
@@ -14,10 +14,11 @@ const fieldClass =
 // withAccount: halaman publik /mitra/daftar, buat akun dulu lalu daftarkan fasilitas.
 export function FacilityRegisterForm({
   withAccount = false,
-  defaultType
+  lockedType
 }: {
   withAccount?: boolean;
-  defaultType?: string;
+  // Dari halaman pendaftaran per jenis: jenis tetap, tanpa pilihan.
+  lockedType?: FacilityTypeValue;
 }) {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -150,31 +151,50 @@ export function FacilityRegisterForm({
         />
       </div>
 
-      <div>
-        <label htmlFor="facility-type" className="text-sm font-semibold text-ink">
-          Jenis fasilitas
-        </label>
-        <select
-          id="facility-type"
-          name="type"
-          required
-          defaultValue={defaultType ?? ''}
-          aria-describedby="facility-type-help"
-          className={`${fieldClass} h-12`}
-        >
-          <option value="" disabled>
-            Pilih jenis fasilitas
-          </option>
-          {facilityTypes.map((value) => (
-            <option key={value} value={value}>
-              {facilityTypeLabels[value]}
+      {lockedType ? (
+        <div>
+          <p className="text-sm font-semibold text-ink">Jenis fasilitas</p>
+          <p className="mt-2 flex min-h-12 items-center border border-border bg-surface px-3 text-base text-ink">
+            {facilityTypeLabels[lockedType]}
+          </p>
+          <input type="hidden" name="type" value={lockedType} />
+          <p className="mt-1 text-sm text-ink-muted">
+            Bukan {facilityTypeLabels[lockedType].toLowerCase()}?{' '}
+            <Link
+              href={withAccount ? '/mitra/daftar' : '/mitra/fasilitas'}
+              className="font-semibold text-primary-hover underline"
+            >
+              Pilih jenis lain
+            </Link>
+          </p>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="facility-type" className="text-sm font-semibold text-ink">
+            Jenis fasilitas
+          </label>
+          <select
+            id="facility-type"
+            name="type"
+            required
+            defaultValue=""
+            aria-describedby="facility-type-help"
+            className={`${fieldClass} h-12`}
+          >
+            <option value="" disabled>
+              Pilih jenis fasilitas
             </option>
-          ))}
-        </select>
-        <p id="facility-type-help" className="mt-1 text-sm text-ink-muted">
-          Jenis tidak bisa diubah sendiri setelah mendaftar. Hubungi admin bila salah pilih.
-        </p>
-      </div>
+            {facilityTypes.map((value) => (
+              <option key={value} value={value}>
+                {facilityTypeLabels[value]}
+              </option>
+            ))}
+          </select>
+          <p id="facility-type-help" className="mt-1 text-sm text-ink-muted">
+            Jenis tidak bisa diubah sendiri setelah mendaftar. Hubungi admin bila salah pilih.
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

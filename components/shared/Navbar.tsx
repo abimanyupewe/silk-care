@@ -2,18 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ChevronDown,
-  Handshake,
-  MapPin,
-  Menu,
-  Search,
-  ShoppingCart,
-  Stethoscope,
-  X
-} from 'lucide-react';
+import { ChevronDown, Handshake, Menu, Search, ShoppingCart, Stethoscope, X } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { AccountActions } from './AccountActions';
 import { AnnouncementBanner } from './AnnouncementBanner';
 import { PartnerMenuPanel, ServiceMenuPanel, serviceMenuSections } from './MegaMenu';
 import { NavbarLinks } from './NavbarLink';
@@ -73,7 +65,11 @@ const HoverMenu = ({ label, children }: { label: string; children: ReactNode }) 
         type="button"
         aria-expanded={open}
         aria-haspopup="true"
-        onClick={() => setOpen((value) => !value)}
+        onClick={(event) => {
+          // Mouse: hover sudah membukanya, jadi klik tidak boleh menutup. Sentuh dan keyboard bergantian.
+          const mouse = (event.nativeEvent as PointerEvent).pointerType === 'mouse';
+          setOpen((value) => (mouse ? true : !value));
+        }}
         className="flex h-11 items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-ink hover:text-primary-deep aria-expanded:text-primary-deep"
       >
         {label}
@@ -117,6 +113,9 @@ export const Navbar = () => {
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const [mobilePartnerOpen, setMobilePartnerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  // Batas atas overlay menu mobile = dasar navbar; berubah bila banner tampil di atasnya.
+  const [overlayTop, setOverlayTop] = useState(56);
 
   const closeMobileMenu = () => {
     setMenuOpen(false);
@@ -150,14 +149,14 @@ export const Navbar = () => {
   return (
     <>
       <AnnouncementBanner />
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-white">
+      <nav ref={navRef} className="sticky top-0 z-50 w-full border-b border-border bg-white">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="hidden h-[72px] items-center gap-4 lg:flex xl:gap-5">
             <Link href="/" aria-label="SILK beranda" className="flex shrink-0 items-center">
               <Image src="/assets/icon/icon.svg" alt="SILK" width={40} height={40} />
             </Link>
 
-            <HoverMenu label="Layanan">
+            <HoverMenu label="Fasilitas">
               <ServiceMenuPanel />
             </HoverMenu>
 
@@ -187,14 +186,6 @@ export const Navbar = () => {
               </button>
 
               <Link
-                href="/#cari-layanan"
-                className="hidden h-11 items-center gap-1.5 px-2 text-sm font-medium text-ink-muted hover:text-primary-deep xl:flex"
-              >
-                <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-                Malang
-              </Link>
-
-              <Link
                 href="/apotek"
                 aria-label="Keranjang"
                 className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
@@ -202,18 +193,7 @@ export const Navbar = () => {
                 <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               </Link>
 
-              <Link
-                href="/login"
-                className="flex h-11 min-w-[64px] items-center justify-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-surface"
-              >
-                Masuk
-              </Link>
-              <Link
-                href="/daftar"
-                className="flex h-11 min-w-[64px] items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"
-              >
-                Daftar
-              </Link>
+              <AccountActions />
             </div>
           </div>
 
@@ -243,7 +223,11 @@ export const Navbar = () => {
                 className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
                 aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
                 aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((open) => !open)}
+                onClick={() => {
+                  if (!menuOpen)
+                    setOverlayTop(navRef.current?.getBoundingClientRect().bottom ?? 56);
+                  setMenuOpen((open) => !open);
+                }}
               >
                 {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -252,7 +236,10 @@ export const Navbar = () => {
         </div>
 
         {menuOpen && (
-          <div className="fixed inset-x-0 bottom-0 top-14 z-40 overflow-y-auto border-t border-border bg-white lg:hidden">
+          <div
+            style={{ top: overlayTop }}
+            className="fixed inset-x-0 bottom-0 z-40 overflow-y-auto border-t border-border bg-white lg:hidden"
+          >
             <div className="flex min-h-full flex-col px-4 pb-8 pt-4">
               <button
                 type="button"
@@ -262,7 +249,7 @@ export const Navbar = () => {
               >
                 <span className="flex items-center gap-2">
                   <Stethoscope className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Layanan kesehatan
+                  Fasilitas
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 text-ink-muted transition-transform ${
@@ -322,21 +309,8 @@ export const Navbar = () => {
                 <NavbarLinks mobile onNavigate={closeMobileMenu} />
               </div>
 
-              <div className="mt-auto grid grid-cols-2 gap-3 pt-8">
-                <Link
-                  href="/login"
-                  onClick={closeMobileMenu}
-                  className="flex h-11 items-center justify-center rounded-md border border-border-strong text-sm font-semibold text-ink hover:bg-surface"
-                >
-                  Masuk
-                </Link>
-                <Link
-                  href="/daftar"
-                  onClick={closeMobileMenu}
-                  className="flex h-11 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white hover:bg-primary-hover"
-                >
-                  Daftar
-                </Link>
+              <div className="mt-auto pt-8">
+                <AccountActions mobile onNavigate={closeMobileMenu} />
               </div>
             </div>
           </div>
