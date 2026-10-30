@@ -23,6 +23,7 @@ function credential(prefix: string) {
 
 const doctor = credential('TEST_DOCTOR');
 const facility = credential('TEST_FACILITY');
+const pharmacy = credential('TEST_PHARMACY');
 const patient = credential('TEST_PATIENT');
 
 function upsertUser(input: { email: string; password: string }, name: string, role: string) {
@@ -50,6 +51,7 @@ ON CONFLICT ("email") DO UPDATE SET
 runSql(`
 ${upsertUser(doctor, 'Dokter Uji', 'DOCTOR')}
 ${upsertUser(facility, 'Fasilitas Uji', 'FACILITY')}
+${upsertUser(pharmacy, 'Apotek Uji', 'PHARMACY')}
 ${upsertUser(patient, 'Pengguna Uji', 'PATIENT')}
 
 INSERT INTO "DoctorProfile" ("id", "slug", "userId", "specialty", "bio", "experienceYears", "consultationFee", "city", "verificationStatus", "createdAt", "updatedAt")
@@ -88,10 +90,29 @@ ON CONFLICT ("slug") DO UPDATE SET
   "userId" = EXCLUDED."userId",
   "verificationStatus" = 'VERIFIED',
   "updatedAt" = NOW();
+
+INSERT INTO "Facility" ("id", "slug", "userId", "name", "type", "description", "city", "verificationStatus", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  'apotek-uji',
+  (SELECT "id" FROM "User" WHERE "email" = ${sqlString(pharmacy.email)}),
+  'Apotek Uji',
+  'PHARMACY',
+  'Akun uji untuk pengembangan panel apotek (pesanan dan produk).',
+  'Malang',
+  'VERIFIED',
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("slug") DO UPDATE SET
+  "userId" = EXCLUDED."userId",
+  "verificationStatus" = 'VERIFIED',
+  "updatedAt" = NOW();
 `);
 
 console.log('Akun uji siap:');
 console.log(`- Dokter    : ${doctor.email}`);
-console.log(`- Fasilitas : ${facility.email}`);
+console.log(`- Fasilitas : ${facility.email} (klinik, tanpa menu pesanan/produk)`);
+console.log(`- Apotek    : ${pharmacy.email} (dengan menu pesanan/produk)`);
 console.log(`- Pengguna  : ${patient.email}`);
 console.log('Password ada di .env (TEST_*_PASSWORD).');

@@ -309,9 +309,11 @@ Untuk menguji login dan panel per peran tanpa menyentuh akun demo:
 npm run db:seed:test
 ```
 
-Kredensial dibaca dari `.env` (`TEST_DOCTOR_*`, `TEST_FACILITY_*`, `TEST_PATIENT_*`; contoh kunci di
-`.env.example`). Seed ini idempoten, memulihkan akun yang dinonaktifkan, menolak jalan di
-production, dan membuat dokter serta fasilitas berstatus `VERIFIED` (muncul di katalog publik).
+Kredensial dibaca dari `.env` (`TEST_DOCTOR_*`, `TEST_FACILITY_*`, `TEST_PHARMACY_*`,
+`TEST_PATIENT_*`; contoh kunci di `.env.example`). Seed ini idempoten, memulihkan akun yang
+dinonaktifkan, menolak jalan di production, dan membuat dokter serta fasilitas berstatus `VERIFIED`
+(muncul di katalog publik). `TEST_FACILITY_*` adalah klinik (role `FACILITY`) dan
+`TEST_PHARMACY_*` adalah apotek (role `PHARMACY`); hanya apotek yang punya menu pesanan dan produk.
 
 ## Fixtures demo deterministik
 
