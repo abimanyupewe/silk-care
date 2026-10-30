@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getActiveSession } from '@/lib/auth-guard';
 import { panelHomeForRole } from '@/lib/roles';
+import { facilityTypes, type FacilityTypeValue } from '@/lib/facility-types';
 import { FacilityRegisterForm } from '../fasilitas/facility-register-form';
 
 export const metadata: Metadata = {
@@ -10,8 +11,15 @@ export const metadata: Metadata = {
   description: 'Buat akun dan daftarkan apotek, klinik, atau fasilitas kesehatan Anda di SILK.'
 };
 
-export default async function PartnerSignUpPage() {
+export default async function PartnerSignUpPage({
+  searchParams
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
   const session = await getActiveSession();
+  const { type } = await searchParams;
+  // Nilai di luar daftar tipe diabaikan; pengguna memilih sendiri di formulir.
+  const defaultType = facilityTypes.find((value): value is FacilityTypeValue => value === type);
 
   if (session) {
     // Pasien melanjutkan lewat formulir fasilitas; peran lain sudah punya panel sendiri.
@@ -31,7 +39,7 @@ export default async function PartnerSignUpPage() {
         </p>
 
         <div className="mt-6">
-          <FacilityRegisterForm withAccount />
+          <FacilityRegisterForm withAccount defaultType={defaultType} />
         </div>
 
         <p className="mt-6 text-sm text-ink-muted">

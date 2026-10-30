@@ -12,7 +12,13 @@ const fieldClass =
   'mt-2 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary';
 
 // withAccount: halaman publik /mitra/daftar, buat akun dulu lalu daftarkan fasilitas.
-export function FacilityRegisterForm({ withAccount = false }: { withAccount?: boolean }) {
+export function FacilityRegisterForm({
+  withAccount = false,
+  defaultType
+}: {
+  withAccount?: boolean;
+  defaultType?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState('');
   const [duplicateEmail, setDuplicateEmail] = useState(false);
@@ -152,7 +158,7 @@ export function FacilityRegisterForm({ withAccount = false }: { withAccount?: bo
           id="facility-type"
           name="type"
           required
-          defaultValue=""
+          defaultValue={defaultType ?? ''}
           aria-describedby="facility-type-help"
           className={`${fieldClass} h-12`}
         >

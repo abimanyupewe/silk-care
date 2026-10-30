@@ -6,6 +6,7 @@ import {
   Building2,
   ChevronDown,
   FlaskConical,
+  Handshake,
   HeartPulse,
   MapPin,
   Menu,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavbarLinks } from './NavbarLink';
+import { PartnerMenuItems } from './PartnerMenu';
 import { SearchModal } from './SearchModal';
 
 const serviceMenuItems: {
@@ -80,11 +82,13 @@ const ServiceMenuItems = () => (
 export const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [mobilePartnerOpen, setMobilePartnerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
   const closeMobileMenu = () => {
     setMenuOpen(false);
     setMobileServicesOpen(false);
+    setMobilePartnerOpen(false);
   };
 
   const openSearch = () => {
@@ -140,6 +144,27 @@ export const Navbar = () => {
               </div>
             </div>
 
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                popoverTarget="silk-partner-menu"
+                className="after:content-none flex h-12 items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-ink hover:bg-surface"
+              >
+                Jadi mitra
+                <ChevronDown className="h-4 w-4 text-ink-muted" aria-hidden="true" />
+              </button>
+
+              <div
+                id="silk-partner-menu"
+                popover="auto"
+                className="fixed inset-x-0 bottom-auto top-[72px] m-0 max-h-[calc(100vh-72px)] w-full max-w-none overflow-y-auto border-y border-border bg-white p-0"
+              >
+                <div className="container mx-auto max-w-7xl px-4 py-5">
+                  <PartnerMenuItems />
+                </div>
+              </div>
+            </div>
+
             <NavbarLinks />
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -177,18 +202,18 @@ export const Navbar = () => {
                 <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               </Link>
 
-              <button
-                type="button"
-                className="h-12 min-w-[72px] rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-surface"
+              <Link
+                href="/login"
+                className="flex h-12 min-w-[72px] items-center justify-center rounded-md border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-surface"
               >
                 Masuk
-              </button>
-              <button
-                type="button"
-                className="h-12 min-w-[72px] rounded-md bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover"
+              </Link>
+              <Link
+                href="/daftar"
+                className="flex h-12 min-w-[72px] items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover"
               >
                 Daftar
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -267,25 +292,49 @@ export const Navbar = () => {
                 </div>
               )}
 
+              <button
+                type="button"
+                className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface"
+                aria-expanded={mobilePartnerOpen}
+                onClick={() => setMobilePartnerOpen((open) => !open)}
+              >
+                <span className="flex items-center gap-2">
+                  <Handshake className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Jadi mitra
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-ink-muted transition-transform ${
+                    mobilePartnerOpen ? 'rotate-180' : ''
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {mobilePartnerOpen && (
+                <div className="ml-3 border-l border-border pl-3">
+                  <PartnerMenuItems onNavigate={closeMobileMenu} />
+                </div>
+              )}
+
               <div className="mt-2 border-t border-border pt-2">
                 <NavbarLinks mobile onNavigate={closeMobileMenu} />
               </div>
 
               <div className="mt-auto grid grid-cols-2 gap-3 pt-8">
-                <button
-                  type="button"
+                <Link
+                  href="/login"
                   onClick={closeMobileMenu}
-                  className="h-12 rounded-md border border-border-strong text-sm font-semibold text-ink hover:bg-surface"
+                  className="flex h-12 items-center justify-center rounded-md border border-border-strong text-sm font-semibold text-ink hover:bg-surface"
                 >
                   Masuk
-                </button>
-                <button
-                  type="button"
+                </Link>
+                <Link
+                  href="/daftar"
                   onClick={closeMobileMenu}
-                  className="h-12 rounded-md bg-primary text-sm font-semibold text-white hover:bg-primary-hover"
+                  className="flex h-12 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white hover:bg-primary-hover"
                 >
                   Daftar
-                </button>
+                </Link>
               </div>
             </div>
           </div>
