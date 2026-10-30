@@ -645,6 +645,29 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/facilities/{slug}/services:
+    get:
+      tags: [Public Catalog]
+      security: []
+      summary: Daftar layanan aktif sebuah fasilitas
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: Layanan aktif fasilitas terverifikasi.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FacilityService'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/articles:
     get:
       tags: [Public Catalog]
@@ -5083,6 +5106,11 @@ components:
           description: Hanya pada profil sendiri (/facility/profile); publik memakai rating.
         reviewCount:
           type: integer
+        services:
+          type: array
+          description: Layanan aktif (hanya pada detail publik).
+          items:
+            $ref: '#/components/schemas/FacilityService'
         distanceKm:
           type: number
           nullable: true

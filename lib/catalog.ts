@@ -1,5 +1,6 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
+import { publicFacilityServiceSelect } from '@/lib/facility-service';
 
 export const publicDoctorWhere = {
   verificationStatus: 'VERIFIED',
@@ -10,6 +11,11 @@ export const publicFacilityWhere = {
   verificationStatus: 'VERIFIED',
   user: { deletedAt: null }
 } satisfies Prisma.FacilityWhereInput;
+
+export const publicFacilityServiceWhere = {
+  active: true,
+  deletedAt: null
+} satisfies Prisma.FacilityServiceWhereInput;
 
 export const publicArticleWhere = {
   status: 'PUBLISHED',
@@ -106,6 +112,13 @@ export const facilityDetailSelect = {
       dayOfWeek: 'asc'
     },
     select: facilityOperatingHourSelect
+  },
+  services: {
+    where: publicFacilityServiceWhere,
+    orderBy: {
+      name: 'asc'
+    },
+    select: publicFacilityServiceSelect
   }
 } satisfies Prisma.FacilitySelect;
 
