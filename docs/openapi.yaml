@@ -1739,8 +1739,6 @@ paths:
                   type: string
                   minLength: 2
                   maxLength: 150
-                type:
-                  $ref: '#/components/schemas/FacilityType'
                 description:
                   type: string
                   maxLength: 2000

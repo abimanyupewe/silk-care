@@ -7,6 +7,7 @@ import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { VerificationBanner } from '@/components/panel/VerificationBanner';
 import { useApiQuery } from '@/lib/api-swr';
+import { formatAdminRating } from '@/lib/admin-format';
 import { isShopFacility } from '@/lib/facility-types';
 
 type FacilityProfile = {
@@ -18,6 +19,8 @@ type FacilityProfile = {
   phone: string | null;
   photoUrl: string | null;
   verificationStatus: string;
+  ratingAverage: number | null;
+  reviewCount: number;
   operatingHours: Array<{ id: string }>;
 };
 
@@ -60,6 +63,12 @@ export function FacilityDashboard() {
   ];
   const remaining = checklist.filter((item) => !item.done).length;
 
+  const ratingCard = {
+    label: `Rating (${facility.reviewCount.toLocaleString('id-ID')} ulasan)`,
+    display: formatAdminRating(facility.ratingAverage),
+    href: '/dashboard/fasilitas/ulasan'
+  };
+
   const cards = shop
     ? [
         {
@@ -101,23 +110,27 @@ export function FacilityDashboard() {
         <VerificationBanner status={facility.verificationStatus} />
       </div>
 
+      <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Ringkasan">
+        {[...cards, ratingCard].map((card) => (
+          <Link
+            key={card.label}
+            href={card.href}
+            className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
+          >
+            <p className="text-sm font-medium text-ink-muted">{card.label}</p>
+            <p className="mt-2 text-2xl font-bold text-ink">
+              {'display' in card
+                ? card.display
+                : card.value == null
+                  ? '–'
+                  : card.value.toLocaleString('id-ID')}
+            </p>
+          </Link>
+        ))}
+      </section>
+
       {shop ? (
         <>
-          <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Ringkasan">
-            {cards.map((card) => (
-              <Link
-                key={card.label}
-                href={card.href}
-                className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
-              >
-                <p className="text-sm font-medium text-ink-muted">{card.label}</p>
-                <p className="mt-2 text-2xl font-bold text-ink">
-                  {card.value == null ? '–' : card.value.toLocaleString('id-ID')}
-                </p>
-              </Link>
-            ))}
-          </section>
-
           <section className="mt-6 border border-border bg-white p-4" aria-label="Stok menipis">
             <h2 className="text-lg font-bold text-ink">Stok menipis</h2>
             {lowStock.length === 0 ? (

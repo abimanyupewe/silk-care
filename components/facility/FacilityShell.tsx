@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Building2, Clock, LayoutDashboard, Package, ShoppingBag } from 'lucide-react';
+import { Bell, Building2, Clock, LayoutDashboard, Package, ShoppingBag, Star } from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
 import { useApiQuery } from '@/lib/api-swr';
 import { isShopFacility } from '@/lib/facility-types';
@@ -11,6 +11,7 @@ const shopItems = [
 ];
 
 const commonItems = [
+  { href: '/dashboard/fasilitas/ulasan', label: 'Ulasan', icon: Star },
   { href: '/dashboard/fasilitas/notifikasi', label: 'Notifikasi', icon: Bell },
   { href: '/dashboard/fasilitas/profil', label: 'Profil', icon: Building2 },
   { href: '/dashboard/fasilitas/jam-operasional', label: 'Jam operasional', icon: Clock }

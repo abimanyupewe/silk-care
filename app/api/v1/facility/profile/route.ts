@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireFacility } from '@/lib/facility-guard';
-import { facilityProfileSelect, facilityTypes } from '@/lib/facility';
+import { facilityProfileSelect } from '@/lib/facility';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { logError } from '@/lib/logger';
 import {
@@ -11,10 +11,10 @@ import {
 } from '@/lib/cloudinary';
 import { mediaPairError } from '@/lib/media';
 
+// Tipe tidak bisa diubah sendiri: menentukan akses apotek, dan role hanya disinkronkan oleh admin.
 const profileSchema = z
   .object({
     name: z.string().trim().min(2).max(150).optional(),
-    type: z.enum(facilityTypes).optional(),
     description: z.string().trim().max(2000).nullable().optional(),
     address: z.string().trim().max(500).nullable().optional(),
     city: z.string().trim().max(100).nullable().optional(),

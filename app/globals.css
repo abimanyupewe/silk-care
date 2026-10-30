@@ -187,3 +187,36 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Product tour (driver.js): ikuti aturan desain — tanpa shadow, border 1px, teks >=14px, tombol >=44px. */
+.driver-popover {
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+  color: var(--ink);
+}
+.driver-popover-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.driver-popover-description,
+.driver-popover-progress-text {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+.driver-popover-footer button {
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.875rem;
+  text-shadow: none;
+}
+.driver-popover-footer .driver-popover-next-btn {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}

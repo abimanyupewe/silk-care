@@ -14,6 +14,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PanelTour } from './PanelTour';
 
 export type NavItem = {
   href: string;
@@ -183,7 +184,7 @@ export function PanelShell({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-3" aria-label={navLabel}>
+        <nav id="panel-nav" className="flex-1 overflow-y-auto py-3" aria-label={navLabel}>
           {navGroups.map((group) => (
             <div
               key={group.label ?? 'utama'}
@@ -253,6 +254,7 @@ export function PanelShell({
             <p className="truncate text-sm text-white/75">{user.email}</p>
           </div>
           <button
+            id="panel-signout"
             type="button"
             onClick={() => signOut({ redirectTo: '/' })}
             title={collapsed ? 'Keluar' : undefined}
@@ -278,7 +280,7 @@ export function PanelShell({
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
-          <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+          <nav id="panel-breadcrumb" aria-label="Breadcrumb" className="min-w-0 flex-1">
             {activeItem ? (
               <ol className="flex items-center gap-2 text-sm">
                 {activeGroup?.label ? (
@@ -291,6 +293,7 @@ export function PanelShell({
               </ol>
             ) : null}
           </nav>
+          <PanelTour storageKey={storageKey} />
         </header>
 
         <main id="panel-main" tabIndex={-1} className="px-4 py-6 outline-none md:px-8 md:py-8">
