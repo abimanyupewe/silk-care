@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import type { Prisma } from '@/lib/generated/prisma';
+import type { IdempotencyScope as IdempotencyScopeValue, Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { jsonError } from '@/lib/api';
 
@@ -69,7 +69,7 @@ function readIdempotencyKey(request: Request): { key?: string; error?: NextRespo
   return { key };
 }
 
-async function findRecord(userId: string, scope: 'CHECKOUT' | 'CONSULTATION_CREATE', key: string) {
+async function findRecord(userId: string, scope: IdempotencyScopeValue, key: string) {
   const record = await prisma.idempotencyKey.findUnique({
     where: {
       userId_scope_key: {
@@ -124,7 +124,7 @@ function existingRecordResponse(record: IdempotencyRecord, requestHash: string) 
 export async function resolveIdempotency(
   request: Request,
   userId: string,
-  scope: 'CHECKOUT' | 'CONSULTATION_CREATE',
+  scope: IdempotencyScopeValue,
   payload: unknown
 ): Promise<{ context?: IdempotencyContext; response?: NextResponse }> {
   const keyResult = readIdempotencyKey(request);
@@ -154,7 +154,7 @@ export async function resolveIdempotency(
 
 export async function replayIdempotency(
   userId: string,
-  scope: 'CHECKOUT' | 'CONSULTATION_CREATE',
+  scope: IdempotencyScopeValue,
   key: string,
   requestHash: string
 ) {
@@ -171,7 +171,7 @@ export async function createIdempotencyRecord(
   tx: Prisma.TransactionClient,
   input: {
     userId: string;
-    scope: 'CHECKOUT' | 'CONSULTATION_CREATE';
+    scope: IdempotencyScopeValue;
     context: IdempotencyContext;
   }
 ) {

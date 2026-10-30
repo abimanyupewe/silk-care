@@ -298,6 +298,75 @@ Catatan: {{catatan}}
 ${thanks}`
   },
   {
+    key: 'APPOINTMENT_REQUEST',
+    label: 'Permintaan janji temu baru',
+    description: 'Dikirim ke fasilitas saat pasien mengajukan janji temu.',
+    group: 'Janji temu',
+    variables: [
+      nama,
+      { name: 'nama_pasien', label: 'Nama pasien', sample: 'Budi Santoso' },
+      { name: 'layanan', label: 'Nama layanan', sample: 'Pemeriksaan umum' },
+      { name: 'jadwal', label: 'Jadwal janji temu', sample: 'Senin, 3 November 2026 pukul 10.00' },
+      link('Tautan janji temu fasilitas', 'https://silk.example/dashboard/fasilitas/janji-temu')
+    ],
+    required: [],
+    subject: 'Permintaan janji temu baru dari {{nama_pasien}}',
+    body: `Halo {{nama}},
+
+{{nama_pasien}} mengajukan janji temu untuk {{layanan}} pada {{jadwal}}.
+
+{{link}}
+
+Silakan konfirmasi atau batalkan janji temu melalui panel fasilitas.`
+  },
+  {
+    key: 'APPOINTMENT_CANCELLED',
+    label: 'Janji temu dibatalkan pasien',
+    description: 'Dikirim ke fasilitas saat pasien membatalkan janji temu.',
+    group: 'Janji temu',
+    variables: [
+      nama,
+      { name: 'nama_pasien', label: 'Nama pasien', sample: 'Budi Santoso' },
+      { name: 'jadwal', label: 'Jadwal janji temu', sample: 'Senin, 3 November 2026 pukul 10.00' },
+      { name: 'alasan', label: 'Alasan (opsional)', sample: 'Berhalangan hadir.' },
+      link('Tautan janji temu fasilitas', 'https://silk.example/dashboard/fasilitas/janji-temu')
+    ],
+    required: [],
+    subject: 'Janji temu dibatalkan oleh {{nama_pasien}}',
+    body: `Halo {{nama}},
+
+{{nama_pasien}} membatalkan janji temu pada {{jadwal}}.
+Alasan: {{alasan}}
+
+{{link}}
+
+${thanks}`
+  },
+  {
+    key: 'APPOINTMENT_STATUS',
+    label: 'Status janji temu berubah',
+    description: 'Dikirim ke pasien saat fasilitas mengonfirmasi, menyelesaikan, atau membatalkan.',
+    group: 'Janji temu',
+    variables: [
+      nama,
+      { name: 'nama_fasilitas', label: 'Nama fasilitas', sample: 'Klinik Sehat' },
+      { name: 'jadwal', label: 'Jadwal janji temu', sample: 'Senin, 3 November 2026 pukul 10.00' },
+      { name: 'status', label: 'Status janji temu', sample: 'Dikonfirmasi' },
+      catatan('Catatan (opsional)', 'Mohon hadir 10 menit lebih awal.'),
+      link('Tautan janji temu', 'https://silk.example/appointments')
+    ],
+    required: [],
+    subject: 'Janji temu di {{nama_fasilitas}}: {{status}}',
+    body: `Halo {{nama}},
+
+Status janji temu Anda di {{nama_fasilitas}} pada {{jadwal}} sekarang: {{status}}.
+Catatan: {{catatan}}
+
+{{link}}
+
+${thanks}`
+  },
+  {
     key: 'MEDICAL_RECORD',
     label: 'Rekam medis tersedia',
     description: 'Dikirim ke pasien saat dokter mengisi rekam medis.',

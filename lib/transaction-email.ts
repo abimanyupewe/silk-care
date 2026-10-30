@@ -30,6 +30,13 @@ const consultationStatusLabels: Record<string, string> = {
   CANCELLED: 'Dibatalkan'
 };
 
+const appointmentStatusLabels: Record<string, string> = {
+  REQUESTED: 'Menunggu konfirmasi fasilitas',
+  CONFIRMED: 'Dikonfirmasi',
+  COMPLETED: 'Selesai',
+  CANCELLED: 'Dibatalkan'
+};
+
 function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'full',
@@ -311,6 +318,84 @@ export async function sendPartnerVerificationEmail({
       status: labels[status],
       catatan: note ?? '',
       link: `${getAppUrl()}${partnerType === 'DOKTER' ? '/dashboard/dokter' : '/dashboard/fasilitas'}`
+    }
+  });
+}
+
+export async function sendAppointmentRequestEmail({
+  to,
+  name,
+  patientName,
+  serviceName,
+  scheduledAt
+}: EmailRecipient & {
+  patientName: string;
+  serviceName: string;
+  scheduledAt: Date;
+}) {
+  await sendSafe({
+    key: 'APPOINTMENT_REQUEST',
+    to,
+    audience: 'FACILITY',
+    vars: {
+      nama: name,
+      nama_pasien: patientName,
+      layanan: serviceName,
+      jadwal: formatDateTime(scheduledAt),
+      link: `${getAppUrl()}/dashboard/fasilitas/janji-temu`
+    }
+  });
+}
+
+export async function sendAppointmentStatusEmail({
+  to,
+  name,
+  facilityName,
+  scheduledAt,
+  status,
+  note
+}: EmailRecipient & {
+  facilityName: string;
+  scheduledAt: Date;
+  status: string;
+  note?: string | null;
+}) {
+  await sendSafe({
+    key: 'APPOINTMENT_STATUS',
+    to,
+    audience: 'PATIENT',
+    vars: {
+      nama: name,
+      nama_fasilitas: facilityName,
+      jadwal: formatDateTime(scheduledAt),
+      status: appointmentStatusLabels[status] ?? status,
+      catatan: note ?? '',
+      link: `${getAppUrl()}/appointments`
+    }
+  });
+}
+
+export async function sendAppointmentCancelledToFacilityEmail({
+  to,
+  name,
+  patientName,
+  scheduledAt,
+  reason
+}: EmailRecipient & {
+  patientName: string;
+  scheduledAt: Date;
+  reason?: string | null;
+}) {
+  await sendSafe({
+    key: 'APPOINTMENT_CANCELLED',
+    to,
+    audience: 'FACILITY',
+    vars: {
+      nama: name,
+      nama_pasien: patientName,
+      jadwal: formatDateTime(scheduledAt),
+      alasan: reason ?? '',
+      link: `${getAppUrl()}/dashboard/fasilitas/janji-temu`
     }
   });
 }

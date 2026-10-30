@@ -44,6 +44,8 @@ tags:
   - name: Orders
   - name: Consultations
   - name: Medical Records
+  - name: Appointments
+    description: Janji temu pasien ke fasilitas non-apotek.
   - name: Doctor
   - name: Facility
   - name: Partner
@@ -2296,6 +2298,139 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/appointments:
+    get:
+      tags: [Appointments]
+      summary: Daftar janji temu milik pengguna
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AppointmentStatus'
+      responses:
+        '200':
+          description: Daftar janji temu.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Appointments]
+      summary: Ajukan janji temu ke fasilitas non-apotek
+      description: >-
+        Waktu divalidasi terhadap jam operasional fasilitas (zona Asia/Jakarta). Mendukung
+        header Idempotency-Key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [facilitySlug, scheduledAt]
+              properties:
+                facilitySlug:
+                  type: string
+                serviceId:
+                  type: string
+                scheduledAt:
+                  type: string
+                  format: date-time
+                notes:
+                  type: string
+                  maxLength: 1000
+                  nullable: true
+      responses:
+        '201':
+          description: Janji temu dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/appointments/{id}:
+    get:
+      tags: [Appointments]
+      summary: Detail janji temu milik pengguna
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Detail janji temu.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/appointments/{id}/cancel:
+    post:
+      tags: [Appointments]
+      summary: Batalkan janji temu milik pengguna
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  nullable: true
+      responses:
+        '200':
+          description: Janji temu dibatalkan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/facility/orders:
@@ -5039,6 +5174,70 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScheduleItem'
+    AppointmentStatus:
+      type: string
+      enum: [REQUESTED, CONFIRMED, COMPLETED, CANCELLED]
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/AppointmentStatus'
+        scheduledAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        serviceName:
+          type: string
+        price:
+          type: integer
+          nullable: true
+        priceMax:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        cancelReason:
+          type: string
+          nullable: true
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        facility:
+          type: object
+          properties:
+            name:
+              type: string
+            slug:
+              type: string
+        patient:
+          type: object
+          properties:
+            name:
+              type: string
+              nullable: true
+            email:
+              type: string
+              nullable: true
+              description: Hanya pada detail.
     FacilityService:
       type: object
       properties:
