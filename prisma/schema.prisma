@@ -73,6 +73,13 @@ enum ConsultationType {
   IN_PERSON
 }
 
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 enum ConsultationStatus {
   REQUESTED
   CONFIRMED
@@ -98,6 +105,7 @@ enum NotificationType {
   REVIEW
   ARTICLE
   CONSULTATION
+  APPOINTMENT
   SYSTEM
 }
 
@@ -110,6 +118,7 @@ enum EmailAudience {
 enum IdempotencyScope {
   CHECKOUT
   CONSULTATION_CREATE
+  APPOINTMENT_CREATE
 }
 
 model User {
@@ -137,6 +146,7 @@ model User {
   orderStatusChanges   OrderStatusHistory[] @relation("OrderStatusChanger")
   notifications        Notification[]
   patientConsultations Consultation[]       @relation("PatientConsultations")
+  appointments         Appointment[]        @relation("PatientAppointments")
   medicalRecords       MedicalRecord[]      @relation("PatientMedicalRecords")
   auditLogs            AuditLog[]           @relation("AuditLogs")
   idempotencyKeys      IdempotencyKey[]
@@ -224,6 +234,8 @@ model Facility {
   carts          Cart[]
   orders         Order[]
   operatingHours FacilityOperatingHour[]
+  services       FacilityService[]
+  appointments   Appointment[]
 
   @@index([type])
   @@index([city])
@@ -245,6 +257,54 @@ model FacilityOperatingHour {
 
   @@unique([facilityId, dayOfWeek])
   @@index([facilityId, dayOfWeek])
+}
+
+model FacilityService {
+  id              String    @id @default(cuid())
+  facilityId      String
+  facility        Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  slug            String    @unique
+  name            String
+  description     String?
+  priceMin        Int
+  priceMax        Int?
+  durationMinutes Int       @default(30)
+  active          Boolean   @default(true)
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  appointments Appointment[]
+
+  @@index([facilityId, active])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  facilityId      String
+  facility        Facility          @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  serviceId       String?
+  service         FacilityService?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceName     String
+  price           Int?
+  priceMax        Int?
+  status          AppointmentStatus @default(REQUESTED)
+  scheduledAt     DateTime
+  endsAt          DateTime
+  durationMinutes Int
+  notes           String?
+  cancelReason    String?
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([patientId, scheduledAt])
+  @@index([facilityId, scheduledAt])
+  @@index([status, scheduledAt])
 }
 
 model Article {
