@@ -40,3 +40,10 @@ export function formatAdminRating(value: number | null | undefined) {
   if (value === null || value === undefined) return '—';
   return `${value.toLocaleString('id-ID')} / 5`;
 }
+
+export function formatAdminPriceRange(min: number | null | undefined, max?: number | null) {
+  if (min === null || min === undefined) return '—';
+  return max
+    ? `${formatAdminCurrency(min)} – ${formatAdminCurrency(max)}`
+    : formatAdminCurrency(min);
+}

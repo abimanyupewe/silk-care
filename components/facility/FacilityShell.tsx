@@ -1,13 +1,28 @@
 'use client';
 
-import { Bell, Building2, Clock, LayoutDashboard, Package, ShoppingBag, Star } from 'lucide-react';
+import {
+  Bell,
+  Building2,
+  CalendarCheck,
+  ClipboardList,
+  Clock,
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Star
+} from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
 import { useApiQuery } from '@/lib/api-swr';
-import { isShopFacility } from '@/lib/facility-types';
+import { isServiceFacility, isShopFacility } from '@/lib/facility-types';
 
 const shopItems = [
   { href: '/dashboard/fasilitas/pesanan', label: 'Pesanan', icon: ShoppingBag },
   { href: '/dashboard/fasilitas/produk', label: 'Produk', icon: Package }
+];
+
+const serviceItems = [
+  { href: '/dashboard/fasilitas/layanan', label: 'Layanan', icon: ClipboardList },
+  { href: '/dashboard/fasilitas/janji-temu', label: 'Janji temu', icon: CalendarCheck }
 ];
 
 const commonItems = [
@@ -27,11 +42,13 @@ export function FacilityShell({
   children: React.ReactNode;
 }) {
   const shop = isShopFacility(role);
+  const service = isServiceFacility(role);
   const navGroups: NavGroup[] = [
     {
       items: [
         { href: '/dashboard/fasilitas', label: 'Ringkasan', icon: LayoutDashboard },
         ...(shop ? shopItems : []),
+        ...(service ? serviceItems : []),
         ...commonItems
       ]
     }
@@ -39,6 +56,11 @@ export function FacilityShell({
   // URL sama dengan kartu di Ringkasan, jadi SWR memakai satu cache dan satu polling.
   // Path null = tidak fetch; route pesanan menolak non-apotek dengan 403.
   const paid = useApiQuery<unknown[]>(shop ? '/facility/orders?status=PAID&limit=1' : null, 30000);
+  // URL sama dengan kartu di Ringkasan; route janji temu menolak apotek dengan 403.
+  const pendingAppointments = useApiQuery<unknown[]>(
+    service ? '/facility/appointments?status=REQUESTED&limit=1' : null,
+    30000
+  );
   const notifications = useApiQuery<unknown[]>('/notifications?limit=1', 30000);
   const unread = (notifications.meta as { unreadCount?: number } | undefined)?.unreadCount ?? 0;
 
@@ -46,6 +68,7 @@ export function FacilityShell({
     <PanelShell
       badges={{
         '/dashboard/fasilitas/pesanan': paid.meta?.total ?? 0,
+        '/dashboard/fasilitas/janji-temu': pendingAppointments.meta?.total ?? 0,
         '/dashboard/fasilitas/notifikasi': unread
       }}
       navGroups={navGroups}

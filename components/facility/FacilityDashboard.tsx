@@ -8,7 +8,7 @@ import { AdminErrorState } from '@/components/admin/AdminState';
 import { VerificationBanner } from '@/components/panel/VerificationBanner';
 import { useApiQuery } from '@/lib/api-swr';
 import { formatAdminRating } from '@/lib/admin-format';
-import { isShopFacility } from '@/lib/facility-types';
+import { isServiceFacility, isShopFacility } from '@/lib/facility-types';
 
 type FacilityProfile = {
   name: string;
@@ -33,7 +33,12 @@ export function FacilityDashboard() {
   const facility = profile.data;
   // Hanya apotek yang punya pesanan dan produk; path null = tidak fetch (route lain menolak 403).
   const shop = isShopFacility(facility?.type);
+  const service = isServiceFacility(facility?.type);
   const when = (path: string) => (shop ? path : null);
+  const pendingAppointments = useApiQuery<unknown[]>(
+    service ? '/facility/appointments?status=REQUESTED&limit=1' : null,
+    30000
+  );
   const paid = useApiQuery<unknown[]>(when('/facility/orders?status=PAID&limit=1'), 30000);
   const processing = useApiQuery<unknown[]>(
     when('/facility/orders?status=PROCESSING&limit=1'),
@@ -92,7 +97,15 @@ export function FacilityDashboard() {
           href: '/dashboard/fasilitas/produk'
         }
       ]
-    : [];
+    : service
+      ? [
+          {
+            label: 'Janji temu menunggu',
+            value: pendingAppointments.meta?.total,
+            href: '/dashboard/fasilitas/janji-temu'
+          }
+        ]
+      : [];
 
   return (
     <div>
@@ -102,7 +115,7 @@ export function FacilityDashboard() {
         description={
           shop
             ? 'Ringkasan pesanan, stok, dan kelengkapan profil fasilitas Anda.'
-            : 'Ringkasan kelengkapan profil fasilitas Anda.'
+            : 'Ringkasan janji temu, rating, dan kelengkapan profil fasilitas Anda.'
         }
       />
 
