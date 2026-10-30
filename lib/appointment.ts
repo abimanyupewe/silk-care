@@ -87,3 +87,27 @@ export function formatAppointmentSchedule(date: Date) {
     timeZone: 'Asia/Jakarta'
   }).format(date);
 }
+
+// Filter `from`/`to` (ISO) pada scheduledAt untuk daftar mitra dan admin.
+export function parseScheduledRange(searchParams: URLSearchParams) {
+  const range: Prisma.DateTimeFilter = {};
+
+  for (const [param, key] of [
+    ['from', 'gte'],
+    ['to', 'lte']
+  ] as const) {
+    const raw = searchParams.get(param);
+
+    if (!raw) continue;
+
+    const date = new Date(raw);
+
+    if (Number.isNaN(date.getTime())) {
+      return { error: `Parameter ${param} bukan tanggal yang valid.` };
+    }
+
+    range[key] = date;
+  }
+
+  return { range: Object.keys(range).length > 0 ? range : undefined };
+}
