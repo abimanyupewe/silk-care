@@ -37,8 +37,8 @@ export default async function LoginPage({
 
         <p className="mt-6 text-sm text-ink-muted">
           Belum punya akun?{' '}
-          <Link href="/mitra/daftar" className="font-semibold text-primary-hover underline">
-            Daftar sebagai mitra fasilitas
+          <Link href="/daftar" className="font-semibold text-primary-hover underline">
+            Daftar
           </Link>
         </p>
       </div>
