@@ -20,6 +20,11 @@ export function isShopFacility(typeOrRole: string | null | undefined) {
   return typeOrRole === 'PHARMACY';
 }
 
+// Semua tipe/role fasilitas selain apotek: katalog layanan dan janji temu. Role FACILITY ikut.
+export function isServiceFacility(typeOrRole: string | null | undefined) {
+  return Boolean(typeOrRole) && !isShopFacility(typeOrRole);
+}
+
 // Record penuh: menambah tipe di atas tanpa label akan gagal typecheck.
 export const facilityTypeLabels: Record<FacilityTypeValue, string> = {
   HOSPITAL: 'Rumah sakit',

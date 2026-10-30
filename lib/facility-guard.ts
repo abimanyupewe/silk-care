@@ -2,7 +2,7 @@ import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole, type SessionUser } from '@/lib/auth-guard';
 import { jsonError } from '@/lib/api';
-import { isShopFacility } from '@/lib/facility-types';
+import { isServiceFacility, isShopFacility } from '@/lib/facility-types';
 
 type FacilityProfile = {
   id: string;
@@ -31,6 +31,24 @@ export async function requireShopFacility(): Promise<FacilityAuthResult> {
 
   if (!isShopFacility(auth.user.role)) {
     return { ok: false, error: jsonError('Fitur ini hanya tersedia untuk apotek.', 403) };
+  }
+
+  return auth;
+}
+
+// Untuk route layanan dan janji temu: semua fasilitas selain apotek.
+export async function requireServiceFacility(): Promise<FacilityAuthResult> {
+  const auth = await requireFacility();
+
+  if (!auth.ok) {
+    return auth;
+  }
+
+  if (!isServiceFacility(auth.user.role)) {
+    return {
+      ok: false,
+      error: jsonError('Fitur ini hanya tersedia untuk fasilitas non-apotek.', 403)
+    };
   }
 
   return auth;
