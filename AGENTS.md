@@ -51,7 +51,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   user/doctor/facility/order/article
   management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*` (including
   article moderation at `articles/[id]/moderate`), admin audit logs at
-  `/api/v1/admin/audit-logs`, admin broadcast notifications at
+  `/api/v1/admin/audit-logs`, admin banner management under `/api/v1/admin/announcements*`, the
+  public active banner at `/api/v1/announcements/active`, admin broadcast notifications at
   `/api/v1/admin/notifications/broadcast`, dashboard
   stats at `/api/v1/admin/stats`, the Midtrans webhook at
   `/api/v1/payments/midtrans/webhook`, and reviews under `/api/v1/reviews*` plus
@@ -121,7 +122,7 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
   `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
-  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, and `facility_services_appointments`
+  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, `facility_services_appointments`, and `announcements`
   migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
@@ -193,6 +194,13 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   reason); `POST /appointments` accepts `Idempotency-Key`; every status change writes an
   `APPOINTMENT` notification and a best-effort email. The panel routes live in
   `app/dashboard/fasilitas/(service)`, the mirror of `(shop)`.
+  Admins keep any number of information banners (`Announcement`) and activate one: at most one row is
+  `active`, enforced by a partial unique index in the `announcements` migration, and activating one
+  deactivates the others in the same transaction (a lost race returns `409`). New banners start as
+  drafts; a message that still contains a `[ ]` template placeholder can be saved but not activated.
+  `linkUrl` must be an internal path or `https://`. The public site renders the live banner above the
+  navbar (`components/shared/AnnouncementBanner.tsx`, polled every 5 minutes); a visitor's dismissal is
+  kept in `localStorage` per `id:updatedAt`, so an edited banner reappears. Panels do not use `Navbar`.
   Orders start `PENDING`/`UNPAID`; a successful settlement
   moves them to `PAID`/`PAID` and writes history plus customer/facility notifications.
   Facility/admin order management only allows `PAID -> PROCESSING -> SHIPPED -> COMPLETED`

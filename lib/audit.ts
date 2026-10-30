@@ -23,6 +23,9 @@ export const auditActions = {
   notificationBroadcast: 'NOTIFICATION_BROADCAST',
   emailTemplateUpdate: 'EMAIL_TEMPLATE_UPDATE',
   emailTemplateReset: 'EMAIL_TEMPLATE_RESET',
+  announcementCreate: 'ANNOUNCEMENT_CREATE',
+  announcementUpdate: 'ANNOUNCEMENT_UPDATE',
+  announcementDelete: 'ANNOUNCEMENT_DELETE',
   // Aktivitas yang dilakukan pengguna sendiri.
   userRegister: 'USER_REGISTER',
   userLogin: 'USER_LOGIN',
@@ -43,7 +46,8 @@ export const auditTargetTypes = [
   'REVIEW',
   'NOTIFICATION',
   'CONSULTATION',
-  'EMAIL_TEMPLATE'
+  'EMAIL_TEMPLATE',
+  'ANNOUNCEMENT'
 ] as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

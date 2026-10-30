@@ -621,3 +621,25 @@ model EmailTemplate {
   @@unique([key, audience])
   @@index([updatedById])
 }
+
+enum AnnouncementTone {
+  INFO
+  PROMO
+  IMPORTANT
+}
+
+model Announcement {
+  id          String           @id @default(cuid())
+  message     String
+  linkLabel   String?
+  linkUrl     String?
+  tone        AnnouncementTone @default(INFO)
+  active      Boolean          @default(false)
+  dismissible Boolean          @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([active, startsAt, endsAt])
+}
