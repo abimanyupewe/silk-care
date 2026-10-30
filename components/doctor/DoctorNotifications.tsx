@@ -23,7 +23,20 @@ type Notification = {
 const outlineBtn =
   'inline-flex h-11 items-center border border-border-strong px-4 text-sm font-semibold text-ink hover:border-primary hover:bg-primary-tint disabled:opacity-60';
 
-export function DoctorNotifications() {
+type NotificationLink = { href: string; label: string };
+
+// Default untuk panel dokter; panel lain mengoper eyebrow/description/links sendiri.
+export function DoctorNotifications({
+  eyebrow = 'Panel dokter',
+  description = 'Konsultasi baru, perubahan status, dan ulasan untuk Anda.',
+  links = {
+    CONSULTATION: { href: '/dashboard/dokter/konsultasi', label: 'Lihat konsultasi' }
+  }
+}: {
+  eyebrow?: string;
+  description?: string;
+  links?: Record<string, NotificationLink>;
+}) {
   const [page, setPage] = useState(1);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [error, setError] = useState('');
@@ -52,11 +65,7 @@ export function DoctorNotifications() {
 
   return (
     <div>
-      <AdminPageHeader
-        eyebrow="Panel dokter"
-        title="Notifikasi"
-        description="Konsultasi baru, perubahan status, dan ulasan untuk Anda."
-      />
+      <AdminPageHeader eyebrow={eyebrow} title="Notifikasi" description={description} />
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-ink">
@@ -123,9 +132,9 @@ export function DoctorNotifications() {
                     {formatAdminDateTime(item.createdAt)}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {item.type === 'CONSULTATION' ? (
-                      <Link href="/dashboard/dokter/konsultasi" className={outlineBtn}>
-                        Lihat konsultasi
+                    {links[item.type] ? (
+                      <Link href={links[item.type].href} className={outlineBtn}>
+                        {links[item.type].label}
                       </Link>
                     ) : null}
                     {unread ? (

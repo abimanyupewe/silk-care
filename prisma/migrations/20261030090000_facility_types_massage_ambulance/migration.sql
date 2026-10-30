@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "FacilityType" ADD VALUE 'MASSAGE';
+ALTER TYPE "FacilityType" ADD VALUE 'AMBULANCE';

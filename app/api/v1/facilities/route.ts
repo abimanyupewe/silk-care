@@ -12,18 +12,8 @@ import {
 import { facilityAvailabilityWhere, parseAvailabilityFilter } from '@/lib/availability';
 import { facilityListSelect, publicFacilityWhere } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
+import { facilityTypes } from '@/lib/facility-types';
 import { formatRating, parseMinRating } from '@/lib/rating';
-
-const facilityTypes = [
-  'HOSPITAL',
-  'CLINIC',
-  'LABORATORY',
-  'PHARMACY',
-  'PHYSIOTHERAPY',
-  'RADIOLOGY',
-  'FUNERAL_HOME',
-  'WELLNESS'
-] as const;
 
 const facilitySorts = {
   newest: { createdAt: 'desc' },

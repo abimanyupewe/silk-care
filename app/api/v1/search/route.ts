@@ -13,20 +13,10 @@ import {
   publicProductWhere
 } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
+import { facilityTypeLabels } from '@/lib/facility-types';
 import { formatRating, parseMinRating } from '@/lib/rating';
 
 const searchTypes = ['DOCTOR', 'FACILITY', 'ARTICLE', 'PRODUCT'] as const;
-
-const facilityTypeLabels: Record<string, string> = {
-  HOSPITAL: 'Rumah sakit',
-  CLINIC: 'Klinik',
-  LABORATORY: 'Laboratorium',
-  PHARMACY: 'Apotek',
-  PHYSIOTHERAPY: 'Fisioterapi',
-  RADIOLOGY: 'Radiologi',
-  FUNERAL_HOME: 'Rumah duka',
-  WELLNESS: 'Wellness'
-};
 
 function distanceForLocation(
   location: { latitude: number | null; longitude: number | null },

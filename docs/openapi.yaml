@@ -3343,7 +3343,9 @@ paths:
                           PHYSIOTHERAPY,
                           RADIOLOGY,
                           FUNERAL_HOME,
-                          WELLNESS
+                          WELLNESS,
+                          MASSAGE,
+                          AMBULANCE
                         ]
                     description:
                       type: string
@@ -4679,7 +4681,18 @@ components:
     FacilityType:
       type: string
       enum:
-        [HOSPITAL, CLINIC, LABORATORY, PHARMACY, PHYSIOTHERAPY, RADIOLOGY, FUNERAL_HOME, WELLNESS]
+        [
+          HOSPITAL,
+          CLINIC,
+          LABORATORY,
+          PHARMACY,
+          PHYSIOTHERAPY,
+          RADIOLOGY,
+          FUNERAL_HOME,
+          WELLNESS,
+          MASSAGE,
+          AMBULANCE
+        ]
     OrderStatus:
       type: string
       enum: [PENDING, PAID, PROCESSING, SHIPPED, COMPLETED, CANCELLED]

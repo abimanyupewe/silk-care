@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { requireFacility } from '@/lib/facility-guard';
+import { requireShopFacility } from '@/lib/facility-guard';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
 import { orderDetailSelect } from '@/lib/order';
 
@@ -11,7 +11,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;

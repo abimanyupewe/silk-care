@@ -23,7 +23,10 @@ export default async function FacilityLayout({
   }
 
   return (
-    <FacilityShell user={{ name: session.user.name, email: session.user.email }}>
+    <FacilityShell
+      role={session.user.role}
+      user={{ name: session.user.name, email: session.user.email }}
+    >
       {children}
     </FacilityShell>
   );

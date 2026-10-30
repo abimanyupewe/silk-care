@@ -16,6 +16,11 @@ export function safeCallbackUrl(
   callbackUrl: string | null | undefined,
   role: string | null | undefined
 ) {
+  // Satu-satunya tujuan di luar panel (pendaftaran mitra); kecocokan persis, bukan prefix.
+  if (callbackUrl === '/mitra/fasilitas') {
+    return callbackUrl;
+  }
+
   const home = panelHomeForRole(role);
 
   if (home === '/' || !callbackUrl) {

@@ -1,7 +1,7 @@
 import { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { requireFacility } from '@/lib/facility-guard';
+import { requireShopFacility } from '@/lib/facility-guard';
 import {
   getBoolean,
   getPagination,
@@ -27,7 +27,7 @@ const productSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;

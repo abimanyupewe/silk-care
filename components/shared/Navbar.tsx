@@ -28,13 +28,13 @@ const serviceMenuItems: {
   {
     label: 'Klinik & rumah sakit',
     description: 'Bandingkan fasilitas dan jadwal layanan.',
-    href: '/#cari-layanan',
+    href: '/fasilitas',
     icon: Building2
   },
   {
     label: 'Laboratorium',
     description: 'Temukan pemeriksaan penunjang terdekat.',
-    href: '/#cari-layanan',
+    href: '/fasilitas?type=LABORATORY',
     icon: FlaskConical
   },
   {
@@ -46,7 +46,7 @@ const serviceMenuItems: {
   {
     label: 'Layanan kesehatan lain',
     description: 'Cari layanan kesehatan di sekitar Anda.',
-    href: '/#cari-layanan',
+    href: '/fasilitas',
     icon: HeartPulse
   }
 ];

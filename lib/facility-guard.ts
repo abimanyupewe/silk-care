@@ -2,6 +2,7 @@ import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireRole, type SessionUser } from '@/lib/auth-guard';
 import { jsonError } from '@/lib/api';
+import { isShopFacility } from '@/lib/facility-types';
 
 type FacilityProfile = {
   id: string;
@@ -19,6 +20,21 @@ type FacilityAuthResult =
       ok: false;
       error: NextResponse;
     };
+
+// Untuk route produk dan pesanan: hanya apotek (role PHARMACY) yang berjualan.
+export async function requireShopFacility(): Promise<FacilityAuthResult> {
+  const auth = await requireFacility();
+
+  if (!auth.ok) {
+    return auth;
+  }
+
+  if (!isShopFacility(auth.user.role)) {
+    return { ok: false, error: jsonError('Fitur ini hanya tersedia untuk apotek.', 403) };
+  }
+
+  return auth;
+}
 
 export async function requireFacility(): Promise<FacilityAuthResult> {
   const auth = await requireRole(['FACILITY', 'PHARMACY']);

@@ -5,6 +5,7 @@ import {
   type ApiErrorBody,
   type PaginationMeta
 } from '@/lib/api-client';
+import { facilityTypeLabels } from '@/lib/facility-types';
 
 // Nama lama dipertahankan agar kode admin tidak perlu berubah; inti ada di lib/api-client.ts.
 export type AdminPaginationMeta = PaginationMeta;
@@ -557,16 +558,7 @@ export const adminReviewStatusLabels: Record<string, string> = {
   REJECTED: 'Ditolak'
 };
 
-export const adminFacilityTypeLabels: Record<string, string> = {
-  HOSPITAL: 'Rumah sakit',
-  CLINIC: 'Klinik',
-  LABORATORY: 'Laboratorium',
-  PHARMACY: 'Apotek',
-  PHYSIOTHERAPY: 'Fisioterapi',
-  RADIOLOGY: 'Radiologi',
-  FUNERAL_HOME: 'Rumah duka',
-  WELLNESS: 'Wellness'
-};
+export const adminFacilityTypeLabels: Record<string, string> = facilityTypeLabels;
 
 export const adminReviewTargetLabels: Record<AdminReviewTargetType, string> = {
   doctor: 'Dokter',

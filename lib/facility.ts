@@ -2,16 +2,7 @@ import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { slugify, uniqueSlug } from '@/lib/slug';
 
-export const facilityTypes = [
-  'HOSPITAL',
-  'CLINIC',
-  'LABORATORY',
-  'PHARMACY',
-  'PHYSIOTHERAPY',
-  'RADIOLOGY',
-  'FUNERAL_HOME',
-  'WELLNESS'
-] as const;
+export { facilityTypes } from '@/lib/facility-types';
 
 export async function createUniqueFacilitySlug(name: string) {
   return uniqueSlug(slugify(name, 'fasilitas'), async (slug) => {

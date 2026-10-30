@@ -1,6 +1,6 @@
 import type { OrderStatus } from '@/lib/generated/prisma';
 import { z } from 'zod';
-import { requireFacility } from '@/lib/facility-guard';
+import { requireShopFacility } from '@/lib/facility-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { OrderActionError } from '@/lib/order';
 import { changeOrderStatus } from '@/lib/order-status';
@@ -18,7 +18,7 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;

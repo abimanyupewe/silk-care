@@ -30,6 +30,8 @@ enum FacilityType {
   RADIOLOGY
   FUNERAL_HOME
   WELLNESS
+  MASSAGE
+  AMBULANCE
 }
 
 enum OrderStatus {

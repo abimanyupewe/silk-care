@@ -1,13 +1,13 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
-import { requireFacility } from '@/lib/facility-guard';
+import { requireShopFacility } from '@/lib/facility-guard';
 import { getEnum, getPagination, handleRouteError, jsonOk, paginationMeta } from '@/lib/api';
 import { orderManagementListSelect, orderStatuses, paymentStatuses } from '@/lib/order';
 import { expireDueOrders } from '@/lib/order-expiry';
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;

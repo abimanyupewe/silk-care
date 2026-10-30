@@ -29,12 +29,13 @@ export const Footer = () => {
     { href: '/article', label: 'Artikel kesehatan' },
     { href: '/doctor', label: 'Dokter' },
     { href: '/apotek', label: 'Apotek' },
+    { href: '/fasilitas', label: 'Fasilitas kesehatan' },
     { href: '#tentang', label: 'Tentang SILK' }
   ];
   const collaborationLinks = [
     { href: '#mitra', label: 'Daftar sebagai dokter' },
-    { href: '#mitra', label: 'Daftar sebagai klinik' },
-    { href: '#mitra', label: 'Daftar sebagai apotek' }
+    { href: '/mitra/fasilitas', label: 'Daftar sebagai klinik' },
+    { href: '/mitra/fasilitas', label: 'Daftar sebagai apotek' }
   ];
 
   return (

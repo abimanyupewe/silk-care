@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { requireFacility } from '@/lib/facility-guard';
+import { requireShopFacility } from '@/lib/facility-guard';
 import { handleRouteError, jsonError, jsonOk, parseJson } from '@/lib/api';
 import { facilityProductSelect } from '@/lib/product';
 
@@ -37,7 +37,7 @@ async function findProduct(id: string, facilityId: string) {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;
@@ -58,7 +58,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;
@@ -93,7 +93,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    const auth = await requireFacility();
+    const auth = await requireShopFacility();
 
     if (!auth.ok) {
       return auth.error;

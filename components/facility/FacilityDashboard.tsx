@@ -7,9 +7,11 @@ import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
 import { VerificationBanner } from '@/components/panel/VerificationBanner';
 import { useApiQuery } from '@/lib/api-swr';
+import { isShopFacility } from '@/lib/facility-types';
 
 type FacilityProfile = {
   name: string;
+  type: string;
   description: string | null;
   address: string | null;
   city: string | null;
@@ -25,12 +27,21 @@ const LOW_STOCK = 5;
 
 export function FacilityDashboard() {
   const profile = useApiQuery<FacilityProfile>('/facility/profile', 60000);
-  const paid = useApiQuery<unknown[]>('/facility/orders?status=PAID&limit=1', 30000);
-  const processing = useApiQuery<unknown[]>('/facility/orders?status=PROCESSING&limit=1', 30000);
-  const activeProducts = useApiQuery<unknown[]>('/facility/products?active=true&limit=1', 60000);
-  // shortcut: API tanpa filter stok; ambil 100 produk aktif lalu saring di klien, upgrade bila produk aktif >100.
-  const products = useApiQuery<Product[]>('/facility/products?active=true&limit=100', 60000);
   const facility = profile.data;
+  // Hanya apotek yang punya pesanan dan produk; path null = tidak fetch (route lain menolak 403).
+  const shop = isShopFacility(facility?.type);
+  const when = (path: string) => (shop ? path : null);
+  const paid = useApiQuery<unknown[]>(when('/facility/orders?status=PAID&limit=1'), 30000);
+  const processing = useApiQuery<unknown[]>(
+    when('/facility/orders?status=PROCESSING&limit=1'),
+    30000
+  );
+  const activeProducts = useApiQuery<unknown[]>(
+    when('/facility/products?active=true&limit=1'),
+    60000
+  );
+  // shortcut: API tanpa filter stok; ambil 100 produk aktif lalu saring di klien, upgrade bila produk aktif >100.
+  const products = useApiQuery<Product[]>(when('/facility/products?active=true&limit=100'), 60000);
   const lowStock = (products.data ?? [])
     .filter((item) => item.stock <= LOW_STOCK)
     .sort((a, b) => a.stock - b.stock);
@@ -49,77 +60,89 @@ export function FacilityDashboard() {
   ];
   const remaining = checklist.filter((item) => !item.done).length;
 
-  const cards = [
-    {
-      label: 'Pesanan baru (dibayar)',
-      value: paid.meta?.total,
-      href: '/dashboard/fasilitas/pesanan'
-    },
-    {
-      label: 'Sedang diproses',
-      value: processing.meta?.total,
-      href: '/dashboard/fasilitas/pesanan'
-    },
-    {
-      label: 'Produk aktif',
-      value: activeProducts.meta?.total,
-      href: '/dashboard/fasilitas/produk'
-    },
-    {
-      label: `Stok menipis (≤ ${LOW_STOCK})`,
-      value: products.data ? lowStock.length : undefined,
-      href: '/dashboard/fasilitas/produk'
-    }
-  ];
+  const cards = shop
+    ? [
+        {
+          label: 'Pesanan baru (dibayar)',
+          value: paid.meta?.total,
+          href: '/dashboard/fasilitas/pesanan'
+        },
+        {
+          label: 'Sedang diproses',
+          value: processing.meta?.total,
+          href: '/dashboard/fasilitas/pesanan'
+        },
+        {
+          label: 'Produk aktif',
+          value: activeProducts.meta?.total,
+          href: '/dashboard/fasilitas/produk'
+        },
+        {
+          label: `Stok menipis (≤ ${LOW_STOCK})`,
+          value: products.data ? lowStock.length : undefined,
+          href: '/dashboard/fasilitas/produk'
+        }
+      ]
+    : [];
 
   return (
     <div>
       <AdminPageHeader
         eyebrow="Panel fasilitas"
         title={facility.name}
-        description="Ringkasan pesanan, stok, dan kelengkapan profil fasilitas Anda."
+        description={
+          shop
+            ? 'Ringkasan pesanan, stok, dan kelengkapan profil fasilitas Anda.'
+            : 'Ringkasan kelengkapan profil fasilitas Anda.'
+        }
       />
 
       <div className="mt-6">
         <VerificationBanner status={facility.verificationStatus} />
       </div>
 
-      <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Ringkasan">
-        {cards.map((card) => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
-          >
-            <p className="text-sm font-medium text-ink-muted">{card.label}</p>
-            <p className="mt-2 text-2xl font-bold text-ink">
-              {card.value == null ? '–' : card.value.toLocaleString('id-ID')}
-            </p>
-          </Link>
-        ))}
-      </section>
-
-      <section className="mt-6 border border-border bg-white p-4" aria-label="Stok menipis">
-        <h2 className="text-lg font-bold text-ink">Stok menipis</h2>
-        {lowStock.length === 0 ? (
-          <p className="mt-1 text-sm text-ink-muted">Semua produk aktif stoknya aman.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-border border-y border-border">
-            {lowStock.slice(0, 5).map((item) => (
-              <li key={item.id} className="flex min-h-11 items-center gap-3 py-2 text-sm">
-                <span className="flex-1 text-ink">{item.name}</span>
-                <span
-                  className={
-                    item.stock === 0 ? 'font-semibold text-destructive' : 'font-semibold text-ink'
-                  }
-                >
-                  {item.stock === 0 ? 'Habis' : `Sisa ${item.stock}`}
-                </span>
-              </li>
+      {shop ? (
+        <>
+          <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Ringkasan">
+            {cards.map((card) => (
+              <Link
+                key={card.label}
+                href={card.href}
+                className="block min-h-11 border border-border bg-white p-4 hover:border-primary"
+              >
+                <p className="text-sm font-medium text-ink-muted">{card.label}</p>
+                <p className="mt-2 text-2xl font-bold text-ink">
+                  {card.value == null ? '–' : card.value.toLocaleString('id-ID')}
+                </p>
+              </Link>
             ))}
-          </ul>
-        )}
-      </section>
+          </section>
+
+          <section className="mt-6 border border-border bg-white p-4" aria-label="Stok menipis">
+            <h2 className="text-lg font-bold text-ink">Stok menipis</h2>
+            {lowStock.length === 0 ? (
+              <p className="mt-1 text-sm text-ink-muted">Semua produk aktif stoknya aman.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-border border-y border-border">
+                {lowStock.slice(0, 5).map((item) => (
+                  <li key={item.id} className="flex min-h-11 items-center gap-3 py-2 text-sm">
+                    <span className="flex-1 text-ink">{item.name}</span>
+                    <span
+                      className={
+                        item.stock === 0
+                          ? 'font-semibold text-destructive'
+                          : 'font-semibold text-ink'
+                      }
+                    >
+                      {item.stock === 0 ? 'Habis' : `Sisa ${item.stock}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : null}
 
       <section className="mt-6 border border-border bg-white p-4" aria-label="Kelengkapan profil">
         <h2 className="text-lg font-bold text-ink">Kelengkapan profil</h2>
