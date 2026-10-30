@@ -172,19 +172,20 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 
 ### Katalog publik
 
-| Method | Path                        | Sukses |
-| ------ | --------------------------- | ------ |
-| GET    | `/api/v1/health`            | 200    |
-| GET    | `/api/v1/openapi`           | 200    |
-| GET    | `/api/v1/doctors`           | 200    |
-| GET    | `/api/v1/doctors/{slug}`    | 200    |
-| GET    | `/api/v1/facilities`        | 200    |
-| GET    | `/api/v1/facilities/{slug}` | 200    |
-| GET    | `/api/v1/articles`          | 200    |
-| GET    | `/api/v1/articles/{slug}`   | 200    |
-| GET    | `/api/v1/products`          | 200    |
-| GET    | `/api/v1/products/{slug}`   | 200    |
-| GET    | `/api/v1/search`            | 200    |
+| Method | Path                                 | Sukses |
+| ------ | ------------------------------------ | ------ |
+| GET    | `/api/v1/health`                     | 200    |
+| GET    | `/api/v1/openapi`                    | 200    |
+| GET    | `/api/v1/doctors`                    | 200    |
+| GET    | `/api/v1/doctors/{slug}`             | 200    |
+| GET    | `/api/v1/facilities`                 | 200    |
+| GET    | `/api/v1/facilities/{slug}`          | 200    |
+| GET    | `/api/v1/facilities/{slug}/services` | 200    |
+| GET    | `/api/v1/articles`                   | 200    |
+| GET    | `/api/v1/articles/{slug}`            | 200    |
+| GET    | `/api/v1/products`                   | 200    |
+| GET    | `/api/v1/products/{slug}`            | 200    |
+| GET    | `/api/v1/search`                     | 200    |
 
 ### Keranjang dan pesanan
 
@@ -217,6 +218,28 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | GET    | `/api/v1/doctor/consultations/{id}`                | 200    |
 | PATCH  | `/api/v1/doctor/consultations/{id}/status`         | 200    |
 | PUT    | `/api/v1/doctor/consultations/{id}/medical-record` | 200    |
+
+### Layanan fasilitas dan janji temu
+
+Untuk fasilitas non-apotek. Apotek mendapat 403 di route `/facility/services*` dan
+`/facility/appointments*`. Waktu janji temu divalidasi terhadap jam operasional (Asia/Jakarta);
+`POST /appointments` mendukung `Idempotency-Key`. Penolakan fasilitas = `CANCELLED` dengan alasan.
+
+| Method | Path                                        | Sukses |
+| ------ | ------------------------------------------- | ------ |
+| GET    | `/api/v1/facility/services`                 | 200    |
+| POST   | `/api/v1/facility/services`                 | 201    |
+| GET    | `/api/v1/facility/services/{id}`            | 200    |
+| PATCH  | `/api/v1/facility/services/{id}`            | 200    |
+| DELETE | `/api/v1/facility/services/{id}`            | 200    |
+| GET    | `/api/v1/facility/appointments`             | 200    |
+| GET    | `/api/v1/facility/appointments/{id}`        | 200    |
+| PATCH  | `/api/v1/facility/appointments/{id}/status` | 200    |
+| GET    | `/api/v1/appointments`                      | 200    |
+| POST   | `/api/v1/appointments`                      | 201    |
+| GET    | `/api/v1/appointments/{id}`                 | 200    |
+| POST   | `/api/v1/appointments/{id}/cancel`          | 200    |
+| GET    | `/api/v1/admin/appointments`                | 200    |
 
 ### Dokter, fasilitas, dan partner
 
@@ -335,6 +358,9 @@ akun demo berasal dari `SEED_DEMO_PASSWORD` (default `Demo12345!`). Akun admin b
 | Dokter    | `santika@silk.local` | `dr-santika-dewi`    |
 | Fasilitas | `klinik@silk.local`  | `klinik-sehat-senja` |
 | Farmasi   | `aposilk@silk.local` | `aposilk`            |
+
+Layanan stabil (klinik demo): `klinik-sehat-senja-pemeriksaan-umum`,
+`klinik-sehat-senja-vaksinasi`, `klinik-sehat-senja-cek-laboratorium-dasar`.
 
 Produk stabil: `vitamin-harian-keluarga`, `susu-nutrisi-ibu-dan-anak`,
 `perawatan-kulit-sensitif`, `tensimeter-digital`.

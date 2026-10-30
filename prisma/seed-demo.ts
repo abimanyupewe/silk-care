@@ -36,6 +36,16 @@ type DemoFacility = {
   longitude: number;
 };
 
+type DemoService = {
+  slug: string;
+  name: string;
+  description: string;
+  priceMin: number;
+  priceMax: number | null;
+  durationMinutes: number;
+  facilitySlug: string;
+};
+
 type DemoArticle = {
   slug: string;
   title: string;
@@ -303,6 +313,37 @@ const reviews: DemoReview[] = [
   }
 ];
 
+// Hanya fasilitas non-apotek yang punya layanan.
+const facilityServices: DemoService[] = [
+  {
+    slug: 'klinik-sehat-senja-pemeriksaan-umum',
+    name: 'Pemeriksaan umum',
+    description: 'Pemeriksaan kesehatan dasar oleh dokter umum.',
+    priceMin: 150000,
+    priceMax: null,
+    durationMinutes: 30,
+    facilitySlug: 'klinik-sehat-senja'
+  },
+  {
+    slug: 'klinik-sehat-senja-vaksinasi',
+    name: 'Vaksinasi',
+    description: 'Vaksinasi dewasa dan anak; harga bergantung jenis vaksin.',
+    priceMin: 200000,
+    priceMax: 750000,
+    durationMinutes: 20,
+    facilitySlug: 'klinik-sehat-senja'
+  },
+  {
+    slug: 'klinik-sehat-senja-cek-laboratorium-dasar',
+    name: 'Cek laboratorium dasar',
+    description: 'Gula darah, kolesterol, dan asam urat.',
+    priceMin: 120000,
+    priceMax: 300000,
+    durationMinutes: 30,
+    facilitySlug: 'klinik-sehat-senja'
+  }
+];
+
 const doctorSchedules: DemoSchedule[] = [
   { dayOfWeek: 1, startTime: '09:00', endTime: '12:00' },
   { dayOfWeek: 1, startTime: '13:00', endTime: '17:00' },
@@ -484,6 +525,38 @@ VALUES (
     .join('\n');
 }
 
+function buildServiceSql() {
+  return facilityServices
+    .map(
+      (service) => `
+INSERT INTO "FacilityService" ("id", "facilityId", "slug", "name", "description", "priceMin", "priceMax", "durationMinutes", "active", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "Facility" WHERE "slug" = ${sqlString(service.facilitySlug)}),
+  ${sqlString(service.slug)},
+  ${sqlString(service.name)},
+  ${sqlString(service.description)},
+  ${service.priceMin},
+  ${service.priceMax ?? 'NULL'},
+  ${service.durationMinutes},
+  TRUE,
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("slug") DO UPDATE SET
+  "facilityId" = EXCLUDED."facilityId",
+  "name" = EXCLUDED."name",
+  "description" = EXCLUDED."description",
+  "priceMin" = EXCLUDED."priceMin",
+  "priceMax" = EXCLUDED."priceMax",
+  "durationMinutes" = EXCLUDED."durationMinutes",
+  "active" = TRUE,
+  "deletedAt" = NULL,
+  "updatedAt" = NOW();`
+    )
+    .join('\n');
+}
+
 function buildArticleSql() {
   return articles
     .map(
@@ -630,6 +703,7 @@ async function main() {
     buildFacilitySql(),
     buildDoctorScheduleSql(),
     buildFacilityOperatingHourSql(),
+    buildServiceSql(),
     buildArticleSql(),
     buildProductSql(),
     buildReviewSql()

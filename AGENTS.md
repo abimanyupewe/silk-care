@@ -44,6 +44,9 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `/api/v1/doctor/{profile,schedule}`, doctor consultation management under
   `/api/v1/doctor/consultations*`, facility profile, operating hours, order, and
   product management under `/api/v1/facility/{profile,operating-hours,orders,products}*`,
+  non-pharmacy service catalog and appointment management under
+  `/api/v1/facility/{services,appointments}*`, patient appointments under `/api/v1/appointments*`,
+  admin appointment list at `/api/v1/admin/appointments`,
   Cloudinary upload signatures at `/api/v1/uploads/signature`, admin
   user/doctor/facility/order/article
   management under `/api/v1/admin/{users,doctors,facilities,orders,articles}*` (including
@@ -118,7 +121,7 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
   `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
-  `catalog_rating_backfill`, `audit_log`, `session_revocation`, and `idempotency_keys`
+  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, and `facility_services_appointments`
   migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
@@ -182,7 +185,14 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   optional but recommended for format/size enforcement. Article cover uploads use the
   `article-cover` purpose. Public doctor/facility details
   expose active schedules and operating hours; admin detail selects include schedules and
-  media but admins do not edit them.
+  media but admins do not edit them. Non-pharmacy facilities (every type except `PHARMACY`) manage
+  a service catalog (`FacilityService`, soft-deleted, public via `/facilities/{slug}/services`) and
+  receive appointment requests (`Appointment`): patients propose a date and time, validated against
+  the facility operating hours in Asia/Jakarta, with no slots, quota, or payment. Status runs
+  `REQUESTED -> CONFIRMED -> COMPLETED` or `CANCELLED` (a facility rejection is `CANCELLED` with a
+  reason); `POST /appointments` accepts `Idempotency-Key`; every status change writes an
+  `APPOINTMENT` notification and a best-effort email. The panel routes live in
+  `app/dashboard/fasilitas/(service)`, the mirror of `(shop)`.
   Orders start `PENDING`/`UNPAID`; a successful settlement
   moves them to `PAID`/`PAID` and writes history plus customer/facility notifications.
   Facility/admin order management only allows `PAID -> PROCESSING -> SHIPPED -> COMPLETED`
