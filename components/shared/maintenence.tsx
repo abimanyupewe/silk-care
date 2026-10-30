@@ -9,9 +9,9 @@ const containerVariants: Variants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.3,
-      delayChildren: 0.2,
-    },
-  },
+      delayChildren: 0.2
+    }
+  }
 };
 
 const itemVariants: Variants = {
@@ -21,9 +21,9 @@ const itemVariants: Variants = {
     y: 0,
     transition: {
       duration: 0.6,
-      ease: 'easeOut',
-    },
-  },
+      ease: 'easeOut'
+    }
+  }
 };
 
 interface MaintenancePageProps {

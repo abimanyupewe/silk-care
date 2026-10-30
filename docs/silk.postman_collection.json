@@ -33,14 +33,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/auth/csrf",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "csrf"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "csrf"],
               "variable": [],
               "query": []
             },
@@ -71,15 +65,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/callback/credentials",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "callback",
-                "credentials"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "callback", "credentials"],
               "variable": [],
               "query": []
             },
@@ -134,14 +121,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "health"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"],
               "variable": [],
               "query": []
             },
@@ -166,14 +147,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/openapi",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "openapi"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "openapi"],
               "variable": [],
               "query": []
             },
@@ -208,15 +183,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "register"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"],
               "variable": [],
               "query": []
             },
@@ -255,16 +223,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/verify-email/request",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "verify-email",
-                "request"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "verify-email", "request"],
               "variable": [],
               "query": []
             },
@@ -303,16 +263,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/verify-email/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "verify-email",
-                "confirm"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "verify-email", "confirm"],
               "variable": [],
               "query": []
             },
@@ -351,15 +303,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "forgot-password"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forgot-password"],
               "variable": [],
               "query": []
             },
@@ -398,15 +343,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/reset-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "reset-password"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "reset-password"],
               "variable": [],
               "query": []
             },
@@ -440,15 +378,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "me"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"],
               "variable": [],
               "query": []
             },
@@ -473,15 +404,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/users/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "users",
-                "me"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"],
               "variable": [],
               "query": []
             },
@@ -511,15 +435,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/users/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "users",
-                "me"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"],
               "variable": [],
               "query": []
             },
@@ -558,16 +475,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/users/me/change-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "users",
-                "me",
-                "change-password"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me", "change-password"],
               "variable": [],
               "query": []
             },
@@ -606,14 +515,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctors",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctors"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctors"],
               "variable": [],
               "query": [
                 {
@@ -714,15 +617,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctors/:slug",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctors",
-                ":slug"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctors", ":slug"],
               "variable": [
                 {
                   "key": "slug",
@@ -752,14 +648,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facilities",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facilities"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facilities"],
               "variable": [],
               "query": [
                 {
@@ -850,15 +740,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facilities/:slug",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facilities",
-                ":slug"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facilities", ":slug"],
               "variable": [
                 {
                   "key": "slug",
@@ -888,14 +771,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/articles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "articles"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "articles"],
               "variable": [],
               "query": [
                 {
@@ -941,15 +818,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/articles/:slug",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "articles",
-                ":slug"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "articles", ":slug"],
               "variable": [
                 {
                   "key": "slug",
@@ -979,14 +849,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "products"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"],
               "variable": [],
               "query": [
                 {
@@ -1052,15 +916,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/products/:slug",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "products",
-                ":slug"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", ":slug"],
               "variable": [
                 {
                   "key": "slug",
@@ -1090,14 +947,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/search",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "search"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "search"],
               "variable": [],
               "query": [
                 {
@@ -1178,14 +1029,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cart",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cart"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"],
               "variable": [],
               "query": []
             },
@@ -1210,14 +1055,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cart",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cart"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"],
               "variable": [],
               "query": []
             },
@@ -1247,15 +1086,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cart/items",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cart",
-                "items"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items"],
               "variable": [],
               "query": []
             },
@@ -1294,16 +1126,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cart/items/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cart",
-                "items",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -1342,16 +1166,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cart/items/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cart",
-                "items",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -1386,14 +1202,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orders",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "orders"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"],
               "variable": [],
               "query": [
                 {
@@ -1449,14 +1259,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orders",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "orders"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"],
               "variable": [],
               "query": []
             },
@@ -1490,15 +1294,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orders/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "orders",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -1528,16 +1325,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orders/:id/cancel",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "orders",
-                ":id",
-                "cancel"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id", "cancel"],
               "variable": [
                 {
                   "key": "id",
@@ -1567,16 +1356,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orders/:id/payment",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "orders",
-                ":id",
-                "payment"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id", "payment"],
               "variable": [
                 {
                   "key": "id",
@@ -1611,14 +1392,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/consultations",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "consultations"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "consultations"],
               "variable": [],
               "query": [
                 {
@@ -1669,14 +1444,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/consultations",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "consultations"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "consultations"],
               "variable": [],
               "query": []
             },
@@ -1710,15 +1479,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/consultations/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "consultations",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "consultations", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -1753,16 +1515,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/consultations/:id/cancel",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "consultations",
-                ":id",
-                "cancel"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "consultations", ":id", "cancel"],
               "variable": [
                 {
                   "key": "id",
@@ -1806,14 +1560,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/medical-records",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "medical-records"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records"],
               "variable": [],
               "query": [
                 {
@@ -1849,15 +1597,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/medical-records/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "medical-records",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -1892,15 +1633,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "profile"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "profile"],
               "variable": [],
               "query": []
             },
@@ -1930,15 +1664,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "profile"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "profile"],
               "variable": [],
               "query": []
             },
@@ -1972,15 +1699,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/schedule",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "schedule"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "schedule"],
               "variable": [],
               "query": []
             },
@@ -2010,15 +1730,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/schedule",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "schedule"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "schedule"],
               "variable": [],
               "query": []
             },
@@ -2052,15 +1765,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/consultations",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "consultations"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "consultations"],
               "variable": [],
               "query": [
                 {
@@ -2106,16 +1812,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/consultations/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "consultations",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "consultations", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2150,17 +1848,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/consultations/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "consultations",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "consultations", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -2204,17 +1893,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/doctor/consultations/:id/medical-record",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "doctor",
-                "consultations",
-                ":id",
-                "medical-record"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "consultations", ":id", "medical-record"],
               "variable": [
                 {
                   "key": "id",
@@ -2258,15 +1938,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "profile"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "profile"],
               "variable": [],
               "query": []
             },
@@ -2296,15 +1969,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "profile"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "profile"],
               "variable": [],
               "query": []
             },
@@ -2338,15 +2004,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/operating-hours",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "operating-hours"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "operating-hours"],
               "variable": [],
               "query": []
             },
@@ -2376,15 +2035,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/operating-hours",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "operating-hours"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "operating-hours"],
               "variable": [],
               "query": []
             },
@@ -2418,15 +2070,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "products"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "products"],
               "variable": [],
               "query": [
                 {
@@ -2477,15 +2122,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "products"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "products"],
               "variable": [],
               "query": []
             },
@@ -2519,16 +2157,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2563,16 +2193,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2611,16 +2233,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2650,15 +2264,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/orders",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "orders"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "orders"],
               "variable": [],
               "query": [
                 {
@@ -2704,16 +2311,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/orders/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "orders",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "orders", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2748,17 +2347,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/facility/orders/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "facility",
-                "orders",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "facility", "orders", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -2807,15 +2397,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/doctor",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "doctor"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "doctor"],
               "variable": [],
               "query": []
             },
@@ -2854,15 +2437,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/facility",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "facility"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "facility"],
               "variable": [],
               "query": []
             },
@@ -2896,15 +2472,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles"],
               "variable": [],
               "query": [
                 {
@@ -2955,15 +2524,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles"],
               "variable": [],
               "query": []
             },
@@ -2997,16 +2559,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3041,16 +2595,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3089,16 +2635,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3128,17 +2666,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/partner/articles/:id/submit",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "partner",
-                "articles",
-                ":id",
-                "submit"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partner", "articles", ":id", "submit"],
               "variable": [
                 {
                   "key": "id",
@@ -3173,14 +2702,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/notifications",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "notifications"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications"],
               "variable": [],
               "query": [
                 {
@@ -3221,16 +2744,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/notifications/:id/read",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "notifications",
-                ":id",
-                "read"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", ":id", "read"],
               "variable": [
                 {
                   "key": "id",
@@ -3260,15 +2775,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/notifications/read-all",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "notifications",
-                "read-all"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "read-all"],
               "variable": [],
               "query": []
             },
@@ -3298,14 +2806,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/reviews",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "reviews"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reviews"],
               "variable": [],
               "query": [
                 {
@@ -3356,14 +2858,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/reviews",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "reviews"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reviews"],
               "variable": [],
               "query": []
             },
@@ -3402,15 +2898,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/reviews/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "reviews",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reviews", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3449,15 +2938,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/reviews/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "reviews",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reviews", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3497,15 +2979,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/uploads/signature",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "uploads",
-                "signature"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "uploads", "signature"],
               "variable": [],
               "query": []
             },
@@ -3544,15 +3019,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/ai/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "ai",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ai", "status"],
               "variable": [],
               "query": []
             },
@@ -3582,15 +3050,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/ai/chat",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "ai",
-                "chat"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ai", "chat"],
               "variable": [],
               "query": []
             },
@@ -3629,15 +3090,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"],
               "variable": [],
               "query": [
                 {
@@ -3693,15 +3147,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"],
               "variable": [],
               "query": []
             },
@@ -3735,16 +3182,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3779,16 +3218,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3827,16 +3258,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3866,17 +3289,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/users/:id/restore",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "users",
-                ":id",
-                "restore"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", ":id", "restore"],
               "variable": [
                 {
                   "key": "id",
@@ -3906,15 +3320,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/doctors",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "doctors"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "doctors"],
               "variable": [],
               "query": [
                 {
@@ -3960,16 +3367,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/doctors/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "doctors",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "doctors", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4004,16 +3403,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/doctors/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "doctors",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "doctors", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4057,17 +3448,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/doctors/:id/verification",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "doctors",
-                ":id",
-                "verification"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "doctors", ":id", "verification"],
               "variable": [
                 {
                   "key": "id",
@@ -4106,15 +3488,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/facilities",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "facilities"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "facilities"],
               "variable": [],
               "query": [
                 {
@@ -4170,15 +3545,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/facilities",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "facilities"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "facilities"],
               "variable": [],
               "query": []
             },
@@ -4212,16 +3580,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/facilities/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "facilities",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "facilities", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4256,16 +3616,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/facilities/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "facilities",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "facilities", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4309,17 +3661,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/facilities/:id/verification",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "facilities",
-                ":id",
-                "verification"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "facilities", ":id", "verification"],
               "variable": [
                 {
                   "key": "id",
@@ -4358,15 +3701,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/orders",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "orders"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "orders"],
               "variable": [],
               "query": [
                 {
@@ -4422,16 +3758,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/orders/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "orders",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "orders", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4466,17 +3794,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/orders/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "orders",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "orders", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -4515,15 +3834,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles"],
               "variable": [],
               "query": [
                 {
@@ -4579,15 +3891,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles"],
               "variable": [],
               "query": []
             },
@@ -4621,16 +3926,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4665,16 +3962,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4713,16 +4002,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4757,17 +4038,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles/:id/moderate",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles",
-                ":id",
-                "moderate"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles", ":id", "moderate"],
               "variable": [
                 {
                   "key": "id",
@@ -4806,17 +4078,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/articles/:id/restore",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "articles",
-                ":id",
-                "restore"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "articles", ":id", "restore"],
               "variable": [
                 {
                   "key": "id",
@@ -4846,15 +4109,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/reviews",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "reviews"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "reviews"],
               "variable": [],
               "query": [
                 {
@@ -4920,16 +4176,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/reviews/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "reviews",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "reviews", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -4964,17 +4212,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/reviews/:id/moderate",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "reviews",
-                ":id",
-                "moderate"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "reviews", ":id", "moderate"],
               "variable": [
                 {
                   "key": "id",
@@ -5013,15 +4252,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/audit-logs",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "audit-logs"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "audit-logs"],
               "variable": [],
               "query": [
                 {
@@ -5092,16 +4324,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/notifications/broadcast",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "notifications",
-                "broadcast"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "notifications", "broadcast"],
               "variable": [],
               "query": []
             },
@@ -5135,15 +4359,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/admin/stats",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "stats"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "stats"],
               "variable": [],
               "query": []
             },
@@ -5178,16 +4395,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/payments/midtrans/webhook",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "payments",
-                "midtrans",
-                "webhook"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "midtrans", "webhook"],
               "variable": [],
               "query": []
             },
@@ -5232,16 +4441,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/v1/cron/orders/expire",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "cron",
-                "orders",
-                "expire"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cron", "orders", "expire"],
               "variable": [],
               "query": []
             },
