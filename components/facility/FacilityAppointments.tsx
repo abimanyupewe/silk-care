@@ -176,7 +176,9 @@ function AppointmentCard({
 }
 
 export function FacilityAppointments() {
-  const [status, setStatus] = useState('');
+  // Bawaan: yang menunggu. Daftar urut waktu terlama dulu, jadi tanpa filter permintaan baru
+  // terkubur di halaman terakhir di antara janji yang sudah selesai.
+  const [status, setStatus] = useState<string>('REQUESTED');
   const [page, setPage] = useState(1);
   const params = new URLSearchParams({ page: String(page) });
 
