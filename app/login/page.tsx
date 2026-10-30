@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { getActiveSession } from '@/lib/auth-guard';
 import { safeCallbackUrl } from '@/lib/roles';
 import { LoginForm } from './login-form';
@@ -33,6 +34,13 @@ export default async function LoginPage({
         <div className="mt-6">
           <LoginForm callbackUrl={callbackUrl ?? ''} />
         </div>
+
+        <p className="mt-6 text-sm text-ink-muted">
+          Belum punya akun?{' '}
+          <Link href="/mitra/daftar" className="font-semibold text-primary-hover underline">
+            Daftar sebagai mitra fasilitas
+          </Link>
+        </p>
       </div>
     </main>
   );

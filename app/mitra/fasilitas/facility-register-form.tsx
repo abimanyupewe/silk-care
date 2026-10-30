@@ -1,17 +1,23 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { fetchApi } from '@/lib/api-client';
+import { ApiError, fetchApi } from '@/lib/api-client';
 import { facilityTypeLabels, facilityTypes } from '@/lib/facility-types';
 
 const fieldClass =
   'mt-2 w-full border border-border-strong bg-white px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:border-primary';
 
-export function FacilityRegisterForm() {
+// withAccount: halaman publik /mitra/daftar, buat akun dulu lalu daftarkan fasilitas.
+export function FacilityRegisterForm({ withAccount = false }: { withAccount?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [duplicateEmail, setDuplicateEmail] = useState(false);
+  // Akun sudah dibuat dan masuk; percobaan ulang hanya mengulang pendaftaran fasilitas.
+  const [accountReady, setAccountReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -20,8 +26,34 @@ export function FacilityRegisterForm() {
     const text = (key: string) => String(form.get(key) ?? '').trim() || null;
 
     setError('');
+    setDuplicateEmail(false);
     setSubmitting(true);
     try {
+      if (withAccount && !accountReady) {
+        const email = String(form.get('email') ?? '').trim();
+        const password = String(form.get('password') ?? '');
+
+        try {
+          await fetchApi('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ name: text('accountName'), email, password })
+          });
+        } catch (err) {
+          setDuplicateEmail(err instanceof ApiError && err.status === 409);
+          throw err;
+        }
+
+        const result = await signIn('credentials', { email, password, redirect: false });
+
+        if (!result?.ok) {
+          throw new Error(
+            'Akun dibuat, tetapi gagal masuk otomatis. Silakan masuk lewat halaman login.'
+          );
+        }
+
+        setAccountReady(true);
+      }
+
       await fetchApi('/partner/facility', {
         method: 'POST',
         body: JSON.stringify({
@@ -45,6 +77,59 @@ export function FacilityRegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {withAccount ? (
+        <fieldset disabled={accountReady} className="space-y-4">
+          <legend className="text-base font-bold text-ink">Akun pemilik</legend>
+          <div>
+            <label htmlFor="account-name" className="text-sm font-semibold text-ink">
+              Nama lengkap
+            </label>
+            <input
+              id="account-name"
+              name="accountName"
+              autoComplete="name"
+              required
+              minLength={2}
+              maxLength={100}
+              className={`${fieldClass} h-12`}
+            />
+          </div>
+          <div>
+            <label htmlFor="account-email" className="text-sm font-semibold text-ink">
+              Email
+            </label>
+            <input
+              id="account-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className={`${fieldClass} h-12`}
+            />
+          </div>
+          <div>
+            <label htmlFor="account-password" className="text-sm font-semibold text-ink">
+              Password
+            </label>
+            <input
+              id="account-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={72}
+              aria-describedby="account-password-help"
+              className={`${fieldClass} h-12`}
+            />
+            <p id="account-password-help" className="mt-1 text-sm text-ink-muted">
+              Minimal 8 karakter.
+            </p>
+          </div>
+          <p className="border-t border-border pt-4 text-base font-bold text-ink">Data fasilitas</p>
+        </fieldset>
+      ) : null}
+
       <div>
         <label htmlFor="facility-name" className="text-sm font-semibold text-ink">
           Nama fasilitas
@@ -137,6 +222,14 @@ export function FacilityRegisterForm() {
         <p className="flex items-start gap-2 text-sm text-destructive" aria-live="polite">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {error}
+          {duplicateEmail ? (
+            <>
+              {' '}
+              <Link href="/login?callbackUrl=/mitra/fasilitas" className="font-semibold underline">
+                Masuk dengan akun ini
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
 
@@ -145,7 +238,11 @@ export function FacilityRegisterForm() {
         disabled={submitting}
         className="inline-flex min-h-12 w-full items-center justify-center bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? 'Mengirim...' : 'Daftarkan fasilitas'}
+        {submitting
+          ? 'Mengirim...'
+          : withAccount
+            ? 'Buat akun dan daftarkan fasilitas'
+            : 'Daftarkan fasilitas'}
       </button>
     </form>
   );
