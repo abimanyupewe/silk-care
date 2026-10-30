@@ -2076,6 +2076,205 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/facility/services:
+    get:
+      tags: [Facility]
+      summary: Daftar layanan fasilitas sendiri (non-apotek)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Daftar layanan.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FacilityService'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Facility]
+      summary: Tambah layanan fasilitas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, priceMin]
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                description:
+                  type: string
+                  maxLength: 2000
+                  nullable: true
+                priceMin:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000000
+                priceMax:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000000
+                  nullable: true
+                  description: Harus >= priceMin bila diisi.
+                durationMinutes:
+                  type: integer
+                  minimum: 5
+                  maximum: 480
+                active:
+                  type: boolean
+      responses:
+        '201':
+          description: Layanan dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FacilityService'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/facility/services/{id}:
+    get:
+      tags: [Facility]
+      summary: Detail layanan fasilitas
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Detail layanan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FacilityService'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Facility]
+      summary: Ubah layanan fasilitas
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                description:
+                  type: string
+                  maxLength: 2000
+                  nullable: true
+                priceMin:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000000
+                priceMax:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000000
+                  nullable: true
+                  description: Harus >= priceMin bila diisi.
+                durationMinutes:
+                  type: integer
+                  minimum: 5
+                  maximum: 480
+                active:
+                  type: boolean
+      responses:
+        '200':
+          description: Layanan diperbarui.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FacilityService'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Facility]
+      summary: Hapus (soft-delete) layanan fasilitas
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Layanan dihapus.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      deletedAt:
+                        type: string
+                        format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/facility/orders:
     get:
       tags: [Facility]
@@ -4817,6 +5016,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScheduleItem'
+    FacilityService:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        priceMin:
+          type: integer
+        priceMax:
+          type: integer
+          nullable: true
+        durationMinutes:
+          type: integer
+        active:
+          type: boolean
+          description: Hanya pada endpoint mitra.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     Facility:
       type: object
       required: [id, slug, name, type]
@@ -4850,6 +5077,10 @@ components:
         rating:
           type: number
           nullable: true
+        ratingAverage:
+          type: number
+          nullable: true
+          description: Hanya pada profil sendiri (/facility/profile); publik memakai rating.
         reviewCount:
           type: integer
         distanceKm:
