@@ -151,6 +151,7 @@ model User {
   auditLogs            AuditLog[]           @relation("AuditLogs")
   idempotencyKeys      IdempotencyKey[]
   emailTemplates       EmailTemplate[]      @relation("EmailTemplateEditor")
+  subscription         Subscription?
 
   @@index([role])
   @@index([deletedAt])
@@ -176,6 +177,8 @@ model DoctorProfile {
   verificationStatus VerificationStatus @default(PENDING)
   ratingAverage      Float?
   reviewCount        Int                @default(0)
+  details            Json?
+  internalDetails    Json?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -189,6 +192,7 @@ model DoctorProfile {
   @@index([verificationStatus])
   @@index([ratingAverage])
   @@index([reviewCount])
+  @@index([latitude, longitude])
 }
 
 model DoctorSchedule {
@@ -226,6 +230,8 @@ model Facility {
   verificationStatus VerificationStatus @default(PENDING)
   ratingAverage      Float?
   reviewCount        Int                @default(0)
+  details            Json?
+  internalDetails    Json?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -242,6 +248,7 @@ model Facility {
   @@index([verificationStatus])
   @@index([ratingAverage])
   @@index([reviewCount])
+  @@index([latitude, longitude])
 }
 
 model FacilityOperatingHour {
@@ -620,4 +627,54 @@ model EmailTemplate {
 
   @@unique([key, audience])
   @@index([updatedById])
+}
+
+enum SubscriptionPlan {
+  FREE_TRIAL
+  YEARLY
+  ENTERPRISE
+}
+
+model Subscription {
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan
+  endsAt               DateTime
+  customAmount         Int?
+  customDurationMonths Int?
+  lastReminderDays     Int?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  payments SubscriptionPayment[]
+
+  @@index([endsAt])
+}
+
+model SubscriptionPayment {
+  id              String               @id @default(cuid())
+  subscriptionId  String
+  subscription    Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  plan            SubscriptionPlan
+  amount          Int
+  durationMonths  Int
+  status          PaymentAttemptStatus @default(PENDING)
+  merchantOrderId String               @unique
+  reference       String?
+  paymentUrl      String?
+  rawPayload      Json?
+  paidAt          DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+model SubscriptionPrice {
+  partnerType String   @id
+  amount      Int
+  updatedAt   DateTime @updatedAt
 }

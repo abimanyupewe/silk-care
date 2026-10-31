@@ -694,6 +694,96 @@ FROM (
 WHERE f."id" = stats."id";`;
 }
 
+// Detail publik (details) dan internal (internalDetails) sesuai registry partner-requirements.
+const partnerDetails: Record<string, { details: object; internalDetails: object }> = {
+  'dr-clara-anindita': {
+    details: {
+      title: 'dr.',
+      practicePlaces: ['Klinik Sehat Senja'],
+      education: ['S1 Kedokteran'],
+      languages: ['Indonesia', 'Inggris'],
+      whatsapp: '081200000001'
+    },
+    internalDetails: { strNumber: 'DEMO-STR-001' }
+  },
+  'dr-santika-dewi': {
+    details: {
+      title: 'dr.',
+      practicePlaces: ['Aposilk'],
+      education: ['S1 Kedokteran'],
+      languages: ['Indonesia'],
+      whatsapp: '081200000002'
+    },
+    internalDetails: { strNumber: 'DEMO-STR-002' }
+  },
+  'klinik-sehat-senja': {
+    details: {
+      clinicKind: 'GENERAL',
+      mainServices: ['Pemeriksaan umum', 'Imunisasi'],
+      acceptsBpjs: true,
+      inpatient: false
+    },
+    internalDetails: { licenseNumber: 'DEMO-IZIN-001' }
+  },
+  aposilk: {
+    details: { open24h: false, acceptsPrescription: true, delivery: true },
+    internalDetails: { licenseNumber: 'DEMO-IZIN-002', pharmacistName: 'Apt. Demo' }
+  }
+};
+
+// Nilai demo (rupiah), bukan harga resmi.
+const demoPrices: [string, number][] = [
+  ['DOCTOR', 300000],
+  ...[
+    'HOSPITAL',
+    'CLINIC',
+    'LABORATORY',
+    'PHARMACY',
+    'PHYSIOTHERAPY',
+    'RADIOLOGY',
+    'FUNERAL_HOME',
+    'WELLNESS',
+    'MASSAGE',
+    'AMBULANCE'
+  ].map((type): [string, number] => [type, 1500000])
+];
+
+function buildPartnerSql() {
+  const profiles = [
+    ...doctors.map((d) => ({ table: 'DoctorProfile', ...d })),
+    ...facilities.map((f) => ({ table: 'Facility', ...f }))
+  ];
+  const rows = profiles.map((p) => {
+    const d = partnerDetails[p.slug];
+    return `
+UPDATE "${p.table}" SET
+  "details" = ${sqlString(JSON.stringify(d.details))}::jsonb,
+  "internalDetails" = ${sqlString(JSON.stringify(d.internalDetails))}::jsonb
+WHERE "slug" = ${sqlString(p.slug)};
+
+INSERT INTO "Subscription" ("id", "userId", "plan", "endsAt", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "User" WHERE "email" = ${sqlString(p.email)}),
+  'YEARLY',
+  NOW() + interval '1 year',
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("userId") DO UPDATE SET
+  "plan" = 'YEARLY',
+  "endsAt" = NOW() + interval '1 year',
+  "updatedAt" = NOW();`;
+  });
+  const prices = demoPrices.map(
+    ([type, amount]) => `
+INSERT INTO "SubscriptionPrice" ("partnerType", "amount", "updatedAt")
+VALUES (${sqlString(type)}, ${amount}, NOW())
+ON CONFLICT ("partnerType") DO UPDATE SET "amount" = EXCLUDED."amount", "updatedAt" = NOW();`
+  );
+  return [...rows, ...prices].join('\n');
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash(demoPassword, 12);
 
@@ -701,6 +791,7 @@ async function main() {
     buildUserSql(passwordHash),
     buildDoctorSql(),
     buildFacilitySql(),
+    buildPartnerSql(),
     buildDoctorScheduleSql(),
     buildFacilityOperatingHourSql(),
     buildServiceSql(),

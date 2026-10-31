@@ -33,9 +33,9 @@ export const Footer = () => {
     { href: '#tentang', label: 'Tentang SILK' }
   ];
   const collaborationLinks = [
-    { href: '#mitra', label: 'Daftar sebagai dokter' },
-    { href: '/mitra/fasilitas', label: 'Daftar sebagai klinik' },
-    { href: '/mitra/fasilitas', label: 'Daftar sebagai apotek' }
+    { href: '/mitra/daftar?type=DOCTOR', label: 'Daftar sebagai dokter' },
+    { href: '/mitra/daftar?type=CLINIC', label: 'Daftar sebagai klinik' },
+    { href: '/mitra/daftar?type=PHARMACY', label: 'Daftar sebagai apotek' }
   ];
 
   return (

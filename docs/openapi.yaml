@@ -942,6 +942,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/cart/items/{id}:
@@ -1102,6 +1104,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/orders/{id}:
@@ -1283,6 +1287,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/consultations/{id}:
@@ -2375,6 +2381,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/appointments/{id}:
@@ -2652,129 +2660,44 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/partner/doctor:
+  /api/v1/partner/registrations:
     post:
       tags: [Partner]
-      summary: Ajukan onboarding dokter
+      summary: Daftar sebagai mitra (dokter atau fasilitas)
+      description: Profil langsung terverifikasi dan masa gratis 6 bulan dimulai.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [specialty]
+              required: [partnerType, values]
               properties:
-                specialty:
-                  type: string
-                  minLength: 2
-                  maxLength: 100
-                bio:
-                  type: string
-                  maxLength: 2000
-                  nullable: true
-                experienceYears:
-                  type: integer
-                  minimum: 0
-                  maximum: 80
-                  nullable: true
-                consultationFee:
-                  type: integer
-                  minimum: 0
-                  maximum: 100000000
-                  nullable: true
-                city:
-                  type: string
-                  maxLength: 100
-                  nullable: true
-                address:
-                  type: string
-                  maxLength: 500
-                  nullable: true
-                latitude:
-                  type: number
-                  minimum: -90
-                  maximum: 90
-                  nullable: true
-                longitude:
-                  type: number
-                  minimum: -180
-                  maximum: 180
-                  nullable: true
+                partnerType:
+                  oneOf:
+                    - $ref: '#/components/schemas/FacilityType'
+                    - type: string
+                      enum: [DOCTOR]
+                values:
+                  type: object
+                  description: Kunci field berasal dari registri partner-requirements per jenis mitra.
+                  additionalProperties: true
       responses:
         '201':
-          description: Profil dokter dibuat dengan status pending.
+          description: Profil mitra dibuat dan terverifikasi.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Doctor'
+                    oneOf:
+                      - $ref: '#/components/schemas/Doctor'
+                      - $ref: '#/components/schemas/Facility'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /api/v1/partner/facility:
-    post:
-      tags: [Partner]
-      summary: Ajukan onboarding fasilitas
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, type]
-              properties:
-                name:
-                  type: string
-                  minLength: 2
-                  maxLength: 150
-                type:
-                  $ref: '#/components/schemas/FacilityType'
-                description:
-                  type: string
-                  maxLength: 2000
-                  nullable: true
-                address:
-                  type: string
-                  maxLength: 500
-                  nullable: true
-                city:
-                  type: string
-                  maxLength: 100
-                  nullable: true
-                phone:
-                  type: string
-                  minLength: 8
-                  maxLength: 20
-                  nullable: true
-                latitude:
-                  type: number
-                  minimum: -90
-                  maximum: 90
-                  nullable: true
-                longitude:
-                  type: number
-                  minimum: -180
-                  maximum: 180
-                  nullable: true
-      responses:
-        '201':
-          description: Profil fasilitas dibuat dengan status pending.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Facility'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -3766,8 +3689,8 @@ paths:
       summary: Buat fasilitas beserta akun pemilik
       description: >-
         Membuat akun pemilik (email langsung terverifikasi) dan profil fasilitas yang langsung
-        berstatus VERIFIED. Role pemilik menjadi PHARMACY untuk tipe PHARMACY, selain itu
-        FACILITY.
+        berstatus VERIFIED, beserta masa gratis 6 bulan yang dimulai saat dibuat. Role pemilik
+        menjadi PHARMACY untuk tipe PHARMACY, selain itu FACILITY.
       requestBody:
         required: true
         content:
@@ -5275,6 +5198,11 @@ components:
       type: object
       required: [id, slug, specialty, user]
       properties:
+        details:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Field publik khusus jenis mitra (kunci dari registri partner-requirements).
         id:
           type: string
         slug:
@@ -5436,6 +5364,11 @@ components:
       type: object
       required: [id, slug, name, type]
       properties:
+        details:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Field publik khusus jenis mitra (kunci dari registri partner-requirements).
         id:
           type: string
         slug:

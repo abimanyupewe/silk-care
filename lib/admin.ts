@@ -63,6 +63,8 @@ export const adminDoctorSelect = {
 
 export const adminDoctorDetailSelect = {
   ...adminDoctorSelect,
+  details: true,
+  internalDetails: true,
   photoUrl: true,
   photoPublicId: true,
   videoUrl: true,
@@ -106,6 +108,8 @@ export const adminFacilitySelect = {
 
 export const adminFacilityDetailSelect = {
   ...adminFacilitySelect,
+  details: true,
+  internalDetails: true,
   photoUrl: true,
   photoPublicId: true,
   videoUrl: true,

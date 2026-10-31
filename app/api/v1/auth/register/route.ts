@@ -2,7 +2,7 @@ import { auditActions, recordActivity } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { Prisma } from '@/lib/generated/prisma';
+import { uniqueViolation } from '@/lib/prisma-errors';
 import { handleRouteError, jsonCreated, jsonError, parseJson } from '@/lib/api';
 import { sendVerificationEmail } from '@/lib/auth-email';
 import { logError } from '@/lib/logger';
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     return jsonCreated(user);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    if (uniqueViolation(error)) {
       return jsonError('Email sudah terdaftar.', 409);
     }
 

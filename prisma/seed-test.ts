@@ -54,7 +54,7 @@ ${upsertUser(facility, 'Fasilitas Uji', 'FACILITY')}
 ${upsertUser(pharmacy, 'Apotek Uji', 'PHARMACY')}
 ${upsertUser(patient, 'Pengguna Uji', 'PATIENT')}
 
-INSERT INTO "DoctorProfile" ("id", "slug", "userId", "specialty", "bio", "experienceYears", "consultationFee", "city", "verificationStatus", "createdAt", "updatedAt")
+INSERT INTO "DoctorProfile" ("id", "slug", "userId", "specialty", "bio", "experienceYears", "consultationFee", "city", "latitude", "longitude", "verificationStatus", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
   'dokter-uji',
@@ -64,16 +64,19 @@ VALUES (
   5,
   50000,
   'Malang',
+  -6.2000, 106.8166,
   'VERIFIED',
   NOW(),
   NOW()
 )
 ON CONFLICT ("slug") DO UPDATE SET
   "userId" = EXCLUDED."userId",
+  "latitude" = EXCLUDED."latitude",
+  "longitude" = EXCLUDED."longitude",
   "verificationStatus" = 'VERIFIED',
   "updatedAt" = NOW();
 
-INSERT INTO "Facility" ("id", "slug", "userId", "name", "type", "description", "city", "verificationStatus", "createdAt", "updatedAt")
+INSERT INTO "Facility" ("id", "slug", "userId", "name", "type", "description", "city", "latitude", "longitude", "verificationStatus", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
   'fasilitas-uji',
@@ -82,16 +85,19 @@ VALUES (
   'CLINIC',
   'Akun uji untuk pengembangan panel fasilitas.',
   'Malang',
+  -6.2100, 106.8300,
   'VERIFIED',
   NOW(),
   NOW()
 )
 ON CONFLICT ("slug") DO UPDATE SET
   "userId" = EXCLUDED."userId",
+  "latitude" = EXCLUDED."latitude",
+  "longitude" = EXCLUDED."longitude",
   "verificationStatus" = 'VERIFIED',
   "updatedAt" = NOW();
 
-INSERT INTO "Facility" ("id", "slug", "userId", "name", "type", "description", "city", "verificationStatus", "createdAt", "updatedAt")
+INSERT INTO "Facility" ("id", "slug", "userId", "name", "type", "description", "city", "latitude", "longitude", "verificationStatus", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
   'apotek-uji',
@@ -100,13 +106,73 @@ VALUES (
   'PHARMACY',
   'Akun uji untuk pengembangan panel apotek (pesanan dan produk).',
   'Malang',
+  -6.1900, 106.8000,
   'VERIFIED',
   NOW(),
   NOW()
 )
 ON CONFLICT ("slug") DO UPDATE SET
   "userId" = EXCLUDED."userId",
+  "latitude" = EXCLUDED."latitude",
+  "longitude" = EXCLUDED."longitude",
   "verificationStatus" = 'VERIFIED',
+  "updatedAt" = NOW();
+
+UPDATE "DoctorProfile" SET
+  "details" = '{"title":"dr.","languages":["Indonesia"]}'::jsonb,
+  "internalDetails" = '{"strNumber":"TEST-STR-001"}'::jsonb
+WHERE "slug" = 'dokter-uji';
+
+INSERT INTO "Subscription" ("id", "userId", "plan", "endsAt", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "User" WHERE "email" = ${sqlString(doctor.email)}),
+  'YEARLY',
+  NOW() + interval '1 year',
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("userId") DO UPDATE SET
+  "plan" = 'YEARLY',
+  "endsAt" = NOW() + interval '1 year',
+  "updatedAt" = NOW();
+
+UPDATE "Facility" SET
+  "details" = '{"clinicKind":"GENERAL","acceptsBpjs":true,"inpatient":false}'::jsonb,
+  "internalDetails" = '{"licenseNumber":"TEST-IZIN-001"}'::jsonb
+WHERE "slug" = 'fasilitas-uji';
+
+INSERT INTO "Subscription" ("id", "userId", "plan", "endsAt", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "User" WHERE "email" = ${sqlString(facility.email)}),
+  'YEARLY',
+  NOW() + interval '1 year',
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("userId") DO UPDATE SET
+  "plan" = 'YEARLY',
+  "endsAt" = NOW() + interval '1 year',
+  "updatedAt" = NOW();
+
+UPDATE "Facility" SET
+  "details" = '{"open24h":false,"acceptsPrescription":true,"delivery":false}'::jsonb,
+  "internalDetails" = '{"licenseNumber":"TEST-IZIN-002"}'::jsonb
+WHERE "slug" = 'apotek-uji';
+
+INSERT INTO "Subscription" ("id", "userId", "plan", "endsAt", "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  (SELECT "id" FROM "User" WHERE "email" = ${sqlString(pharmacy.email)}),
+  'YEARLY',
+  NOW() + interval '1 year',
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("userId") DO UPDATE SET
+  "plan" = 'YEARLY',
+  "endsAt" = NOW() + interval '1 year',
   "updatedAt" = NOW();
 `);
 

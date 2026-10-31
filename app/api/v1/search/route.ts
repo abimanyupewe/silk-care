@@ -8,11 +8,12 @@ import {
 } from '@/lib/availability';
 import {
   publicArticleWhere,
-  publicDoctorWhere,
-  publicFacilityWhere,
-  publicProductWhere
+  publicDoctorWhereAt,
+  publicFacilityWhereAt,
+  publicProductWhereAt
 } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
+import { transactionsEnabled } from '@/lib/features';
 import { facilityTypeLabels } from '@/lib/facility-types';
 import { formatRating, parseMinRating } from '@/lib/rating';
 
@@ -34,6 +35,7 @@ function distanceForLocation(
 
 export async function GET(request: Request) {
   try {
+    const now = new Date();
     const searchParams = new URL(request.url).searchParams;
     const q = getString(searchParams, 'q', 100) ?? '';
     const typeParam = getString(searchParams, 'type', 20);
@@ -70,7 +72,7 @@ export async function GET(request: Request) {
 
     const shouldSearch = (value: (typeof searchTypes)[number]) => !type || type === value;
     const doctorWhere: Prisma.DoctorProfileWhereInput = {
-      ...publicDoctorWhere,
+      ...publicDoctorWhereAt(now),
       OR: [
         { specialty: { contains: q, mode: 'insensitive' } },
         { bio: { contains: q, mode: 'insensitive' } },
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
       ]
     };
     const facilityWhere: Prisma.FacilityWhereInput = {
-      ...publicFacilityWhere,
+      ...publicFacilityWhereAt(now),
       OR: [
         { name: { contains: q, mode: 'insensitive' } },
         { description: { contains: q, mode: 'insensitive' } },
@@ -127,6 +129,7 @@ export async function GET(request: Request) {
               longitude: true,
               ratingAverage: true,
               reviewCount: true,
+              details: true,
               user: {
                 select: {
                   name: true,
@@ -151,6 +154,7 @@ export async function GET(request: Request) {
               longitude: true,
               ratingAverage: true,
               reviewCount: true,
+              details: true,
               user: {
                 select: {
                   image: true
@@ -179,10 +183,10 @@ export async function GET(request: Request) {
             }
           })
         : Promise.resolve([]),
-      shouldSearch('PRODUCT')
+      transactionsEnabled && shouldSearch('PRODUCT')
         ? prisma.product.findMany({
             where: {
-              ...publicProductWhere,
+              ...publicProductWhereAt(now),
               OR: [
                 { name: { contains: q, mode: 'insensitive' } },
                 { description: { contains: q, mode: 'insensitive' } },
@@ -240,6 +244,7 @@ export async function GET(request: Request) {
         image: doctor.user.image,
         rating: formatRating(doctor.ratingAverage),
         reviewCount: doctor.reviewCount,
+        details: doctor.details,
         ...(geoFilter ? { distanceKm: formatDistanceKm(doctor.distanceKm) } : {})
       })),
       ...facilities.map((facility) => ({
@@ -254,6 +259,7 @@ export async function GET(request: Request) {
         image: facility.user.image,
         rating: formatRating(facility.ratingAverage),
         reviewCount: facility.reviewCount,
+        details: facility.details,
         ...(geoFilter ? { distanceKm: formatDistanceKm(facility.distanceKm) } : {})
       })),
       ...articles.map((article) => ({

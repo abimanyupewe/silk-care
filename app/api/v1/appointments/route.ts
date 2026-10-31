@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { requireTransactions } from '@/lib/transactions-guard';
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
@@ -20,7 +21,7 @@ import {
   formatAppointmentSchedule,
   isWithinOperatingHours
 } from '@/lib/appointment';
-import { publicFacilityServiceWhere, publicFacilityWhere } from '@/lib/catalog';
+import { publicFacilityServiceWhere, publicFacilityWhereAt } from '@/lib/catalog';
 import { getJakartaSchedulePosition } from '@/lib/consultation';
 import {
   completeIdempotencyRecord,
@@ -86,6 +87,9 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
+    const off = requireTransactions();
+    if (off) return off;
+
     const parsed = await parseJson(request, createSchema);
 
     if (parsed.error) {
@@ -124,7 +128,7 @@ export async function POST(request: Request) {
     }
 
     const facility = await prisma.facility.findFirst({
-      where: { ...publicFacilityWhere, slug: parsed.data.facilitySlug },
+      where: { ...publicFacilityWhereAt(new Date()), slug: parsed.data.facilitySlug },
       select: {
         id: true,
         userId: true,

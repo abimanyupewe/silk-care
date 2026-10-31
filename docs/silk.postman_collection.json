@@ -2386,7 +2386,7 @@
       "name": "Partner",
       "item": [
         {
-          "name": "POST /api/v1/partner/doctor — Ajukan onboarding dokter",
+          "name": "POST /api/v1/partner/registrations — Daftar mitra (dokter)",
           "request": {
             "method": "POST",
             "header": [
@@ -2396,16 +2396,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/partner/doctor",
+              "raw": "{{baseUrl}}/api/v1/partner/registrations",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "partner", "doctor"],
+              "path": ["api", "v1", "partner", "registrations"],
               "variable": [],
               "query": []
             },
-            "description": "Ajukan onboarding dokter",
+            "description": "Daftar sebagai mitra dokter; langsung VERIFIED dengan masa gratis 6 bulan",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"specialty\": \"string\",\n  \"bio\": \"string\",\n  \"experienceYears\": 0,\n  \"consultationFee\": 0,\n  \"city\": \"string\",\n  \"address\": \"string\",\n  \"latitude\": -90,\n  \"longitude\": -180\n}",
+              "raw": "{\n  \"partnerType\": \"DOCTOR\",\n  \"values\": {\n    \"specialty\": \"Dokter Umum\",\n    \"bio\": \"Praktik umum.\",\n    \"experienceYears\": 5,\n    \"phone\": \"081234567890\",\n    \"title\": \"dr.\",\n    \"languages\": [\n      \"Indonesia\",\n      \"Inggris\"\n    ],\n    \"strNumber\": \"1234567890\",\n    \"city\": \"Jakarta\",\n    \"address\": \"Jl. Contoh No. 1\",\n    \"latitude\": -6.2,\n    \"longitude\": 106.8\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2426,7 +2426,7 @@
           ]
         },
         {
-          "name": "POST /api/v1/partner/facility — Ajukan onboarding fasilitas",
+          "name": "POST /api/v1/partner/registrations — Daftar mitra (apotek)",
           "request": {
             "method": "POST",
             "header": [
@@ -2436,16 +2436,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/partner/facility",
+              "raw": "{{baseUrl}}/api/v1/partner/registrations",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "partner", "facility"],
+              "path": ["api", "v1", "partner", "registrations"],
               "variable": [],
               "query": []
             },
-            "description": "Ajukan onboarding fasilitas",
+            "description": "Daftar sebagai mitra apotek; langsung VERIFIED dengan masa gratis 6 bulan",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"string\",\n  \"type\": \"HOSPITAL\",\n  \"description\": \"string\",\n  \"address\": \"string\",\n  \"city\": \"string\",\n  \"phone\": \"string\",\n  \"latitude\": -90,\n  \"longitude\": -180\n}",
+              "raw": "{\n  \"partnerType\": \"PHARMACY\",\n  \"values\": {\n    \"name\": \"Apotek Contoh\",\n    \"description\": \"Apotek lengkap.\",\n    \"phone\": \"021555000\",\n    \"licenseNumber\": \"SIA-001\",\n    \"open24h\": false,\n    \"acceptsPrescription\": true,\n    \"delivery\": true,\n    \"pharmacistName\": \"Apt. Contoh\",\n    \"city\": \"Jakarta\",\n    \"address\": \"Jl. Contoh No. 2\",\n    \"latitude\": -6.2,\n    \"longitude\": 106.8\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"

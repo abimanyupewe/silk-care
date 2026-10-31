@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { Prisma } from '@/lib/generated/prisma';
+import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth-guard';
 import {
@@ -17,6 +17,8 @@ import {
 import { adminFacilitySelect, verificationStatuses } from '@/lib/admin';
 import { auditActions, writeAuditLog } from '@/lib/audit';
 import { createUniqueFacilitySlug, facilityTypes } from '@/lib/facility';
+import { uniqueViolation } from '@/lib/prisma-errors';
+import { startTrial } from '@/lib/subscription';
 
 // Admin membuat akun pemilik sekaligus profil fasilitas (mis. apotek yang kesulitan
 // mendaftar sendiri). Hasilnya langsung terverifikasi karena dibuat oleh admin.
@@ -140,6 +142,9 @@ export async function POST(request: Request) {
           select: adminFacilitySelect
         });
 
+        // Katalog publik hanya menampilkan mitra dengan langganan aktif.
+        await startTrial(tx, user.id, new Date());
+
         await writeAuditLog(
           {
             actorId: auth.user.id,
@@ -161,7 +166,7 @@ export async function POST(request: Request) {
 
       return jsonCreated(created);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (uniqueViolation(error)) {
         return jsonError('Email sudah terdaftar.', 409);
       }
 

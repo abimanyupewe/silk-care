@@ -1,4 +1,5 @@
 import { auditActions, writeAuditLog } from '@/lib/audit';
+import { requireTransactions } from '@/lib/transactions-guard';
 import type { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -14,7 +15,7 @@ import {
   paginationMeta,
   parseJson
 } from '@/lib/api';
-import { publicDoctorWhere } from '@/lib/catalog';
+import { publicDoctorWhereAt } from '@/lib/catalog';
 import {
   consultationDetailSelect,
   consultationListSelect,
@@ -98,6 +99,9 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
+    const off = requireTransactions();
+    if (off) return off;
+
     const parsed = await parseJson(request, createSchema);
 
     if (parsed.error) {
@@ -138,7 +142,7 @@ export async function POST(request: Request) {
 
     const doctor = await prisma.doctorProfile.findFirst({
       where: {
-        ...publicDoctorWhere,
+        ...publicDoctorWhereAt(new Date()),
         slug: parsed.data.doctorSlug
       },
       select: {

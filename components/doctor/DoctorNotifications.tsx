@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { transactionsEnabled } from '@/lib/features';
 import { useState } from 'react';
 import { Bell, BellRing } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -29,9 +30,9 @@ type NotificationLink = { href: string; label: string };
 export function DoctorNotifications({
   eyebrow = 'Panel dokter',
   description = 'Konsultasi baru, perubahan status, dan ulasan untuk Anda.',
-  links = {
-    CONSULTATION: { href: '/dashboard/dokter/konsultasi', label: 'Lihat konsultasi' }
-  }
+  links = transactionsEnabled
+    ? { CONSULTATION: { href: '/dashboard/dokter/konsultasi', label: 'Lihat konsultasi' } }
+    : {}
 }: {
   eyebrow?: string;
   description?: string;

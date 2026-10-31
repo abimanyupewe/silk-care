@@ -18,6 +18,8 @@ export const doctorProfileSelect = {
   videoUrl: true,
   videoPublicId: true,
   verificationStatus: true,
+  details: true,
+  internalDetails: true,
   createdAt: true,
   updatedAt: true,
   user: {

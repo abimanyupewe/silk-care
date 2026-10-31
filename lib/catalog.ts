@@ -1,16 +1,19 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { doctorScheduleSelect, facilityOperatingHourSelect } from '@/lib/schedule';
 import { publicFacilityServiceSelect } from '@/lib/facility-service';
+import { activeSubscriptionWhere } from '@/lib/subscription';
 
-export const publicDoctorWhere = {
-  verificationStatus: 'VERIFIED',
-  user: { deletedAt: null }
-} satisfies Prisma.DoctorProfileWhereInput;
+export const publicDoctorWhereAt = (now: Date) =>
+  ({
+    verificationStatus: 'VERIFIED',
+    user: activeSubscriptionWhere(now)
+  }) satisfies Prisma.DoctorProfileWhereInput;
 
-export const publicFacilityWhere = {
-  verificationStatus: 'VERIFIED',
-  user: { deletedAt: null }
-} satisfies Prisma.FacilityWhereInput;
+export const publicFacilityWhereAt = (now: Date) =>
+  ({
+    verificationStatus: 'VERIFIED',
+    user: activeSubscriptionWhere(now)
+  }) satisfies Prisma.FacilityWhereInput;
 
 export const publicFacilityServiceWhere = {
   active: true,
@@ -22,14 +25,15 @@ export const publicArticleWhere = {
   deletedAt: null
 } satisfies Prisma.ArticleWhereInput;
 
-export const publicProductWhere = {
-  active: true,
-  deletedAt: null,
-  facility: {
-    verificationStatus: 'VERIFIED',
-    user: { deletedAt: null }
-  }
-} satisfies Prisma.ProductWhereInput;
+export const publicProductWhereAt = (now: Date) =>
+  ({
+    active: true,
+    deletedAt: null,
+    facility: {
+      verificationStatus: 'VERIFIED',
+      user: activeSubscriptionWhere(now)
+    }
+  }) satisfies Prisma.ProductWhereInput;
 
 export const doctorListSelect = {
   id: true,
@@ -46,6 +50,7 @@ export const doctorListSelect = {
   reviewCount: true,
   createdAt: true,
   photoUrl: true,
+  details: true,
   user: {
     select: {
       name: true,
@@ -91,6 +96,7 @@ export const facilityListSelect = {
   reviewCount: true,
   createdAt: true,
   photoUrl: true,
+  details: true,
   user: {
     select: {
       image: true

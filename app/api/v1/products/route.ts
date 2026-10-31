@@ -9,7 +9,7 @@ import {
   jsonOk,
   paginationMeta
 } from '@/lib/api';
-import { productSelect, publicProductWhere } from '@/lib/catalog';
+import { productSelect, publicProductWhereAt } from '@/lib/catalog';
 
 const productSorts = {
   newest: { createdAt: 'desc' },
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       return jsonError('minPrice tidak boleh lebih besar dari maxPrice.', 422);
     }
 
-    const where: Prisma.ProductWhereInput = { ...publicProductWhere };
+    const where: Prisma.ProductWhereInput = { ...publicProductWhereAt(new Date()) };
 
     if (q) {
       where.OR = [

@@ -39,7 +39,7 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   order-expiry cron endpoint at `/api/v1/cron/orders/expire`,
   patient consultations under `/api/v1/consultations*`, patient medical records under
   `/api/v1/medical-records*`, partner
-  onboarding under `/api/v1/partner/{doctor,facility}`, partner article CRUD/submission
+  onboarding under `/api/v1/partner/registrations`, partner article CRUD/submission
   under `/api/v1/partner/articles*`, doctor profile and schedule at
   `/api/v1/doctor/{profile,schedule}`, doctor consultation management under
   `/api/v1/doctor/consultations*`, facility profile, operating hours, order, and
@@ -88,7 +88,11 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   copy,
   `lib/payments/` for the payment-provider abstraction (`lib/midtrans.ts` stays the
   low-level Snap/signature adapter), `lib/ai/` for the AI provider contract and prompt
-  scaffold, and `lib/reviews.ts` for review target
+  scaffold, `lib/partner-requirements/` for the partner registry (per-type steps/fields,
+  Zod builders, `splitValues`, draft flag), `lib/subscription.ts` for partner subscriptions
+  (`startTrial`, `activeSubscriptionWhere`), `lib/months.ts` for end-of-month-safe `addMonths`,
+  `lib/features.ts` for the `transactionsEnabled` switch, `lib/transactions-guard.ts` for the
+  503 guard, and `lib/reviews.ts` for review target
   helpers. Frontend content
   is still hard-coded; wire it to these endpoints later. Searchable records in
   `lib/search-index.ts` still feed the client `SearchModal` and `/search`; replace them
@@ -99,7 +103,7 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `.env.example` to `.env` and fill both Neon URLs before running migrations.
 - Auth: Auth.js v5 beta in `auth.ts`, credentials + JWT sessions. Route handlers live in
   `app/api/auth/[...nextauth]` and `app/api/v1/auth/*`. Roles are in the `UserRole` enum.
-  There is no login UI yet; use the Auth.js default pages or the API directly. Email
+  Login and sign-up UIs exist (`/login`, `/daftar`, `/mitra/daftar`). Email
   verification and password reset use hashed `AuthToken` rows. JWT payloads carry
   `sessionVersion`; `requireUser` compares it with `User.sessionVersion` so password
   changes/resets and admin deactivation/restoration invalidate old tokens. Without
@@ -121,7 +125,7 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
   `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
-  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, and `facility_services_appointments`
+  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, `facility_services_appointments`, and `partner_subscriptions`
   migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
@@ -209,6 +213,21 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   order created/status/payment, consultation request/status/record, article moderation,
   review received/moderation, and partner verification; failures are logged, not surfaced
   to the API caller.
+- Partner directory (Phase 1; spec in
+  `docs/superpowers/specs/2026-10-31-partner-directory-subscription-design.md`): partners register
+  through the stepper at `/mitra/daftar` (`POST /api/v1/partner/registrations`, which replaced
+  `/partner/{doctor,facility}`). They are `VERIFIED` immediately (admin verification is off for now;
+  `REJECTED` still hides a partner) and get a 6-month `FREE_TRIAL` `Subscription`. Public visibility
+  is `Subscription.endsAt > now`, applied through `publicDoctorWhereAt/publicFacilityWhereAt/
+publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed on purpose: never
+  reintroduce a constant, because spreading a function yields `{}` and silently drops the filter.
+  Per-type fields live only in the `lib/partner-requirements/` registry; `splitValues` routes them
+  to columns, `details` (public) or `internalDetails` (owner/admin only, never in public selects).
+  The per-type fields are DRAFT pending a client cross-check. `transactionsEnabled=false` in
+  `lib/features.ts` switches off shop, appointments, and consultations: the five write endpoints
+  (`POST /orders`, `POST /orders/{id}/payment`, `POST /cart/items`, `POST /appointments`,
+  `POST /consultations`) return `503`; reads, cancellation, the webhook, and cron are untouched.
+  Duitku payments, admin prices, and the public map are Phases 2-3 per the spec.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when

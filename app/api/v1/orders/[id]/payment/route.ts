@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { requireTransactions } from '@/lib/transactions-guard';
 import { requireUser } from '@/lib/auth-guard';
 import { jsonCreated, jsonError, jsonOk, jsonTooManyRequests } from '@/lib/api';
 import { getPaymentProvider, PaymentNotConfiguredError } from '@/lib/payments';
@@ -19,6 +20,9 @@ export async function POST(_request: Request, context: RouteContext) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    const off = requireTransactions();
+    if (off) return off;
 
     const limit = await rateLimit(`orders:payment:${auth.user.id}`, 10, 10 * 60 * 1000);
 

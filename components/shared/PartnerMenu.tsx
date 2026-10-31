@@ -30,7 +30,6 @@ const facilityTypeIcons: Record<FacilityTypeValue, LucideIcon> = {
 };
 
 // Dokter dipisah dari fasilitas: profesi berizin, alur dan verifikasinya berbeda.
-// Belum bisa diklik sampai pendaftaran dokter tersedia.
 export function PartnerMenuItems({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="space-y-4">
@@ -57,23 +56,14 @@ export function PartnerMenuItems({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="border-t border-border pt-4">
         <p className="px-3 text-sm font-semibold text-ink">Tenaga medis</p>
-        <div
-          aria-disabled="true"
-          className="mt-1 flex items-start gap-3 rounded-md bg-surface px-3 py-3"
+        <Link
+          href="/mitra/daftar?type=DOCTOR"
+          onClick={onNavigate}
+          className="mt-1 flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-primary-tint"
         >
-          <Stethoscope className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" aria-hidden="true" />
-          <span className="min-w-0">
-            <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
-              Dokter
-              <span className="border border-border-strong bg-white px-2 text-sm text-ink-muted">
-                Segera hadir
-              </span>
-            </span>
-            <span className="mt-0.5 block text-sm text-ink-muted">
-              Khusus dokter berizin, diverifikasi admin. Pendaftaran dokter belum tersedia.
-            </span>
-          </span>
-        </div>
+          <Stethoscope className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          Dokter
+        </Link>
       </div>
     </div>
   );

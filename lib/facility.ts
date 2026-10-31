@@ -31,6 +31,8 @@ export const facilityProfileSelect = {
   videoUrl: true,
   videoPublicId: true,
   verificationStatus: true,
+  details: true,
+  internalDetails: true,
   ratingAverage: true,
   reviewCount: true,
   createdAt: true,

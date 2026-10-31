@@ -261,8 +261,7 @@ Untuk fasilitas non-apotek. Apotek mendapat 403 di route `/facility/services*` d
 | GET    | `/api/v1/facility/orders`              | 200    |
 | GET    | `/api/v1/facility/orders/{id}`         | 200    |
 | PATCH  | `/api/v1/facility/orders/{id}/status`  | 200    |
-| POST   | `/api/v1/partner/doctor`               | 201    |
-| POST   | `/api/v1/partner/facility`             | 201    |
+| POST   | `/api/v1/partner/registrations`        | 201    |
 | GET    | `/api/v1/partner/articles`             | 200    |
 | POST   | `/api/v1/partner/articles`             | 201    |
 | GET    | `/api/v1/partner/articles/{id}`        | 200    |
@@ -338,6 +337,24 @@ dinonaktifkan, menolak jalan di production, dan membuat dokter serta fasilitas b
 (muncul di katalog publik). `TEST_FACILITY_*` adalah klinik (role `FACILITY`) dan
 `TEST_PHARMACY_*` adalah apotek (role `PHARMACY`); hanya apotek yang punya menu pesanan dan produk.
 
+## Pendaftaran mitra
+
+`POST /api/v1/partner/registrations` menggantikan `/partner/doctor` dan `/partner/facility`.
+Body: `{ "partnerType": "DOCTOR" | <tipe fasilitas>, "values": { ... } }`. Kunci `values` berasal
+dari registri `lib/partner-requirements/` per tipe (field khusus tipe masih draf).
+
+- `201`: profil dibuat langsung `VERIFIED` (verifikasi admin dimatikan sementara) dan akun
+  mendapat `Subscription` `FREE_TRIAL` 6 bulan. Mitra tampil di katalog publik selama
+  `Subscription.endsAt > now`.
+- `403`: akun `ADMIN`. `409`: akun sudah punya profil dokter/fasilitas, atau slug bentrok.
+  `422`: `partnerType` tidak dikenal atau `values` tidak lolos skema registri.
+- `details` (publik) tampil di respons dokter/fasilitas; `internalDetails` hanya untuk pemilik
+  dan admin.
+
+Selama `transactionsEnabled=false` (`lib/features.ts`), lima endpoint tulis transaksi
+(`POST /orders`, `POST /orders/{id}/payment`, `POST /cart/items`, `POST /appointments`,
+`POST /consultations`) mengembalikan `503`. Baca, pembatalan, webhook, dan cron tidak berubah.
+
 ## Fixtures demo deterministik
 
 Jalankan:
@@ -384,6 +401,9 @@ tutup.
 
 ID dokter/fasilitas/produk/artikel dibuat acak oleh database. Gunakan slug atau email
 untuk menemukannya; jangan mengandalkan ID hasil seed. Ulasan memakai ID tetap.
+
+Setiap dokter dan fasilitas demo/test punya `Subscription` `YEARLY` yang aktif, sehingga muncul di
+katalog publik.
 
 Seed demo tidak membuat order, konsultasi, notifikasi, atau audit log. Untuk QA yang butuh
 state bersih, gunakan database atau Neon branch terpisah, lalu jalankan `db:seed` dan

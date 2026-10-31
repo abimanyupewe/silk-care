@@ -10,7 +10,7 @@ import {
   paginationMeta
 } from '@/lib/api';
 import { doctorAvailabilityWhere, parseAvailabilityFilter } from '@/lib/availability';
-import { doctorListSelect, publicDoctorWhere } from '@/lib/catalog';
+import { doctorListSelect, publicDoctorWhereAt } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
 import { formatRating, parseMinRating } from '@/lib/rating';
 
@@ -176,7 +176,7 @@ export async function GET(request: Request) {
       return jsonError('sort distance_asc membutuhkan lat dan lng.', 422);
     }
 
-    const where: Prisma.DoctorProfileWhereInput = { ...publicDoctorWhere };
+    const where: Prisma.DoctorProfileWhereInput = { ...publicDoctorWhereAt(new Date()) };
 
     if (q) {
       where.OR = [

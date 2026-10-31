@@ -1,13 +1,13 @@
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
-import { productSelect, publicProductWhere } from '@/lib/catalog';
+import { productSelect, publicProductWhereAt } from '@/lib/catalog';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
     const product = await prisma.product.findFirst({
       where: {
-        ...publicProductWhere,
+        ...publicProductWhereAt(new Date()),
         slug
       },
       select: productSelect

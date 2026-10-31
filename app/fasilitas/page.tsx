@@ -7,7 +7,7 @@ import { facilityTypes } from '@/lib/facility-types';
 
 export const metadata: Metadata = {
   title: 'Fasilitas kesehatan — SILK',
-  description: 'Temukan apotek, klinik, laboratorium, dan fasilitas kesehatan terverifikasi.'
+  description: 'Temukan apotek, klinik, laboratorium, dan fasilitas kesehatan mitra SILK.'
 };
 
 export default async function FacilitiesPage({
@@ -25,7 +25,7 @@ export default async function FacilitiesPage({
       <main className="container mx-auto max-w-7xl px-4 py-10">
         <h1 className="text-3xl font-bold text-ink">Fasilitas kesehatan</h1>
         <p className="mt-2 text-ink-muted">
-          Fasilitas yang sudah diverifikasi admin SILK. Pilih jenis untuk menyaring.
+          Fasilitas kesehatan mitra SILK. Pilih jenis untuk menyaring.
         </p>
         <div className="mt-6">
           <FacilityTypeChips active={active} />

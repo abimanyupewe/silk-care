@@ -10,7 +10,7 @@ import {
   paginationMeta
 } from '@/lib/api';
 import { facilityAvailabilityWhere, parseAvailabilityFilter } from '@/lib/availability';
-import { facilityListSelect, publicFacilityWhere } from '@/lib/catalog';
+import { facilityListSelect, publicFacilityWhereAt } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
 import { facilityTypes } from '@/lib/facility-types';
 import { formatRating, parseMinRating } from '@/lib/rating';
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
       return jsonError('sort distance_asc membutuhkan lat dan lng.', 422);
     }
 
-    const where: Prisma.FacilityWhereInput = { ...publicFacilityWhere };
+    const where: Prisma.FacilityWhereInput = { ...publicFacilityWhereAt(new Date()) };
 
     if (q) {
       where.OR = [

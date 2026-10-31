@@ -31,7 +31,8 @@ export const auditActions = {
   orderCancel: 'ORDER_CANCEL',
   consultationCreate: 'CONSULTATION_CREATE',
   consultationCancel: 'CONSULTATION_CANCEL',
-  reviewCreate: 'REVIEW_CREATE'
+  reviewCreate: 'REVIEW_CREATE',
+  partnerRegister: 'PARTNER_REGISTER'
 } as const;
 
 export const auditTargetTypes = [
@@ -94,7 +95,8 @@ const activityAuditActions: AuditAction[] = [
   auditActions.orderCancel,
   auditActions.consultationCreate,
   auditActions.consultationCancel,
-  auditActions.reviewCreate
+  auditActions.reviewCreate,
+  auditActions.partnerRegister
 ];
 
 function activityRetentionDays() {
