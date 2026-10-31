@@ -16,6 +16,11 @@ export const facilityTypes = [
 
 export type FacilityTypeValue = (typeof facilityTypes)[number];
 
+// Nilai di luar daftar (mis. dari query string) menghasilkan undefined, bukan error.
+export function parseFacilityType(value: string | null | undefined) {
+  return facilityTypes.find((type) => type === value);
+}
+
 // Hanya apotek yang berjualan produk dan menerima pesanan. PHARMACY juga nama role pemilik,
 // jadi satu fungsi ini berlaku untuk tipe fasilitas maupun role.
 export function isShopFacility(typeOrRole: string | null | undefined) {

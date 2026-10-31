@@ -647,6 +647,26 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/announcements/active:
+    get:
+      tags: [Public Catalog]
+      security: []
+      summary: Banner informasi yang sedang tampil
+      description: Banner aktif dalam rentang tanggalnya, atau null bila tidak ada.
+      responses:
+        '200':
+          description: Banner tampil atau null.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    nullable: true
+                    allOf:
+                      - $ref: '#/components/schemas/PublicAnnouncement'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/facilities/{slug}/services:
     get:
       tags: [Public Catalog]
@@ -4479,6 +4499,222 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/admin/announcements:
+    get:
+      tags: [Admin]
+      summary: Daftar banner informasi
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Daftar banner.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Announcement'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin]
+      summary: Buat banner informasi (draf secara bawaan)
+      description: >-
+        active=true menonaktifkan banner lain dalam transaksi yang sama. Tabrakan aktivasi
+        bersamaan menghasilkan 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Tidak boleh diaktifkan selagi memuat tanda [ ] (placeholder template).
+                linkLabel:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                  nullable: true
+                linkUrl:
+                  type: string
+                  maxLength: 500
+                  nullable: true
+                  description: Path internal (diawali /) atau https://. Diisi bersamaan dengan linkLabel.
+                tone:
+                  $ref: '#/components/schemas/AnnouncementTone'
+                active:
+                  type: boolean
+                  description: true menonaktifkan banner lain (hanya satu aktif).
+                dismissible:
+                  type: boolean
+                startsAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                endsAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Harus setelah startsAt.
+      responses:
+        '201':
+          description: Banner dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Announcement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/announcements/{id}:
+    get:
+      tags: [Admin]
+      summary: Detail banner informasi
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Detail banner.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Announcement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin]
+      summary: Ubah atau aktifkan/nonaktifkan banner
+      description: >-
+        Aturan dievaluasi terhadap nilai gabungan (data tersimpan + perubahan). active=true
+        menonaktifkan banner lain.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Tidak boleh diaktifkan selagi memuat tanda [ ] (placeholder template).
+                linkLabel:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                  nullable: true
+                linkUrl:
+                  type: string
+                  maxLength: 500
+                  nullable: true
+                  description: Path internal (diawali /) atau https://. Diisi bersamaan dengan linkLabel.
+                tone:
+                  $ref: '#/components/schemas/AnnouncementTone'
+                active:
+                  type: boolean
+                  description: true menonaktifkan banner lain (hanya satu aktif).
+                dismissible:
+                  type: boolean
+                startsAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                endsAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Harus setelah startsAt.
+      responses:
+        '200':
+          description: Banner diperbarui.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Announcement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Admin]
+      summary: Hapus banner informasi
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Banner dihapus.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/admin/audit-logs:
     get:
       tags: [Admin]
@@ -5332,6 +5568,47 @@ components:
               type: string
               nullable: true
               description: Hanya pada detail.
+    AnnouncementTone:
+      type: string
+      enum: [INFO, PROMO, IMPORTANT]
+    PublicAnnouncement:
+      type: object
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        linkLabel:
+          type: string
+          nullable: true
+        linkUrl:
+          type: string
+          nullable: true
+        tone:
+          $ref: '#/components/schemas/AnnouncementTone'
+        dismissible:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+    Announcement:
+      allOf:
+        - $ref: '#/components/schemas/PublicAnnouncement'
+        - type: object
+          properties:
+            active:
+              type: boolean
+            startsAt:
+              type: string
+              format: date-time
+              nullable: true
+            endsAt:
+              type: string
+              format: date-time
+              nullable: true
+            createdAt:
+              type: string
+              format: date-time
     FacilityService:
       type: object
       properties:

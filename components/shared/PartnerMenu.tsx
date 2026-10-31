@@ -16,7 +16,7 @@ import {
 import { facilityTypeLabels, facilityTypes, type FacilityTypeValue } from '@/lib/facility-types';
 
 // Record penuh: menambah tipe fasilitas tanpa ikon akan gagal typecheck.
-const facilityTypeIcons: Record<FacilityTypeValue, LucideIcon> = {
+export const facilityTypeIcons: Record<FacilityTypeValue, LucideIcon> = {
   HOSPITAL: Hospital,
   CLINIC: Building2,
   LABORATORY: FlaskConical,
@@ -29,7 +29,7 @@ const facilityTypeIcons: Record<FacilityTypeValue, LucideIcon> = {
   AMBULANCE: Ambulance
 };
 
-// Dokter dipisah dari fasilitas: profesi berizin, alur dan verifikasinya berbeda.
+// Dokter dipisah dari fasilitas: tipe, field, dan tujuan panelnya berbeda.
 export function PartnerMenuItems({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="space-y-4">

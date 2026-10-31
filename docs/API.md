@@ -180,6 +180,7 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | GET    | `/api/v1/doctors/{slug}`             | 200    |
 | GET    | `/api/v1/facilities`                 | 200    |
 | GET    | `/api/v1/facilities/{slug}`          | 200    |
+| GET    | `/api/v1/announcements/active`       | 200    |
 | GET    | `/api/v1/facilities/{slug}/services` | 200    |
 | GET    | `/api/v1/articles`                   | 200    |
 | GET    | `/api/v1/articles/{slug}`            | 200    |
@@ -316,6 +317,11 @@ Untuk fasilitas non-apotek. Apotek mendapat 403 di route `/facility/services*` d
 | GET    | `/api/v1/admin/reviews/{id}`                     | 200    |
 | PATCH  | `/api/v1/admin/reviews/{id}/moderate`            | 200    |
 | GET    | `/api/v1/admin/audit-logs`                       | 200    |
+| GET    | `/api/v1/admin/announcements`                    | 200    |
+| POST   | `/api/v1/admin/announcements`                    | 201    |
+| GET    | `/api/v1/admin/announcements/{id}`               | 200    |
+| PATCH  | `/api/v1/admin/announcements/{id}`               | 200    |
+| DELETE | `/api/v1/admin/announcements/{id}`               | 200    |
 | POST   | `/api/v1/admin/notifications/broadcast`          | 201    |
 | GET    | `/api/v1/admin/stats`                            | 200    |
 | GET    | `/api/v1/admin/system`                           | 200    |

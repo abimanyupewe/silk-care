@@ -678,3 +678,27 @@ model SubscriptionPrice {
   amount      Int
   updatedAt   DateTime @updatedAt
 }
+
+enum AnnouncementTone {
+  INFO
+  PROMO
+  IMPORTANT
+}
+
+// Indeks unik parsial "Announcement_single_active_idx" (satu banner aktif) ada di migrasi
+// 20261030150000_announcements dan tidak bisa ditulis di schema Prisma. Jangan dihapus.
+model Announcement {
+  id          String           @id @default(cuid())
+  message     String
+  linkLabel   String?
+  linkUrl     String?
+  tone        AnnouncementTone @default(INFO)
+  active      Boolean          @default(false)
+  dismissible Boolean          @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([active, startsAt, endsAt])
+}
