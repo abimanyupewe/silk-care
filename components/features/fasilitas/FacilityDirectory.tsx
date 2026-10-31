@@ -45,8 +45,8 @@ export function FacilityDirectory({ type }: { type?: FacilityTypeValue }) {
         title="Belum ada fasilitas"
         description={
           type
-            ? `Belum ada ${facilityTypeLabels[type].toLowerCase()} yang terverifikasi.`
-            : 'Fasilitas terverifikasi akan muncul di sini.'
+            ? `Belum ada ${facilityTypeLabels[type].toLowerCase()} yang terdaftar.`
+            : 'Fasilitas mitra akan muncul di sini.'
         }
       />
     );

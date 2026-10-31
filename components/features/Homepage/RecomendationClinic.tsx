@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgeCheck, Building2, ChevronRight, MapPin, Search, Star } from 'lucide-react';
+import { Building2, ChevronRight, MapPin, Search, Star } from 'lucide-react';
 import { SmartImage } from '@/components/shared/SmartImage';
 import { facilityTypeLabels, facilityTypes } from '@/lib/facility-types';
 import { formatRatingId } from '@/lib/format';
@@ -13,8 +13,7 @@ const FacilitySearch = () => (
       <div className="mb-6 max-w-3xl">
         <h2 className="text-2xl font-bold text-white md:text-[28px]">Cari fasilitas kesehatan</h2>
         <p className="mt-2 text-white/80">
-          Pilih jenis fasilitas yang Anda butuhkan, lalu telusuri yang sudah diverifikasi admin
-          SILK.
+          Pilih jenis fasilitas yang Anda butuhkan, lalu telusuri fasilitas mitra SILK.
         </p>
       </div>
       <form
@@ -69,10 +68,6 @@ const FacilityCard = ({ facility }: { facility: HomeFacility }) => (
       <div className="min-w-0">
         <h3 className="text-lg font-semibold leading-tight text-ink">{facility.name}</h3>
         <div className="mt-2 flex flex-wrap gap-2">
-          <span className="inline-flex h-6 items-center gap-1 rounded-md border border-primary-hover px-2 text-sm font-semibold text-primary-hover">
-            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Terverifikasi
-          </span>
           <span className="inline-flex h-6 items-center rounded-md border border-border-strong px-2 text-sm font-semibold text-ink-muted">
             {facilityTypeLabels[facility.type]}
           </span>
@@ -119,7 +114,7 @@ export const RecomendationClinic = ({ facilities }: { facilities: HomeFacility[]
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-ink md:text-[28px]">Fasilitas pilihan</h2>
             <p className="mt-1 text-ink-muted">
-              Fasilitas terverifikasi dengan penilaian terbaik dari pengguna.
+              Fasilitas mitra dengan penilaian terbaik dari pengguna.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

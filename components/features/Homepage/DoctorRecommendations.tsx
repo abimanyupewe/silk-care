@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, Briefcase, CalendarDays, MapPin, Star } from 'lucide-react';
+import { ArrowRight, Briefcase, CalendarDays, MapPin, Star } from 'lucide-react';
 import { Avatar } from '@/components/shared/Avatar';
 import { formatRatingId, formatRupiah } from '@/lib/format';
 import type { HomeDoctor } from '@/lib/home/types';
@@ -39,10 +39,6 @@ export const DoctorRecommendations = ({ doctors }: { doctors: HomeDoctor[] }) =>
                     <h3 className="line-clamp-2 text-lg font-semibold leading-tight text-ink">
                       {doctor.name}
                     </h3>
-                    <BadgeCheck
-                      className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                      aria-label="Terverifikasi"
-                    />
                   </div>
                   <p className="mt-1 text-sm text-ink-muted">{doctor.specialty}</p>
                   <div className="mt-2 flex items-center gap-1 text-sm">

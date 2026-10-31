@@ -59,7 +59,7 @@ const serviceItems: {
 ];
 
 const trustItems: { icon: LucideIcon; label: string }[] = [
-  { icon: ShieldCheck, label: 'Dokter terverifikasi' },
+  { icon: ShieldCheck, label: 'Dokter terdaftar' },
   { icon: ReceiptText, label: 'Harga transparan' },
   { icon: MapPin, label: 'Fokus area Malang' }
 ];
