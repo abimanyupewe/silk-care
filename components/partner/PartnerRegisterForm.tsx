@@ -224,7 +224,13 @@ export function PartnerRegisterForm({
       }}
       className="space-y-4"
     >
-      <p className="text-sm font-semibold text-ink" aria-live="polite">
+      <p
+        aria-hidden="true"
+        className="absolute right-6 top-6 text-sm font-semibold text-ink-muted md:right-8 md:top-8"
+      >
+        {index + 1} dari {steps.length}
+      </p>
+      <p className="sr-only" aria-live="polite">
         Langkah {index + 1} dari {steps.length}: {step.title}
       </p>
 

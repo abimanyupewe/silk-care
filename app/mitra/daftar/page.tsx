@@ -32,7 +32,7 @@ export default async function PartnerSignUpPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-4 py-12">
-      <div className="border border-border bg-white p-6 md:p-8">
+      <div className="relative border border-border bg-white p-6 md:p-8">
         <p className="text-sm font-semibold text-primary-hover">SILK</p>
         <h1 className="mt-2 text-2xl font-bold text-ink">
           {label ? `Daftar sebagai mitra ${label}` : 'Daftar sebagai mitra'}

@@ -12,10 +12,16 @@ docs, and code comments are Indonesian; the root layout sets `lang="id"`.
 - `npm run build` — production build (`prebuild` regenerates Prisma Client and runs the OpenAPI contract check)
 - `npm run openapi:check` — compare route files and exported methods with `docs/openapi.yaml`
 - `npm run format` — Prettier across the repo
-- `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` / `db:seed:demo` — Prisma
+- `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` /
+  `db:seed:demo` / `db:seed:test` — Prisma
 
-Use npm (`package-lock.json`). There is no test framework, test script, or CI workflow;
-verify changes with `npm run lint`, `npm run typecheck`, and `npm run build`.
+Use npm (`package-lock.json`). There is no test framework, test script, or CI workflow.
+Pure-logic checks run with `npx tsx scripts/checks/<name>.check.ts` (`months`,
+`subscription`, `registry`, `register-steps`). After changes run
+`npm run lint && npm run typecheck`; run `npm run build` only with the dev server stopped
+(see the `.next` gotcha below). Adding, removing, or renaming an API route file or an
+exported HTTP method requires a matching edit to `docs/openapi.yaml`, or `npm run
+openapi:check` (also run by `prebuild`) fails.
 
 Prettier: single quotes, semicolons, width 100, no trailing commas. Husky runs
 `lint-staged` (`next lint --fix --file`) on pre-commit and commitlint (Conventional
@@ -25,8 +31,19 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
 ## Structure
 
 - Single app, no monorepo. `@/*` maps to the repo root.
-- Routes: `/` (`app/page.tsx`), `/doctor`, `/apotek`, `/article` (each with `[slug]`), and
-  `/search`. Pages compose `Navbar` and `Footer` themselves; there is no shared page shell.
+- Public routes: `/` (homepage, server-rendered from DB via `lib/home/queries.ts` with
+  `revalidate = 300`; each homepage section hides itself if its query fails), `/doctor`,
+  `/apotek`, `/fasilitas`, `/article` (each with `[slug]`), and `/search`. Pages compose
+  `Navbar` and `Footer` themselves; there is no shared shell for public pages.
+- Panels: three role-based panels share one login (`/login`) and one shell
+  (`components/panel/PanelShell.tsx`): `/admin` (ADMIN), `/dashboard/dokter` (DOCTOR),
+  `/dashboard/fasilitas` (FACILITY, PHARMACY). `lib/roles.ts` maps role to panel home and
+  sanitizes `callbackUrl`; each panel `layout.tsx` re-checks the account via
+  `getActiveSession()` in `lib/auth-guard.ts` and redirects a wrong role to its own panel.
+  Client panel code fetches the REST API (not Prisma) through `fetchApi`
+  (`lib/api-client.ts`, sends 401 to `/login` and 403 to `/`) and `useApiQuery`
+  (`lib/api-swr.ts`); `fetchAdmin`/`useAdminQuery` are aliases (`lib/admin-api.ts`,
+  `lib/admin-swr.ts`). Panel page conventions live in `CLAUDE.md`.
 - `components/features/<domain>/` holds page sections; `components/shared/` holds app-wide
   widgets; `components/ui/` holds shadcn-style primitives. Note the directory is
   `components/features/Homepage/` (capital H), unlike the lowercase domain folders.
@@ -63,6 +80,16 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `SERVICE_UNAVAILABLE`). The API contract lives in `docs/openapi.yaml` and is served as
   YAML at `/api/v1/openapi`; conventions, error table, endpoint index, and demo fixtures
   live in `docs/API.md`.
+  Route handlers under `app/api/v1/**/route.ts` follow one shape: wrap the whole body in
+  `try { ... } catch (error) { return handleRouteError(error); }`; guard first
+  (`requireRole(['ADMIN'])` / `requireUser()` from `lib/auth-guard.ts`,
+  `if (!auth.ok) return auth.error;`) with partner guards from `lib/doctor-guard.ts` /
+  `lib/facility-guard.ts`; read query params with the `lib/api.ts` helpers
+  (`getString`, `getEnum`, `getBoolean`, `getInt`, `getPagination`) and bodies with
+  `parseJson(request, zodSchema)`; query Prisma through `lib/db.ts` with a shared `select`
+  constant from the domain lib; respond with `jsonOk(data, paginationMeta(...))`,
+  `jsonCreated`, or `jsonError` (success bodies are `{ data, meta? }`); admin mutations
+  call `writeAuditLog(input, tx)` inside the same `prisma.$transaction` as the change.
   `lib/catalog.ts` for shared public filters/selects, `lib/availability.ts` for day/time
   availability filters, `lib/geo.ts` for coordinate parsing, Haversine distance, and
   bounding boxes, `lib/rating.ts` for rating filters and denormalized review aggregates,
@@ -94,8 +121,8 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   (`startTrial`, `activeSubscriptionWhere`), `lib/months.ts` for end-of-month-safe `addMonths`,
   `lib/features.ts` for the `transactionsEnabled` switch, `lib/transactions-guard.ts` for the
   503 guard, and `lib/reviews.ts` for review target
-  helpers. Frontend content
-  is still hard-coded; wire it to these endpoints later. Searchable records in
+  helpers. Frontend content is still hard-coded for `/doctor`, `/apotek`, `/fasilitas`,
+  `/article`(+`[slug]`), and `/search`; wire them to the endpoints later. Searchable records in
   `lib/search-index.ts` still feed the client `SearchModal` and `/search`; replace them
   with `/api/v1/search` when wiring the UI.
 - Database layer: Prisma 7 + Neon in `prisma/schema.prisma`; the client singleton is
@@ -126,7 +153,9 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `prebuild` run `prisma generate`; ESLint ignores that directory.
 - The `init`, `add_catalog_slugs`, `marketplace_account_review_models`, `schedule_media`,
   `article_moderation`, `consultation_records`, `catalog_discovery_filters`,
-  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`, `facility_services_appointments`, `announcements`, and `partner_subscriptions`
+  `catalog_rating_backfill`, `audit_log`, `session_revocation`, `idempotency_keys`,
+  `email_templates`, `facility_types_massage_ambulance`,
+  `facility_services_appointments`, `announcements`, and `partner_subscriptions`
   migrations have been applied. Do not run `db:push` against production; use `db:migrate` locally and
   `db:deploy` in deployment. Public detail endpoints use the required unique
   `DoctorProfile.slug` and `Facility.slug`.
@@ -190,7 +219,9 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   optional but recommended for format/size enforcement. Article cover uploads use the
   `article-cover` purpose. Public doctor/facility details
   expose active schedules and operating hours; admin detail selects include schedules and
-  media but admins do not edit them. Non-pharmacy facilities (every type except `PHARMACY`) manage
+  media but admins do not edit them. The 10 facility types (`HOSPITAL` … `AMBULANCE`) and the
+  `isShopFacility`/`isServiceFacility` split live only in `lib/facility-types.ts` (no server
+  imports there; it must stay client-safe). Non-pharmacy facilities (every type except `PHARMACY`) manage
   a service catalog (`FacilityService`, soft-deleted, public via `/facilities/{slug}/services`) and
   receive appointment requests (`Appointment`): patients propose a date and time, validated against
   the facility operating hours in Asia/Jakarta, with no slots, quota, or payment. Status runs
@@ -220,7 +251,11 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   audit log. Transactional email is best-effort and covers
   order created/status/payment, consultation request/status/record, article moderation,
   review received/moderation, and partner verification; failures are logged, not surfaced
-  to the API caller.
+  to the API caller. Template copy defaults to `lib/email-templates.ts` (pure, no server
+  imports; also drives the admin preview) with per-key+audience overrides in the
+  `EmailTemplate` table, editable at `/admin/email-templates`. Absolute URLs (emails,
+  callback references) use `getAppUrl()` from `lib/app-url.ts`
+  (`NEXT_PUBLIC_APP_URL`/`AUTH_URL`, fallback `http://localhost:3000`).
 - Partner directory (Phase 1; spec in
   `docs/superpowers/specs/2026-10-31-partner-directory-subscription-design.md`): partners register
   through the stepper at `/mitra/daftar` (`POST /api/v1/partner/registrations`, which replaced
@@ -235,7 +270,13 @@ publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed o
   `lib/features.ts` switches off shop, appointments, and consultations: the five write endpoints
   (`POST /orders`, `POST /orders/{id}/payment`, `POST /cart/items`, `POST /appointments`,
   `POST /consultations`) return `503`; reads, cancellation, the webhook, and cron are untouched.
-  Duitku payments, admin prices, and the public map are Phases 2-3 per the spec.
+  Subscription payments go through Duitku (POP API): `POST /api/v1/subscription/payment`
+  creates a `SUB-` `SubscriptionPayment` + invoice (price: admin `customAmount` >
+  `SubscriptionPrice[partnerType]`, keys `DOCTOR` or the facility type > placeholder
+  Rp600.000/12 months), and `/api/v1/payments/duitku/callback` settles it by extending
+  `Subscription.endsAt`. Order payments over Duitku (`ORD-`) and the pricing/access gate are
+  still planned scope per `dev/Breakdown Fungsional Demo SILK.md` — `Payment.provider` is
+  still Midtrans-only and `Product` has no `golongan` column yet.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when
@@ -245,7 +286,9 @@ publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed o
   hours, plus the demo users `clara@`, `santika@`, `klinik@`, `aposilk@`, and
   `pasien@silk.local`. All demo accounts use `SEED_DEMO_PASSWORD`; running it repeatedly is
   safe (upserts by unique keys, and demo schedules/hours are replaced). Stable identifiers
-  and QA notes are in `docs/API.md`.
+  and QA notes are in `docs/API.md`. `db:seed:test` is separate and idempotent: it restores
+  one test account per panel from `TEST_*` env vars without touching demo data, and refuses
+  to run in production.
 
 ## Gotchas
 
@@ -265,9 +308,15 @@ publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed o
   the dev server, `rm -rf .next`, and restart.
 - Use `cn()` from `lib/utils` and the design tokens in `app/globals.css`
   (`text-ink`, `bg-surface`, `text-primary-hover`, etc.) instead of raw brand hex values.
+- Detecting a unique-constraint violation: use `uniqueViolation()` from
+  `lib/prisma-errors.ts`. `instanceof Prisma.PrismaClientKnownRequestError` fails in routes
+  (the class can come from a different module copy), and with the Neon driver adapter the
+  target is not in `meta.target` but in `meta.driverAdapterError.cause`.
 - `README.md` is the stock create-next-app file and is wrong about fonts (it says Geist).
-  Trust `app/layout.tsx` and `app/globals.css`; treat `dev/SRS SILK.md` as planned scope,
-  not implemented behavior.
+  Trust `app/layout.tsx` and `app/globals.css`; treat `dev/SRS SILK.md` and
+  `dev/Breakdown Fungsional Demo SILK.md` as planned scope, not implemented behavior.
+  `CLAUDE.md` re-includes this file and adds panel/API-route detail; keep both in mind when
+  panel conventions change.
 
 ## Design constraints
 

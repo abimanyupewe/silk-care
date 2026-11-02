@@ -203,6 +203,8 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | POST   | `/api/v1/orders/{id}/cancel`        | 200     |
 | POST   | `/api/v1/orders/{id}/payment`       | 200/201 |
 | POST   | `/api/v1/payments/midtrans/webhook` | 200     |
+| POST   | `/api/v1/payments/duitku/callback`  | 200     |
+| POST   | `/api/v1/subscription/payment`      | 200/201 |
 | GET    | `/api/v1/cron/orders/expire`        | 200     |
 
 ### Konsultasi dan rekam medis

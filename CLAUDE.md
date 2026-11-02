@@ -4,9 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
-The notes below add to AGENTS.md. Where they disagree, these notes reflect the current
-`panel/admin` work (AGENTS.md still says there is no login UI; `app/login` and `app/admin`
-now exist).
+The notes below add to AGENTS.md, which already describes the three panels and the shared
+route anatomy; here it is the per-file detail, not the summary, that matters.
 
 ## Verification
 

@@ -5075,6 +5075,142 @@ paths:
           $ref: '#/components/responses/InternalError'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/subscription/payment:
+    post:
+      tags: [Payments]
+      summary: Buat invoice pembayaran langganan (Duitku)
+      description: >-
+        Hanya DOCTOR/FACILITY/PHARMACY. Menghitung harga (customAmount admin >
+        SubscriptionPrice per tipe mitra > placeholder Rp600.000/12 bulan), menahan
+        invoice PENDING yang belum kedaluwarsa, lalu membuat invoice Duitku
+        (`SUB-` merchantOrderId, kedaluwarsa 60 menit). Callback Duitku yang memperpanjang.
+      responses:
+        '200':
+          description: Invoice PENDING masih dipakai ulang.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      amount:
+                        type: integer
+                      plan:
+                        type: string
+                      durationMonths:
+                        type: integer
+                      expiresAt:
+                        type: string
+                        format: date-time
+                      paymentUrl:
+                        type: string
+        '201':
+          description: Invoice dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      merchantOrderId:
+                        type: string
+                      plan:
+                        type: string
+                      amount:
+                        type: integer
+                      durationMonths:
+                        type: integer
+                      expiresAt:
+                        type: string
+                        format: date-time
+                      paymentUrl:
+                        type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          description: Aplikasi gagal menjangkau Duitku saat membuat invoice.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/payments/duitku/callback:
+    post:
+      tags: [Payments]
+      security: []
+      summary: Callback Duitku
+      description: >-
+        Callback POP API (x-www-form-urlencoded). Signature HMAC-SHA256 atas
+        merchantCode+amount+merchantOrderId diverifikasi sebelum
+        SubscriptionPayment/Subscription diubah. Alur ORD masih menunggu modul
+        pembuatan invoice.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [merchantCode, amount, merchantOrderId, resultCode, signature]
+              properties:
+                merchantCode:
+                  type: string
+                amount:
+                  type: string
+                merchantOrderId:
+                  type: string
+                productDetail:
+                  type: string
+                resultCode:
+                  type: string
+                  enum: ['00', '02']
+                reference:
+                  type: string
+                signature:
+                  type: string
+                paymentCode:
+                  type: string
+                settlementDate:
+                  type: string
+      responses:
+        '200':
+          description: Callback diproses.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/cron/orders/expire:
     get:
       tags: [Cron]
