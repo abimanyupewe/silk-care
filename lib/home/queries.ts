@@ -12,6 +12,7 @@ import {
   publicFacilityWhereAt,
   publicProductWhereAt
 } from '@/lib/catalog';
+import { facilityTypeLabels } from '@/lib/facility-types';
 import { logError } from '@/lib/logger';
 import { formatRating } from '@/lib/rating';
 import { doctorScheduleSelect } from '@/lib/schedule';
@@ -28,7 +29,8 @@ import type {
   HomeFacility,
   HomeProduct,
   HomeReview,
-  HomeReviewSummary
+  HomeReviewSummary,
+  MapPoint
 } from './types';
 
 async function safely<T>(label: string, query: () => Promise<T[]>): Promise<T[]> {
@@ -131,6 +133,57 @@ export function getLatestReviews(limit = 6): Promise<HomeReview[]> {
 
       return review ? [review] : [];
     });
+  });
+}
+
+// Titik-titik peta untuk beranda: dokter dan semua fasilitas (termasuk apotek) yang
+// punya koordinat. Gagal = tanpa bagian peta, bukan beranda rusak.
+export function getMapPoints(): Promise<MapPoint[]> {
+  return safely('map_points', async () => {
+    const now = new Date();
+    const doctorWhere = { ...publicDoctorWhereAt(now), latitude: { not: null } };
+    const facilityWhere = { ...publicFacilityWhereAt(now), latitude: { not: null } };
+
+    const [doctors, facilities] = await Promise.all([
+      prisma.doctorProfile.findMany({
+        where: doctorWhere,
+        orderBy: [...topRated],
+        take: 30,
+        select: { latitude: true, longitude: true, user: { select: { name: true } } }
+      }),
+      prisma.facility.findMany({
+        where: facilityWhere,
+        orderBy: [...topRated],
+        take: 60,
+        select: { latitude: true, longitude: true, name: true, type: true }
+      })
+    ]);
+
+    const points: MapPoint[] = [];
+
+    for (const row of doctors) {
+      if (row.latitude != null && row.longitude != null) {
+        points.push({
+          lat: row.latitude,
+          lng: row.longitude,
+          title: row.user.name ?? 'Dokter SILK',
+          kind: 'Dokter'
+        });
+      }
+    }
+
+    for (const row of facilities) {
+      if (row.latitude != null && row.longitude != null) {
+        points.push({
+          lat: row.latitude,
+          lng: row.longitude,
+          title: row.name,
+          kind: facilityTypeLabels[row.type]
+        });
+      }
+    }
+
+    return points;
   });
 }
 

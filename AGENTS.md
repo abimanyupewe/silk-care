@@ -45,12 +45,16 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   (`lib/api-swr.ts`); `fetchAdmin`/`useAdminQuery` are aliases (`lib/admin-api.ts`,
   `lib/admin-swr.ts`). Panel page conventions live in `CLAUDE.md`.
 - `components/features/<domain>/` holds page sections; `components/shared/` holds app-wide
-  widgets; `components/ui/` holds shadcn-style primitives. Note the directory is
+  widgets (`LeafletMap` is the shared OSM map: tile URL from `NEXT_PUBLIC_TILE_URL`,
+  attribution always visible, draggable-pin mode for forms plus static points mode for
+  listings — `components/partner/LocationPicker.tsx` wires it into the partner registration
+  location step with the "Cari alamat" reverse-geocode button); `components/ui/` holds
+  shadcn-style primitives. Note the directory is
   `components/features/Homepage/` (capital H), unlike the lowercase domain folders.
 - API routes: `/api/auth/[...nextauth]`, `/api/v1/auth/*` (including register,
   verify-email, forgot-password, reset-password), `/api/v1/health`, AI scaffold under
   `/api/v1/ai/{chat,status}`, public catalog
-  endpoints under `/api/v1/{doctors,facilities,articles,products,search}`, account routes
+  endpoints under `/api/v1/{doctors,facilities,articles,products,search,geocode}`, account routes
   at `/api/v1/users/me*`, cart under `/api/v1/cart*`, orders under `/api/v1/orders*`
   (including `orders/[id]/payment`), notifications under `/api/v1/notifications*`, the
   order-expiry cron endpoint at `/api/v1/cron/orders/expire`,
@@ -93,7 +97,9 @@ Commits) on commit-msg. Prettier is **not** enforced by the lint config, so run
   `lib/catalog.ts` for shared public filters/selects, `lib/availability.ts` for day/time
   availability filters, `lib/geo.ts` for coordinate parsing, Haversine distance, and
   bounding boxes, `lib/rating.ts` for rating filters and denormalized review aggregates,
-  `lib/audit.ts` for admin audit log helpers and action/target constants,
+  `lib/geocode.ts` for the server-only Nominatim reverse geocode (in-memory 24h cache keyed
+  by 4-decimal rounding; the global 1 request/second limit lives in the
+  `/api/v1/geocode` route), `lib/audit.ts` for admin audit log helpers and action/target constants,
   `lib/auth-guard.ts` for session/role
   guards, `lib/facility-guard.ts` for facility profile guards, `lib/facility.ts` for
   facility types/profile select/slug helpers, `lib/doctor-guard.ts` for doctor profile

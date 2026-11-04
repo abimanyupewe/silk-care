@@ -87,6 +87,11 @@ Role: `PATIENT`, `DOCTOR`, `FACILITY`, `PHARMACY`, `ADMIN`.
 - `lat`/`lng`/`radiusKm` mengaktifkan filter Haversine dan `distanceKm`.
 - `minRating`, `sort=rating_desc`, dan `sort=review_desc` memakai agregat ulasan approved.
 - `availableNow` memakai hari dan jam Asia/Jakarta saat request.
+- Harga: `minFee`/`maxFee` di endpoint dokter (fee konsultasi), `minPrice`/`maxPrice` di
+  produk dan `/api/v1/search` (dokter + produk; kategori lain ditolak 422).
+- `/api/v1/geocode` menyapa Nominatim hanya dari server: UA khusus `NOMINATIM_USER_AGENT`,
+  rate limit global 1 request/detik, tanpa autocomplete, dan hasil di-cache 24 jam dengan
+  kunci pembulatan 4 desimal; 429 berarti kuota sesaat sedang dipakai request lain.
 
 ## Idempotency
 
@@ -172,21 +177,22 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 
 ### Katalog publik
 
-| Method | Path                                 | Sukses |
-| ------ | ------------------------------------ | ------ |
-| GET    | `/api/v1/health`                     | 200    |
-| GET    | `/api/v1/openapi`                    | 200    |
-| GET    | `/api/v1/doctors`                    | 200    |
-| GET    | `/api/v1/doctors/{slug}`             | 200    |
-| GET    | `/api/v1/facilities`                 | 200    |
-| GET    | `/api/v1/facilities/{slug}`          | 200    |
-| GET    | `/api/v1/announcements/active`       | 200    |
-| GET    | `/api/v1/facilities/{slug}/services` | 200    |
-| GET    | `/api/v1/articles`                   | 200    |
-| GET    | `/api/v1/articles/{slug}`            | 200    |
-| GET    | `/api/v1/products`                   | 200    |
-| GET    | `/api/v1/products/{slug}`            | 200    |
-| GET    | `/api/v1/search`                     | 200    |
+| Method | Path                                 | Sukses      |
+| ------ | ------------------------------------ | ----------- |
+| GET    | `/api/v1/health`                     | 200         |
+| GET    | `/api/v1/openapi`                    | 200         |
+| GET    | `/api/v1/doctors`                    | 200         |
+| GET    | `/api/v1/doctors/{slug}`             | 200         |
+| GET    | `/api/v1/facilities`                 | 200         |
+| GET    | `/api/v1/facilities/{slug}`          | 200         |
+| GET    | `/api/v1/announcements/active`       | 200         |
+| GET    | `/api/v1/facilities/{slug}/services` | 200         |
+| GET    | `/api/v1/articles`                   | 200         |
+| GET    | `/api/v1/articles/{slug}`            | 200         |
+| GET    | `/api/v1/products`                   | 200         |
+| GET    | `/api/v1/products/{slug}`            | 200         |
+| GET    | `/api/v1/search`                     | 200         |
+| GET    | `/api/v1/geocode`                    | 200/404/429 |
 
 ### Keranjang dan pesanan
 

@@ -2,6 +2,15 @@
 // jadi sumber datanya bisa diganti tanpa menyentuh komponen.
 import type { FacilityTypeValue } from '@/lib/facility-types';
 
+// Titik peta bagian MapSection (beranda): tampilan jadi label pin sederhana.
+export type MapPoint = {
+  lat: number;
+  lng: number;
+  title: string;
+  // Jenis label pendek, mis. "Dokter" atau label tipe fasilitas.
+  kind: string;
+};
+
 export type HomeDoctor = {
   slug: string;
   name: string;

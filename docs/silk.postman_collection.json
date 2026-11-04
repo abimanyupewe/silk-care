@@ -1067,6 +1067,44 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET /api/v1/geocode — Reverse geocode Nominatim",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/geocode?lat=-7.9771&lon=112.6326",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "geocode"],
+              "variable": [],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "-7.9771"
+                },
+                {
+                  "key": "lon",
+                  "value": "112.6326"
+                }
+              ]
+            },
+            "description": "Membaca alamat dari titik lewat Nominatim, hanya dari server (UA khusus NOMINATIM_USER_AGENT, tanpa autocomplete). Rate limit global 1 request/detik; hasil dicache 24 jam per pembulatan 4 desimal. Dipakai tombol Cari alamat di form mitra."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('bukan 5xx tak terduga (503 terdokumentasi diperbolehkan)', () => {",
+                  "const code = pm.response.code;",
+                  "pm.expect(code < 500 || code === 503).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

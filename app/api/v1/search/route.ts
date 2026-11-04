@@ -1,6 +1,14 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
-import { getEnum, getPagination, getString, handleRouteError, jsonError, jsonOk } from '@/lib/api';
+import {
+  getEnum,
+  getInt,
+  getPagination,
+  getString,
+  handleRouteError,
+  jsonError,
+  jsonOk
+} from '@/lib/api';
 import {
   doctorAvailabilityWhere,
   facilityAvailabilityWhere,
@@ -44,6 +52,29 @@ export async function GET(request: Request) {
     const minRating = parseMinRating(searchParams);
     const geo = parseGeoFilter(searchParams);
     const availability = parseAvailabilityFilter(searchParams);
+    const minPrice = getInt(searchParams, 'minPrice');
+    const maxPrice = getInt(searchParams, 'maxPrice');
+
+    if (minPrice !== undefined && minPrice < 0) {
+      return jsonError('minPrice tidak boleh negatif.', 422);
+    }
+
+    if (maxPrice !== undefined && maxPrice < 0) {
+      return jsonError('maxPrice tidak boleh negatif.', 422);
+    }
+
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      return jsonError('minPrice tidak boleh lebih besar dari maxPrice.', 422);
+    }
+
+    // Harga hanya ada pada dokter (konsultasi) dan produk; filter untuk kategori lain
+    // ditolak supaya tidak diam-diam diabaikan.
+    if (
+      (minPrice !== undefined || maxPrice !== undefined) &&
+      (type === 'FACILITY' || type === 'ARTICLE')
+    ) {
+      return jsonError('Filter harga hanya berlaku untuk dokter atau produk.', 422);
+    }
 
     if (typeParam && !type) {
       return jsonError('type harus salah satu dari: doctor, facility, article, product.', 422);
@@ -92,6 +123,10 @@ export async function GET(request: Request) {
     if (minRating.value !== undefined) {
       doctorWhere.ratingAverage = { gte: minRating.value };
       facilityWhere.ratingAverage = { gte: minRating.value };
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      doctorWhere.consultationFee = { gte: minPrice, lte: maxPrice };
     }
 
     if (availability.filter) {
@@ -187,6 +222,9 @@ export async function GET(request: Request) {
         ? prisma.product.findMany({
             where: {
               ...publicProductWhereAt(now),
+              ...(minPrice !== undefined || maxPrice !== undefined
+                ? { price: { gte: minPrice, lte: maxPrice } }
+                : {}),
               OR: [
                 { name: { contains: q, mode: 'insensitive' } },
                 { description: { contains: q, mode: 'insensitive' } },
@@ -200,6 +238,7 @@ export async function GET(request: Request) {
               slug: true,
               name: true,
               image: true,
+              price: true,
               facility: {
                 select: {
                   name: true

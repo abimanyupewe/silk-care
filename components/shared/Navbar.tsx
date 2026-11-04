@@ -7,6 +7,12 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AccountActions } from './AccountActions';
 import { AnnouncementBanner } from './AnnouncementBanner';
+import {
+  CurrentLocationProvider,
+  CurrentLocationPill,
+  CurrentLocationStrip,
+  CurrentLocationToggle
+} from './CurrentLocation';
 import { PartnerMenuPanel, ServiceMenuPanel, serviceMenuSections } from './MegaMenu';
 import { NavbarLinks } from './NavbarLink';
 import { PartnerMenuItems } from './PartnerMenu';
@@ -150,171 +156,177 @@ export const Navbar = () => {
     <>
       <AnnouncementBanner />
       <nav ref={navRef} className="sticky top-0 z-50 w-full border-b border-border bg-white">
-        <div className="container mx-auto max-w-7xl px-4">
-          <div className="hidden h-[72px] items-center gap-4 lg:flex xl:gap-5">
-            <Link href="/" aria-label="SILK beranda" className="flex shrink-0 items-center">
-              <Image src="/assets/icon/icon.svg" alt="SILK" width={40} height={40} />
-            </Link>
-
-            <HoverMenu label="Fasilitas">
-              <ServiceMenuPanel />
-            </HoverMenu>
-
-            <HoverMenu label="Jadi mitra">
-              <PartnerMenuPanel />
-            </HoverMenu>
-
-            <NavbarLinks />
-
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={openSearch}
-                className="hidden h-11 w-64 items-center gap-2 rounded-md border border-border-strong px-3 text-left text-sm text-ink-faint hover:border-primary hover:text-ink xl:flex xl:w-72"
-              >
-                <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="truncate">Cari dokter, klinik, obat</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={openSearch}
-                className="flex h-11 w-11 items-center justify-center rounded-md border border-border-strong text-ink-muted hover:border-primary hover:text-primary-deep xl:hidden"
-                aria-label="Cari layanan"
-              >
-                <Search className="h-5 w-5" aria-hidden="true" />
-              </button>
-
-              <Link
-                href="/apotek"
-                aria-label="Keranjang"
-                className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
-              >
-                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+        <CurrentLocationProvider>
+          <div className="container mx-auto max-w-7xl px-4">
+            <div className="hidden h-[72px] items-center gap-4 lg:flex">
+              <Link href="/" aria-label="SILK beranda" className="flex shrink-0 items-center">
+                <Image src="/assets/icon/icon.svg" alt="SILK" width={40} height={40} />
               </Link>
 
-              <AccountActions />
+              <HoverMenu label="Fasilitas">
+                <ServiceMenuPanel />
+              </HoverMenu>
+
+              <HoverMenu label="Jadi mitra">
+                <PartnerMenuPanel />
+              </HoverMenu>
+
+              <NavbarLinks />
+
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <CurrentLocationPill />
+                <button
+                  type="button"
+                  onClick={openSearch}
+                  className="hidden h-11 w-56 items-center gap-2 rounded-md border border-border-strong px-3 text-left text-sm text-ink-faint hover:border-primary hover:text-ink xl:flex xl:w-60"
+                >
+                  <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="truncate">Cari dokter, klinik, obat</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openSearch}
+                  className="flex h-11 w-11 items-center justify-center rounded-md border border-border-strong text-ink-muted hover:border-primary hover:text-primary-deep xl:hidden"
+                  aria-label="Cari layanan"
+                >
+                  <Search className="h-5 w-5" aria-hidden="true" />
+                </button>
+
+                <Link
+                  href="/apotek"
+                  aria-label="Keranjang"
+                  className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
+                >
+                  <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+                </Link>
+
+                <AccountActions />
+              </div>
             </div>
-          </div>
 
-          <div className="flex h-14 items-center lg:hidden">
-            <Link href="/" aria-label="SILK beranda" className="flex items-center">
-              <Image src="/assets/icon/icon.svg" alt="SILK" width={36} height={36} />
-            </Link>
-
-            <div className="ml-auto flex items-center gap-1">
-              <button
-                type="button"
-                onClick={openSearch}
-                className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
-                aria-label="Cari layanan"
-              >
-                <Search className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <Link
-                href="/apotek"
-                className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
-                aria-label="Keranjang"
-              >
-                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+            <div className="flex h-14 items-center lg:hidden">
+              <Link href="/" aria-label="SILK beranda" className="flex items-center">
+                <Image src="/assets/icon/icon.svg" alt="SILK" width={36} height={36} />
               </Link>
-              <button
-                type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
-                aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
-                aria-expanded={menuOpen}
-                onClick={() => {
-                  if (!menuOpen)
-                    setOverlayTop(navRef.current?.getBoundingClientRect().bottom ?? 56);
-                  setMenuOpen((open) => !open);
-                }}
-              >
-                {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {menuOpen && (
-          <div
-            style={{ top: overlayTop }}
-            className="fixed inset-x-0 bottom-0 z-40 overflow-y-auto border-t border-border bg-white lg:hidden"
-          >
-            <div className="flex min-h-full flex-col px-4 pb-8 pt-4">
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface"
-                aria-expanded={mobileServicesOpen}
-                onClick={() => setMobileServicesOpen((open) => !open)}
-              >
-                <span className="flex items-center gap-2">
-                  <Stethoscope className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Fasilitas
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 text-ink-muted transition-transform ${
-                    mobileServicesOpen ? 'rotate-180' : ''
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
-
-              {mobileServicesOpen && (
-                <div className="ml-3 border-l border-border pl-3">
-                  {serviceMenuSections
-                    .flatMap((section) => section.items)
-                    .map((item) => {
-                      const Icon = item.icon;
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={closeMobileMenu}
-                          className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-ink-muted hover:bg-primary-tint hover:text-primary-hover"
-                        >
-                          <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                          {item.title}
-                        </Link>
-                      );
-                    })}
-                </div>
-              )}
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface"
-                aria-expanded={mobilePartnerOpen}
-                onClick={() => setMobilePartnerOpen((open) => !open)}
-              >
-                <span className="flex items-center gap-2">
-                  <Handshake className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Jadi mitra
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 text-ink-muted transition-transform ${
-                    mobilePartnerOpen ? 'rotate-180' : ''
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
-
-              {mobilePartnerOpen && (
-                <div className="ml-3 border-l border-border pl-3">
-                  <PartnerMenuItems onNavigate={closeMobileMenu} />
-                </div>
-              )}
-
-              <div className="mt-2 border-t border-border pt-2">
-                <NavbarLinks mobile onNavigate={closeMobileMenu} />
-              </div>
-
-              <div className="mt-auto pt-8">
-                <AccountActions mobile onNavigate={closeMobileMenu} />
+              <div className="ml-auto flex items-center gap-1">
+                <CurrentLocationToggle />
+                <button
+                  type="button"
+                  onClick={openSearch}
+                  className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
+                  aria-label="Cari layanan"
+                >
+                  <Search className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <Link
+                  href="/apotek"
+                  className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
+                  aria-label="Keranjang"
+                >
+                  <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+                </Link>
+                <button
+                  type="button"
+                  className="flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-primary-deep"
+                  aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+                  aria-expanded={menuOpen}
+                  onClick={() => {
+                    if (!menuOpen)
+                      setOverlayTop(navRef.current?.getBoundingClientRect().bottom ?? 56);
+                    setMenuOpen((open) => !open);
+                  }}
+                >
+                  {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
               </div>
             </div>
+
+            <CurrentLocationStrip />
           </div>
-        )}
+
+          {menuOpen && (
+            <div
+              style={{ top: overlayTop }}
+              className="fixed inset-x-0 bottom-0 z-40 overflow-y-auto border-t border-border bg-white lg:hidden"
+            >
+              <div className="flex min-h-full flex-col px-4 pb-8 pt-4">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface"
+                  aria-expanded={mobileServicesOpen}
+                  onClick={() => setMobileServicesOpen((open) => !open)}
+                >
+                  <span className="flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Fasilitas
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-ink-muted transition-transform ${
+                      mobileServicesOpen ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {mobileServicesOpen && (
+                  <div className="ml-3 border-l border-border pl-3">
+                    {serviceMenuSections
+                      .flatMap((section) => section.items)
+                      .map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-ink-muted hover:bg-primary-tint hover:text-primary-hover"
+                          >
+                            <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                            {item.title}
+                          </Link>
+                        );
+                      })}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface"
+                  aria-expanded={mobilePartnerOpen}
+                  onClick={() => setMobilePartnerOpen((open) => !open)}
+                >
+                  <span className="flex items-center gap-2">
+                    <Handshake className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Jadi mitra
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-ink-muted transition-transform ${
+                      mobilePartnerOpen ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {mobilePartnerOpen && (
+                  <div className="ml-3 border-l border-border pl-3">
+                    <PartnerMenuItems onNavigate={closeMobileMenu} />
+                  </div>
+                )}
+
+                <div className="mt-2 border-t border-border pt-2">
+                  <NavbarLinks mobile onNavigate={closeMobileMenu} />
+                </div>
+
+                <div className="mt-auto pt-8">
+                  <AccountActions mobile onNavigate={closeMobileMenu} />
+                </div>
+              </div>
+            </div>
+          )}
+        </CurrentLocationProvider>
       </nav>
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />

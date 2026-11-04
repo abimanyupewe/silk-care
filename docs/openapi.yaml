@@ -820,6 +820,64 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/geocode:
+    get:
+      tags: [Public Catalog]
+      security: []
+      summary: Reverse geocode (terbalik) Nominatim
+      description: >-
+        Membaca alamat dari titik (lat, lon) lewat Nominatim, hanya dari server (User-Agent
+        khusus NOMINATIM_USER_AGENT, tanpa autocomplete). Rate limit global
+        1 request/detik; hasil dicache 24 jam per kunci pembulatan 4 desimal
+        (~11 m) supaya pin yang sedikit digeser tidak menanyakan server OSM lagi.
+        Dipakai tombol "Cari alamat" pada step Lokasi registrasi mitra.
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+      responses:
+        '200':
+          description: Alamat terbaca dari titik.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [label]
+                    properties:
+                      label:
+                        type: string
+                      city:
+                        type: string
+                        nullable: true
+                      state:
+                        type: string
+                        nullable: true
+                      country:
+                        type: string
+                        nullable: true
+        '404':
+          description: Titik ini tidak memiliki bacaan OSM.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/search:
     get:
       tags: [Public Catalog]
@@ -845,6 +903,20 @@ paths:
         - $ref: '#/components/parameters/Day'
         - $ref: '#/components/parameters/Time'
         - $ref: '#/components/parameters/AvailableNow'
+        - name: minPrice
+          in: query
+          description: >-
+            Rentang harga minimum; hanya untuk dokter (biaya konsultasi) dan produk.
+            Ditolak 422 bila dipakai dengan type=facility atau type=article.
+          schema:
+            type: integer
+            minimum: 0
+        - name: maxPrice
+          in: query
+          description: Rentang harga maksimum; pasangan minPrice, cakupan sama.
+          schema:
+            type: integer
+            minimum: 0
       responses:
         '200':
           description: Hasil pencarian.

@@ -41,6 +41,13 @@ export default async function PartnerSignUpPage({
           {session ? 'Lengkapi data mitra Anda. ' : 'Buat akun dan lengkapi data mitra Anda. '}
           Langsung tayang di katalog dengan masa gratis 6 bulan.
         </p>
+        <p className="mt-2 text-sm text-ink-muted">
+          Lihat{' '}
+          <Link href="/mitra/harga" className="font-semibold text-primary-hover underline">
+            paket dan harga langganan
+          </Link>{' '}
+          — perpanjangan setelah masa gratis via Duitku.
+        </p>
 
         <div className="mt-6">
           <PartnerRegisterForm withAccount={!session} lockedType={lockedType} />

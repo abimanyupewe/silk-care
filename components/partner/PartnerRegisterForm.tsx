@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useRef, useState } from 'react';
-import { AlertCircle, MapPin } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { ApiError, fetchApi } from '@/lib/api-client';
 import { facilityTypeLabels } from '@/lib/facility-types';
 import { panelHomeForRole } from '@/lib/roles';
+import { LocationPicker } from './LocationPicker';
 import { partnerRequirements } from '@/lib/partner-requirements/partners';
 import { buildStepSchema } from '@/lib/partner-requirements/schema';
 import {
@@ -64,7 +65,6 @@ export function PartnerRegisterForm({
     stepChangedAt.current = performance.now();
     setStepId(id);
   }
-  const [geoMessage, setGeoMessage] = useState('');
 
   const steps = buildFormSteps(type, withAccount);
   const index = Math.max(
@@ -123,32 +123,6 @@ export function PartnerRegisterForm({
     setFormError('');
     setErrors({});
     changeStep(steps[index - 1].id);
-  }
-
-  function useMyLocation() {
-    if (!('geolocation' in navigator)) {
-      setGeoMessage('Peramban ini tidak mendukung lokasi. Isi lintang dan bujur secara manual.');
-      return;
-    }
-
-    setGeoMessage('Mencari lokasi...');
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setValues((prev) => ({
-          ...prev,
-          latitude: Number(coords.latitude.toFixed(6)),
-          longitude: Number(coords.longitude.toFixed(6))
-        }));
-        setErrors((prev) => ({ ...prev, latitude: '', longitude: '' }));
-        setGeoMessage('Lokasi terisi. Periksa lintang dan bujur di bawah.');
-      },
-      (err) =>
-        setGeoMessage(
-          err.code === err.PERMISSION_DENIED
-            ? 'Izin lokasi ditolak. Isi lintang dan bujur secara manual.'
-            : 'Lokasi tidak ditemukan. Isi lintang dan bujur secara manual.'
-        )
-    );
   }
 
   async function submit() {
@@ -316,14 +290,23 @@ export function PartnerRegisterForm({
       ) : null}
 
       {step.id === 'location' ? (
-        // shortcut: pemilih titik di peta menyusul setelah key Google Maps ada (Fase 3)
         <div>
-          <button type="button" onClick={useMyLocation} className={secondaryButton}>
-            <MapPin className="mr-2 h-4 w-4" aria-hidden="true" />
-            Gunakan lokasi saya
-          </button>
-          <p className="mt-2 text-sm text-ink-muted" aria-live="polite">
-            {geoMessage}
+          <LocationPicker
+            latitude={typeof values.latitude === 'number' ? values.latitude : null}
+            longitude={typeof values.longitude === 'number' ? values.longitude : null}
+            onPoint={(point) => {
+              setValue('latitude', point.lat);
+              setValue('longitude', point.lng);
+            }}
+            onAddressRecognized={({ label, city }) => {
+              setValue('address', label);
+              if (city) setValue('city', city);
+            }}
+            disabled={submitting}
+          />
+          <p className="mt-2 text-sm text-ink-muted">
+            Isian alamat/kota di atas akan diperbarui oleh tombol &quot;Cari alamat&quot;; masih
+            bisa diedit setelah itu.
           </p>
         </div>
       ) : null}
