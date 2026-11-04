@@ -5075,6 +5075,65 @@ paths:
           $ref: '#/components/responses/InternalError'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/subscription:
+    get:
+      tags: [Payments]
+      summary: Status langganan mitra
+      description: >-
+        Hanya DOCTOR/FACILITY/PHARMACY. Status ACTIVE/EXPIRED beserta harga perpanjangan
+        (customAmount admin > SubscriptionPrice per tipe mitra > placeholder
+        Rp600.000/12 bulan) dan invoice PENDING. Baris PENDING dicek ke Transaction Status
+        Duitku sebagai cadangan bila callback tidak datang; hasilnya menyettle baris
+        seperti callback (00=PAID, 02=FAILED).
+      responses:
+        '200':
+          description: Status langganan dan invoice PENDING (bila ada).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      plan:
+                        type: string
+                      status:
+                        type: string
+                        enum: [ACTIVE, EXPIRED]
+                      endsAt:
+                        type: string
+                        format: date-time
+                      amount:
+                        type: integer
+                      durationMonths:
+                        type: integer
+                      pendingPayment:
+                        type: object
+                        nullable: true
+                        properties:
+                          merchantOrderId:
+                            type: string
+                            nullable: true
+                          plan:
+                            type: string
+                          amount:
+                            type: integer
+                          durationMonths:
+                            type: integer
+                          expiresAt:
+                            type: string
+                            format: date-time
+                          paymentUrl:
+                            type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/subscription/payment:
     post:
       tags: [Payments]

@@ -271,12 +271,22 @@ publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed o
   (`POST /orders`, `POST /orders/{id}/payment`, `POST /cart/items`, `POST /appointments`,
   `POST /consultations`) return `503`; reads, cancellation, the webhook, and cron are untouched.
   Subscription payments go through Duitku (POP API): `POST /api/v1/subscription/payment`
-  creates a `SUB-` `SubscriptionPayment` + invoice (price: admin `customAmount` >
-  `SubscriptionPrice[partnerType]`, keys `DOCTOR` or the facility type > placeholder
-  Rp600.000/12 months), and `/api/v1/payments/duitku/callback` settles it by extending
-  `Subscription.endsAt`. Order payments over Duitku (`ORD-`) and the pricing/access gate are
-  still planned scope per `dev/Breakdown Fungsional Demo SILK.md` — `Payment.provider` is
-  still Midtrans-only and `Product` has no `golongan` column yet.
+  creates a `SUB-` `SubscriptionPayment` + invoice (price resolution lives in
+  `lib/subscription-price.ts`: admin `customAmount` > `SubscriptionPrice[partnerType]`, keys
+  `DOCTOR` or the facility type > placeholder Rp600.000/12 months via the pure
+  `resolveSubscriptionPricing` in `lib/subscription.ts`), and
+  `/api/v1/payments/duitku/callback` settles it by extending `Subscription.endsAt`.
+  `GET /api/v1/subscription` returns the panel snapshot (status ACTIVE/EXPIRED, price,
+  pending invoice) and doubles as the payment fallback: pending rows are checked against the
+  Duitku Transaction Status API (`lib/payments/duitku-status.ts`), settling through
+  `applySubscriptionStatusChange` in `lib/subscription-settle.ts` (shared with the callback,
+  with a status-keyed `updateMany` so a callback racing the check cannot extend twice).
+  Panels gate partners whose subscription expired: `SubscriptionGate` (inside
+  `DoctorShell`/`FacilityShell`, fails open on read errors) redirects to the panel's
+  `langganan` page (`LanggananPanel`, buy button POSTs `/subscription/payment` and opens the
+  `paymentUrl`). Order payments over Duitku (`ORD-`) are still planned scope per
+  `dev/Breakdown Fungsional Demo SILK.md` — `Payment.provider` is still Midtrans-only and
+  `Product` has no `golongan` column yet.
 - `db:seed` uses `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_NAME` from
   `.env`. It deliberately shells out to `prisma db execute` over the direct connection
   instead of using the Neon adapter, which can fail with an opaque `ErrorEvent` when

@@ -4,13 +4,11 @@ import { requireRole } from '@/lib/auth-guard';
 import { handleRouteError, jsonCreated, jsonError, jsonOk, jsonTooManyRequests } from '@/lib/api';
 import { rateLimit } from '@/lib/rate-limit';
 import { DUITKU_SUB_PREFIX, createDuitkuInvoice, isDuitkuConfigured } from '@/lib/payments/duitku';
+import { resolvePartnerPricing } from '@/lib/subscription-price';
 import { logError } from '@/lib/logger';
 
-// Placeholder harga langganan sampai keputusan harga per tipe mitra final (lihat
-// dev/Breakdown Fungsional Demo SILK.md, keputusan terbuka soal satuan harga).
-const DEFAULT_SUBSCRIPTION_AMOUNT = 600000;
-const DEFAULT_SUBSCRIPTION_DURATION_MONTHS = 12;
-const INVOICE_EXPIRY_MINUTES = 60; // mengikuti expiryPeriod createInvoice
+// Faktur kedaluwarsa 60 menit (mengikuti expiryPeriod createInvoice).
+const INVOICE_EXPIRY_MINUTES = 60;
 
 function planLabel(amount: number, durationMonths: number, plan: 'YEARLY' | 'ENTERPRISE') {
   return `${plan === 'YEARLY' ? 'Tahunan' : 'Enterprise'} ${durationMonths} bulan (${amount})`;
@@ -87,49 +85,15 @@ export async function POST() {
       });
     }
 
-    let amount = DEFAULT_SUBSCRIPTION_AMOUNT;
-    let durationMonths = DEFAULT_SUBSCRIPTION_DURATION_MONTHS;
-    let plan: 'YEARLY' | 'ENTERPRISE' = 'YEARLY';
-
-    if (
-      subscription.customAmount != null &&
-      subscription.customDurationMonths != null &&
-      subscription.customDurationMonths > 0
-    ) {
-      // Paket khusus dari admin (kolom customAmount/customDurationMonths) menang atas harga umum.
-      amount = subscription.customAmount;
-      durationMonths = subscription.customDurationMonths;
-      plan = subscription.plan === 'ENTERPRISE' ? 'ENTERPRISE' : 'YEARLY';
-    } else {
-      // Kunci SubscriptionPrice.partnerType sementara: 'DOCTOR' atau tipe fasilitas untuk
-      // FACILITY/PHARMACY (Facility.userId unik, pola lib/facility-guard.ts).
-      const facilityType =
-        auth.user.role === 'DOCTOR'
-          ? null
-          : ((
-              await prisma.facility.findUnique({
-                where: { userId: auth.user.id },
-                select: { type: true }
-              })
-            )?.type ?? auth.user.role);
-
-      const partnerType = auth.user.role === 'DOCTOR' ? 'DOCTOR' : facilityType;
-
-      if (partnerType) {
-        const price = await prisma.subscriptionPrice.findUnique({
-          where: { partnerType },
-          select: { amount: true }
-        });
-
-        if (price) {
-          amount = price.amount;
-        }
-      }
-    }
-
     if (!auth.user.email) {
       return jsonError('Email akun belum diisi; pembayaran butuh email.', 400);
     }
+
+    const { amount, durationMonths, plan } = await resolvePartnerPricing(
+      subscription,
+      auth.user.role,
+      auth.user.id
+    );
 
     const merchantOrderId = `${DUITKU_SUB_PREFIX}${randomUUID()}`;
     const expiresAt = new Date(now.getTime() + INVOICE_EXPIRY_MINUTES * 60 * 1000);

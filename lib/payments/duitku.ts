@@ -1,5 +1,4 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { PaymentAttemptStatus } from '@/lib/generated/prisma';
 import { getAppUrl } from '@/lib/app-url';
 
 // Callback Duitku (POP API) tiba sebagai x-www-form-urlencoded; merchantCode, amount, dan
@@ -47,7 +46,7 @@ export function verifyDuitkuCallbackSignature(input: DuitkuCallback) {
 
 // Tabel Respon API > Callback: 00 sukses, 02 gagal. Kode lain belum dijadwalkan Duitku pada
 // callback; kembalikan null agar status tidak diubah (payload tetap disimpan di route).
-export function mapDuitkuCallbackStatus(resultCode: string): PaymentAttemptStatus | null {
+export function mapDuitkuCallbackStatus(resultCode: string): 'PAID' | 'FAILED' | null {
   if (resultCode === '00') return 'PAID';
   if (resultCode === '02') return 'FAILED';
   return null;

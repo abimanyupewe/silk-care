@@ -6,7 +6,7 @@ import {
   mapDuitkuCallbackStatus,
   verifyDuitkuCallbackSignature
 } from '@/lib/payments/duitku';
-import { computeEndsAt } from '@/lib/subscription';
+import { applySubscriptionStatusChange } from '@/lib/subscription-settle';
 
 // Callback Duitku (POP API): POST x-www-form-urlencoded, wajib dibalas HTTP 200 supaya Duitku
 // tidak mengirim ulang (maksimal 5 percobaan). Signature diverifikasi sebelum data disentuh.
@@ -128,55 +128,15 @@ export async function POST(request: Request) {
       return jsonOk({ message: 'Notifikasi pembayaran sudah diproses.' });
     }
 
-    const now = new Date();
-
-    await prisma.$transaction(async (tx) => {
-      await tx.subscriptionPayment.update({
-        where: {
-          id: payment.id
-        },
-        data: {
-          status: nextStatus,
-          rawPayload: rawCallback,
-          ...(nextStatus === 'PAID' ? { paidAt: payment.paidAt ?? now } : {}),
-          ...(!payment.reference && callback.reference ? { reference: callback.reference } : {})
-        }
-      });
-
-      if (nextStatus !== 'PAID') {
-        return;
-      }
-
-      const endsAt = computeEndsAt(payment.subscription.endsAt, now, payment.durationMonths);
-
-      await tx.subscription.update({
-        where: {
-          id: payment.subscriptionId
-        },
-        data: {
-          plan: payment.plan,
-          endsAt
-        }
-      });
-
-      await tx.notification.create({
-        data: {
-          userId: payment.subscription.userId,
-          type: 'SYSTEM',
-          title: 'Langganan aktif',
-          body: `Pembayaran langganan telah diterima. Akses langganan aktif sampai ${Intl.DateTimeFormat(
-            'id-ID',
-            { dateStyle: 'long' }
-          ).format(endsAt)}.`,
-          data: {
-            subscriptionId: payment.subscriptionId,
-            merchantOrderId: callback.merchantOrderId
-          }
-        }
-      });
+    const settled = await applySubscriptionStatusChange(payment, nextStatus, {
+      rawPayload: rawCallback,
+      reference: callback.reference,
+      merchantOrderId: callback.merchantOrderId
     });
 
-    return jsonOk({ message: 'Notifikasi pembayaran diproses.' });
+    return jsonOk({
+      message: settled.changed ? 'Notifikasi pembayaran diproses.' : 'Notifikasi pembayaran sudah diproses.'
+    });
   } catch (error) {
     return handleRouteError(error);
   }

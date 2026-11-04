@@ -6,14 +6,18 @@ import {
   CalendarCheck,
   ClipboardList,
   Clock,
+  CreditCard,
   LayoutDashboard,
   Package,
   ShoppingBag,
   Star
 } from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
+import { SubscriptionGate } from '@/components/panel/SubscriptionGate';
 import { useApiQuery } from '@/lib/api-swr';
 import { isServiceFacility, isShopFacility } from '@/lib/facility-types';
+
+const langgananHref = '/dashboard/fasilitas/langganan';
 
 const shopItems = [
   { href: '/dashboard/fasilitas/pesanan', label: 'Pesanan', icon: ShoppingBag },
@@ -31,6 +35,8 @@ const commonItems = [
   { href: '/dashboard/fasilitas/profil', label: 'Profil', icon: Building2 },
   { href: '/dashboard/fasilitas/jam-operasional', label: 'Jam operasional', icon: Clock }
 ];
+
+commonItems.push({ href: langgananHref, label: 'Langganan', icon: CreditCard });
 
 export function FacilityShell({
   role,
@@ -78,7 +84,7 @@ export function FacilityShell({
       storageKey="silk-facility-sidebar-collapsed"
       user={user}
     >
-      {children}
+      <SubscriptionGate langgananHref={langgananHref}>{children}</SubscriptionGate>
     </PanelShell>
   );
 }

@@ -7,6 +7,7 @@ import {
   mapDuitkuCallbackStatus,
   verifyDuitkuCallbackSignature
 } from '@/lib/payments/duitku';
+import { duitkuStatusSignature, mapDuitkuStatusStatusCode } from '@/lib/payments/duitku-status';
 
 // Env uji di proses ini: meniru callback sandbox tanpa kredensial asli.
 process.env.DUITKU_MERCHANT_CODE = 'DXXXX';
@@ -49,6 +50,17 @@ assert.equal(isDuitkuConfigured(), true);
 assert.equal(mapDuitkuCallbackStatus('00'), 'PAID');
 assert.equal(mapDuitkuCallbackStatus('02'), 'FAILED');
 assert.equal(mapDuitkuCallbackStatus('01'), null);
+
+// Fallback Transaction Status: signature operator merchantCode + merchantOrderId, dan
+// statusCode 00/01/02 dipetakan berbeda dari callback.
+assert.equal(mapDuitkuStatusStatusCode('00'), 'PAID');
+assert.equal(mapDuitkuStatusStatusCode('02'), 'FAILED');
+assert.equal(mapDuitkuStatusStatusCode('01'), null);
+assert.equal(mapDuitkuStatusStatusCode(''), null);
+assert.equal(
+  duitkuStatusSignature('DXXXX', `${DUITKU_SUB_PREFIX}abc`, 'KEYTEST0123456789'),
+  sign(`DXXXX${DUITKU_SUB_PREFIX}abc`)
+);
 
 // Beda awalan alur: SUB untuk langganan, ORD untuk pesanan (alur pesanan belum aktif).
 assert.ok(callback.merchantOrderId.startsWith(DUITKU_SUB_PREFIX));

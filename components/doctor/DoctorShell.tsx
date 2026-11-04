@@ -3,14 +3,18 @@
 import {
   Bell,
   CalendarClock,
+  CreditCard,
   FileText,
   LayoutDashboard,
   Stethoscope,
   UserRound
 } from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
+import { SubscriptionGate } from '@/components/panel/SubscriptionGate';
 import { useApiQuery } from '@/lib/api-swr';
 import { transactionsEnabled } from '@/lib/features';
+
+const langgananHref = '/dashboard/dokter/langganan';
 
 const navGroups: NavGroup[] = [
   {
@@ -22,7 +26,8 @@ const navGroups: NavGroup[] = [
       { href: '/dashboard/dokter/artikel', label: 'Artikel', icon: FileText },
       { href: '/dashboard/dokter/notifikasi', label: 'Notifikasi', icon: Bell },
       { href: '/dashboard/dokter/profil', label: 'Profil', icon: UserRound },
-      { href: '/dashboard/dokter/jadwal', label: 'Jadwal praktik', icon: CalendarClock }
+      { href: '/dashboard/dokter/jadwal', label: 'Jadwal praktik', icon: CalendarClock },
+      { href: langgananHref, label: 'Langganan', icon: CreditCard }
     ]
   }
 ];
@@ -56,7 +61,7 @@ export function DoctorShell({
       storageKey="silk-doctor-sidebar-collapsed"
       user={user}
     >
-      {children}
+      <SubscriptionGate langgananHref={langgananHref}>{children}</SubscriptionGate>
     </PanelShell>
   );
 }
