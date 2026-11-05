@@ -9,7 +9,11 @@ import {
   jsonOk,
   paginationMeta
 } from '@/lib/api';
-import { facilityAvailabilityWhere, parseAvailabilityFilter } from '@/lib/availability';
+import {
+  facilityAvailabilityWhere,
+  isFacilityOpenNow,
+  parseAvailabilityFilter
+} from '@/lib/availability';
 import { facilityListSelect, publicFacilityWhereAt } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
 import { facilityTypes } from '@/lib/facility-types';
@@ -59,6 +63,21 @@ function toFacilityResponse(facility: FacilityListItem) {
     ...data,
     rating: formatRating(ratingAverage)
   };
+}
+
+async function facilityOpenNowIds(ids: string[]) {
+  if (ids.length === 0) return new Set<string>();
+  const rows = await prisma.facilityOperatingHour.findMany({
+    where: {
+      facilityId: { in: ids }
+    },
+    select: { facilityId: true, dayOfWeek: true, openTime: true, closeTime: true, isClosed: true }
+  });
+  const open = new Set<string>();
+  for (const row of rows) {
+    if (isFacilityOpenNow([row])) open.add(row.facilityId);
+  }
+  return open;
 }
 
 function facilityOrderBy(sort: FacilitySortKey | undefined) {
@@ -210,11 +229,13 @@ export async function GET(request: Request) {
       });
       const sorted = sortFacilities(filtered, sort, distanceById);
       const items = sorted.slice(pagination.skip, pagination.skip + pagination.limit);
+      const openNowIds = await facilityOpenNowIds(items.map((facility) => facility.id));
 
       return jsonOk(
         items.map((facility) => ({
           ...toFacilityResponse(facility),
-          distanceKm: formatDistanceKm(distanceById.get(facility.id))
+          distanceKm: formatDistanceKm(distanceById.get(facility.id)),
+          openNow: openNowIds.has(facility.id)
         })),
         paginationMeta(filtered.length, pagination)
       );
@@ -230,13 +251,15 @@ export async function GET(request: Request) {
       }),
       prisma.facility.count({ where })
     ]);
+    const openNowIds = await facilityOpenNowIds(items.map((facility) => facility.id));
 
     return jsonOk(
       items.map((facility) => ({
         ...toFacilityResponse(facility),
         ...(geoFilter
           ? { distanceKm: formatDistanceKm(distanceForFacility(facility, geoFilter)) }
-          : {})
+          : {}),
+        openNow: openNowIds.has(facility.id)
       })),
       paginationMeta(total, pagination)
     );

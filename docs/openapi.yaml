@@ -5741,6 +5741,9 @@ components:
         distanceKm:
           type: number
           nullable: true
+        openNow:
+          type: boolean
+          description: Apakah dokter sedang berada dalam jam praktik saat respons dibuat.
         photoUrl:
           type: string
           nullable: true
@@ -5956,6 +5959,9 @@ components:
         distanceKm:
           type: number
           nullable: true
+        openNow:
+          type: boolean
+          description: Apakah fasilitas sedang buka saat respons dibuat.
         photoUrl:
           type: string
           nullable: true

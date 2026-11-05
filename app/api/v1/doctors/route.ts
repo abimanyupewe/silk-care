@@ -9,7 +9,11 @@ import {
   jsonOk,
   paginationMeta
 } from '@/lib/api';
-import { doctorAvailabilityWhere, parseAvailabilityFilter } from '@/lib/availability';
+import {
+  doctorAvailabilityWhere,
+  isDoctorOpenNow,
+  parseAvailabilityFilter
+} from '@/lib/availability';
 import { doctorListSelect, publicDoctorWhereAt } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
 import { formatRating, parseMinRating } from '@/lib/rating';
@@ -62,6 +66,27 @@ function toDoctorResponse(doctor: DoctorListItem) {
     ...data,
     rating: formatRating(ratingAverage)
   };
+}
+
+async function doctorOpenNowIds(ids: string[]) {
+  if (ids.length === 0) return new Set<string>();
+  const rows = await prisma.doctorSchedule.findMany({
+    where: {
+      doctorProfileId: { in: ids }
+    },
+    select: {
+      doctorProfileId: true,
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+      isActive: true
+    }
+  });
+  const open = new Set<string>();
+  for (const row of rows) {
+    if (isDoctorOpenNow([row])) open.add(row.doctorProfileId);
+  }
+  return open;
 }
 
 function doctorOrderBy(sort: DoctorSortKey | undefined) {
@@ -242,11 +267,13 @@ export async function GET(request: Request) {
       });
       const sorted = sortDoctors(filtered, sort, distanceById);
       const items = sorted.slice(pagination.skip, pagination.skip + pagination.limit);
+      const openNowIds = await doctorOpenNowIds(items.map((doctor) => doctor.id));
 
       return jsonOk(
         items.map((doctor) => ({
           ...toDoctorResponse(doctor),
-          distanceKm: formatDistanceKm(distanceById.get(doctor.id))
+          distanceKm: formatDistanceKm(distanceById.get(doctor.id)),
+          openNow: openNowIds.has(doctor.id)
         })),
         paginationMeta(filtered.length, pagination)
       );
@@ -262,11 +289,15 @@ export async function GET(request: Request) {
       }),
       prisma.doctorProfile.count({ where })
     ]);
+    const openNowIds = await doctorOpenNowIds(items.map((doctor) => doctor.id));
 
     return jsonOk(
       items.map((doctor) => ({
         ...toDoctorResponse(doctor),
-        ...(geoFilter ? { distanceKm: formatDistanceKm(distanceForDoctor(doctor, geoFilter)) } : {})
+        ...(geoFilter
+          ? { distanceKm: formatDistanceKm(distanceForDoctor(doctor, geoFilter)) }
+          : {}),
+        openNow: openNowIds.has(doctor.id)
       })),
       paginationMeta(total, pagination)
     );

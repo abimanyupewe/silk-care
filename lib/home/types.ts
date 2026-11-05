@@ -4,11 +4,19 @@ import type { FacilityTypeValue } from '@/lib/facility-types';
 
 // Titik peta bagian MapSection (beranda): tampilan jadi label pin sederhana.
 export type MapPoint = {
+  id: string;
   lat: number;
   lng: number;
+  slug: string;
   title: string;
   // Jenis label pendek, mis. "Dokter" atau label tipe fasilitas.
   kind: string;
+  href: string;
+  distanceKm?: number;
+  imageUrl?: string | null;
+  rating?: number | null;
+  reviewCount?: number;
+  openNow?: boolean;
 };
 
 export type HomeDoctor = {
