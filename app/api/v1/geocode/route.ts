@@ -1,13 +1,24 @@
 import { jsonError, jsonOk, jsonTooManyRequests, handleRouteError } from '@/lib/api';
 import { rateLimit } from '@/lib/rate-limit';
-import { reverseGeocode } from '@/lib/geocode';
+import { reverseGeocode, searchGeocode } from '@/lib/geocode';
 
-// Reverse geocode hanya boleh menyapa dari server (ketentuan Nominatim: tidak diizinkan
-// diakses langsung dari browser). Pintu masuk UI: tombol "Cari alamat", sekali klik untuk satu titik — tanpa
-// autocomplete. Limiter global 1 request/detik melindungi kuota seluruh aplikasi.
+// Geocoding hanya boleh menyapa dari server (ketentuan Nominatim: tidak diizinkan diakses
+// langsung dari browser). Pencarian tetap submit manual, bukan autocomplete.
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q')?.trim();
+
+    if (query) {
+      if (query.length < 3) return jsonError('Alamat minimal 3 karakter.', 422);
+
+      const limit = await rateLimit('nominatim:geocode', 1, 1000);
+
+      if (!limit.allowed) return jsonTooManyRequests(limit.resetAt);
+
+      return jsonOk(await searchGeocode(query.slice(0, 200)));
+    }
+
     const lat = Number(searchParams.get('lat'));
     const lng = Number(searchParams.get('lon') ?? searchParams.get('lng'));
 
@@ -21,7 +32,7 @@ export async function GET(request: Request) {
 
     // Cache diperiksa lebih dahulu di dalam reverseGeocode; limiter hanya dipukul bila
     // benar-benar perlu menyapa server OSM.
-    const limit = await rateLimit('nominatim:reverse', 1, 1000);
+    const limit = await rateLimit('nominatim:geocode', 1, 1000);
 
     if (!limit.allowed) {
       return jsonTooManyRequests(limit.resetAt);

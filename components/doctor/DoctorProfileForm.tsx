@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
+import { LocationPicker } from '@/components/partner/LocationPicker';
+import type { MapPoint } from '@/components/shared/LeafletMap';
 import { fetchApi } from '@/lib/api-client';
 import { useApiQuery } from '@/lib/api-swr';
 import { cn } from '@/lib/utils';
@@ -42,7 +44,16 @@ export function DoctorProfileForm() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const [location, setLocation] = useState<MapPoint | null>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
   const doctor = profile.data;
+
+  useEffect(() => {
+    if (doctor && doctor.latitude != null && doctor.longitude != null) {
+      setLocation({ lat: doctor.latitude, lng: doctor.longitude });
+    }
+  }, [doctor]);
 
   if (profile.loading && !doctor) return <AdminDetailSkeleton />;
   if (profile.error) return <AdminErrorState message={profile.error} onRetry={profile.reload} />;
@@ -71,8 +82,8 @@ export function DoctorProfileForm() {
           consultationFee: number('consultationFee'),
           city: text('city'),
           address: text('address'),
-          latitude: number('latitude'),
-          longitude: number('longitude')
+          latitude: location?.lat ?? null,
+          longitude: location?.lng ?? null
         })
       });
 
@@ -234,6 +245,7 @@ export function DoctorProfileForm() {
             name="city"
             maxLength={100}
             defaultValue={doctor.city ?? ''}
+            ref={cityRef}
             className={cn(fieldClass, 'h-11 py-0')}
           />
         </label>
@@ -244,34 +256,29 @@ export function DoctorProfileForm() {
             maxLength={500}
             rows={2}
             defaultValue={doctor.address ?? ''}
+            ref={addressRef}
             className={fieldClass}
           />
         </label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium text-ink">
-            Latitude
-            <input
-              type="number"
-              name="latitude"
-              min={-90}
-              max={90}
-              step="any"
-              defaultValue={doctor.latitude ?? ''}
-              className={cn(fieldClass, 'h-11 py-0')}
+        <div className="border-t border-border pt-4">
+          <h2 className="text-base font-semibold text-ink">Lokasi praktik</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Geser pin ke lokasi praktik Anda, lalu simpan profil.
+          </p>
+          <div className="mt-3">
+            <LocationPicker
+              latitude={location?.lat ?? null}
+              longitude={location?.lng ?? null}
+              onPoint={setLocation}
+              onAddressRecognized={({ label, city }) => {
+                if (addressRef.current) addressRef.current.value = label;
+                if (city && cityRef.current) cityRef.current.value = city;
+              }}
+              disabled={saving}
             />
-          </label>
-          <label className="block text-sm font-medium text-ink">
-            Longitude
-            <input
-              type="number"
-              name="longitude"
-              min={-180}
-              max={180}
-              step="any"
-              defaultValue={doctor.longitude ?? ''}
-              className={cn(fieldClass, 'h-11 py-0')}
-            />
-          </label>
+          </div>
+          <input type="hidden" name="latitude" value={location?.lat ?? ''} readOnly />
+          <input type="hidden" name="longitude" value={location?.lng ?? ''} readOnly />
         </div>
 
         {error ? (

@@ -14,8 +14,10 @@ export function formatRupiah(value: number) {
   return rupiah.format(value);
 }
 
-export function formatLongDate(iso: string) {
-  return longDate.format(new Date(iso));
+export function formatLongDate(value: string | Date | null | undefined) {
+  const date = value instanceof Date ? value : new Date(value ?? '');
+
+  return Number.isNaN(date.getTime()) ? 'Tanggal tidak tersedia' : longDate.format(date);
 }
 
 // Rating dengan koma desimal (4,9), sesuai penulisan Indonesia.

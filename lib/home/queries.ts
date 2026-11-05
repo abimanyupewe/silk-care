@@ -15,6 +15,7 @@ import {
 import { facilityTypeLabels } from '@/lib/facility-types';
 import { logError } from '@/lib/logger';
 import { formatRating } from '@/lib/rating';
+import { isDoctorOpenNow, isFacilityOpenNow } from '@/lib/availability';
 import { doctorScheduleSelect } from '@/lib/schedule';
 import {
   toHomeArticle,
@@ -149,13 +150,40 @@ export function getMapPoints(): Promise<MapPoint[]> {
         where: doctorWhere,
         orderBy: [...topRated],
         take: 30,
-        select: { latitude: true, longitude: true, user: { select: { name: true } } }
+        select: {
+          id: true,
+          slug: true,
+          latitude: true,
+          longitude: true,
+          photoUrl: true,
+          ratingAverage: true,
+          reviewCount: true,
+          user: { select: { name: true, image: true } },
+          schedules: {
+            where: { isActive: true },
+            select: { dayOfWeek: true, startTime: true, endTime: true, isActive: true }
+          }
+        }
       }),
       prisma.facility.findMany({
         where: facilityWhere,
         orderBy: [...topRated],
         take: 60,
-        select: { latitude: true, longitude: true, name: true, type: true }
+        select: {
+          id: true,
+          slug: true,
+          latitude: true,
+          longitude: true,
+          name: true,
+          type: true,
+          photoUrl: true,
+          ratingAverage: true,
+          reviewCount: true,
+          user: { select: { image: true } },
+          operatingHours: {
+            select: { dayOfWeek: true, openTime: true, closeTime: true, isClosed: true }
+          }
+        }
       })
     ]);
 
@@ -164,10 +192,17 @@ export function getMapPoints(): Promise<MapPoint[]> {
     for (const row of doctors) {
       if (row.latitude != null && row.longitude != null) {
         points.push({
+          id: `doctor:${row.id}`,
           lat: row.latitude,
           lng: row.longitude,
+          slug: row.slug,
           title: row.user.name ?? 'Dokter SILK',
-          kind: 'Dokter'
+          kind: 'Dokter',
+          href: `/doctor/${row.slug}`,
+          imageUrl: row.photoUrl ?? row.user.image,
+          rating: formatRating(row.ratingAverage),
+          reviewCount: row.reviewCount,
+          openNow: isDoctorOpenNow(row.schedules, now)
         });
       }
     }
@@ -175,10 +210,17 @@ export function getMapPoints(): Promise<MapPoint[]> {
     for (const row of facilities) {
       if (row.latitude != null && row.longitude != null) {
         points.push({
+          id: `facility:${row.id}`,
           lat: row.latitude,
           lng: row.longitude,
+          slug: row.slug,
           title: row.name,
-          kind: facilityTypeLabels[row.type]
+          kind: facilityTypeLabels[row.type],
+          href: `/fasilitas/${row.slug}`,
+          imageUrl: row.photoUrl ?? row.user.image,
+          rating: formatRating(row.ratingAverage),
+          reviewCount: row.reviewCount,
+          openNow: isFacilityOpenNow(row.operatingHours, now)
         });
       }
     }

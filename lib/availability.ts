@@ -97,3 +97,37 @@ export function facilityAvailabilityWhere(
     }
   };
 }
+
+export function isDoctorOpenNow(
+  schedules: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>,
+  now = new Date()
+) {
+  const position = getJakartaSchedulePosition(now);
+  return schedules.some(
+    (schedule) =>
+      schedule.isActive &&
+      schedule.dayOfWeek === position.dayOfWeek &&
+      schedule.startTime <= position.time &&
+      schedule.endTime > position.time
+  );
+}
+
+export function isFacilityOpenNow(
+  hours: Array<{
+    dayOfWeek: number;
+    openTime: string | null;
+    closeTime: string | null;
+    isClosed: boolean;
+  }>,
+  now = new Date()
+) {
+  const position = getJakartaSchedulePosition(now);
+  return hours.some(
+    (hour) =>
+      !hour.isClosed &&
+      hour.dayOfWeek === position.dayOfWeek &&
+      Boolean(hour.openTime && hour.closeTime) &&
+      hour.openTime! <= position.time &&
+      hour.closeTime! > position.time
+  );
+}
