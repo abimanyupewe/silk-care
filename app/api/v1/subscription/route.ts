@@ -121,14 +121,12 @@ export async function GET() {
     const pricing = await resolvePartnerPricing(subscription, auth.user.role, auth.user.id);
 
     return jsonOk({
-      data: {
-        plan: activePlan,
-        status: activeEndsAt > now ? 'ACTIVE' : 'EXPIRED',
-        endsAt: activeEndsAt,
-        amount: pricing.amount,
-        durationMonths: pricing.durationMonths,
-        pendingPayment
-      }
+      plan: activePlan,
+      status: activeEndsAt > now ? 'ACTIVE' : 'EXPIRED',
+      endsAt: activeEndsAt,
+      amount: pricing.amount,
+      durationMonths: pricing.durationMonths,
+      pendingPayment
     });
   } catch (error) {
     return handleRouteError(error);

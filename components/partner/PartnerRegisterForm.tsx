@@ -305,8 +305,8 @@ export function PartnerRegisterForm({
             disabled={submitting}
           />
           <p className="mt-2 text-sm text-ink-muted">
-            Isian alamat/kota di atas akan diperbarui oleh tombol &quot;Cari alamat&quot;; masih
-            bisa diedit setelah itu.
+            Isian alamat/kota di atas akan diperbarui oleh pencarian alamat; masih bisa diedit
+            setelah itu.
           </p>
         </div>
       ) : null}

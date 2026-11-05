@@ -824,31 +824,38 @@ paths:
     get:
       tags: [Public Catalog]
       security: []
-      summary: Reverse geocode (terbalik) Nominatim
+      summary: Pencarian dan reverse geocode Nominatim
       description: >-
-        Membaca alamat dari titik (lat, lon) lewat Nominatim, hanya dari server (User-Agent
-        khusus NOMINATIM_USER_AGENT, tanpa autocomplete). Rate limit global
-        1 request/detik; hasil dicache 24 jam per kunci pembulatan 4 desimal
-        (~11 m) supaya pin yang sedikit digeser tidak menanyakan server OSM lagi.
-        Dipakai tombol "Cari alamat" pada step Lokasi registrasi mitra.
+        Dengan q, mencari alamat secara manual; dengan lat dan lon, membaca alamat dari titik.
+        Semua permintaan ke Nominatim hanya dari server (User-Agent khusus NOMINATIM_USER_AGENT,
+        tanpa autocomplete). Rate limit global 1 request/detik dan hasil dicache 24 jam.
+        Dipakai pemilih lokasi pada profil dan pendaftaran mitra.
       parameters:
+        - name: q
+          in: query
+          required: false
+          description: Alamat yang ingin dicari (minimal 3 karakter).
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 200
         - name: lat
           in: query
-          required: true
+          required: false
           schema:
             type: number
             minimum: -90
             maximum: 90
         - name: lon
           in: query
-          required: true
+          required: false
           schema:
             type: number
             minimum: -180
             maximum: 180
       responses:
         '200':
-          description: Alamat terbaca dari titik.
+          description: Alamat terbaca dari titik atau daftar alamat hasil pencarian.
           content:
             application/json:
               schema:
@@ -856,20 +863,25 @@ paths:
                 required: [data]
                 properties:
                   data:
-                    type: object
-                    required: [label]
-                    properties:
-                      label:
-                        type: string
-                      city:
-                        type: string
-                        nullable: true
-                      state:
-                        type: string
-                        nullable: true
-                      country:
-                        type: string
-                        nullable: true
+                    oneOf:
+                      - type: object
+                        required: [label]
+                        properties:
+                          label: { type: string }
+                          city: { type: string, nullable: true }
+                          state: { type: string, nullable: true }
+                          country: { type: string, nullable: true }
+                      - type: array
+                        items:
+                          type: object
+                          required: [label, lat, lng]
+                          properties:
+                            label: { type: string }
+                            lat: { type: number }
+                            lng: { type: number }
+                            city: { type: string, nullable: true }
+                            state: { type: string, nullable: true }
+                            country: { type: string, nullable: true }
         '404':
           description: Titik ini tidak memiliki bacaan OSM.
         '422':

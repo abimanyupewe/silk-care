@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
 import { AdminErrorState } from '@/components/admin/AdminState';
+import { LocationPicker } from '@/components/partner/LocationPicker';
+import type { MapPoint } from '@/components/shared/LeafletMap';
 import { fetchApi } from '@/lib/api-client';
 import { useApiQuery } from '@/lib/api-swr';
 import { cn } from '@/lib/utils';
@@ -40,7 +42,16 @@ export function FacilityProfileForm() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const [location, setLocation] = useState<MapPoint | null>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
   const facility = profile.data;
+
+  useEffect(() => {
+    if (facility && facility.latitude != null && facility.longitude != null) {
+      setLocation({ lat: facility.latitude, lng: facility.longitude });
+    }
+  }, [facility]);
 
   if (profile.loading && !facility) return <AdminDetailSkeleton />;
   if (profile.error) return <AdminErrorState message={profile.error} onRetry={profile.reload} />;
@@ -50,12 +61,6 @@ export function FacilityProfileForm() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const text = (key: string) => String(form.get(key) ?? '').trim() || null;
-    const number = (key: string) => {
-      const value = text(key);
-
-      return value === null ? null : Number(value);
-    };
-
     setSaving(true);
     setSaved(false);
     setError('');
@@ -68,8 +73,8 @@ export function FacilityProfileForm() {
           address: text('address'),
           city: text('city'),
           phone: text('phone'),
-          latitude: number('latitude'),
-          longitude: number('longitude')
+          latitude: location?.lat ?? null,
+          longitude: location?.lng ?? null
         })
       });
 
@@ -206,6 +211,7 @@ export function FacilityProfileForm() {
               name="city"
               maxLength={100}
               defaultValue={facility.city ?? ''}
+              ref={cityRef}
               className={cn(fieldClass, 'h-11 py-0')}
             />
           </label>
@@ -228,34 +234,29 @@ export function FacilityProfileForm() {
             maxLength={500}
             rows={2}
             defaultValue={facility.address ?? ''}
+            ref={addressRef}
             className={fieldClass}
           />
         </label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium text-ink">
-            Latitude
-            <input
-              type="number"
-              name="latitude"
-              min={-90}
-              max={90}
-              step="any"
-              defaultValue={facility.latitude ?? ''}
-              className={cn(fieldClass, 'h-11 py-0')}
+        <div className="border-t border-border pt-4">
+          <h2 className="text-base font-semibold text-ink">Lokasi fasilitas</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Geser pin ke lokasi fasilitas Anda, lalu simpan profil.
+          </p>
+          <div className="mt-3">
+            <LocationPicker
+              latitude={location?.lat ?? null}
+              longitude={location?.lng ?? null}
+              onPoint={setLocation}
+              onAddressRecognized={({ label, city }) => {
+                if (addressRef.current) addressRef.current.value = label;
+                if (city && cityRef.current) cityRef.current.value = city;
+              }}
+              disabled={saving}
             />
-          </label>
-          <label className="block text-sm font-medium text-ink">
-            Longitude
-            <input
-              type="number"
-              name="longitude"
-              min={-180}
-              max={180}
-              step="any"
-              defaultValue={facility.longitude ?? ''}
-              className={cn(fieldClass, 'h-11 py-0')}
-            />
-          </label>
+          </div>
+          <input type="hidden" name="latitude" value={location?.lat ?? ''} readOnly />
+          <input type="hidden" name="longitude" value={location?.lng ?? ''} readOnly />
         </div>
 
         {error ? (
