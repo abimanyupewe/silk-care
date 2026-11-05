@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useApiQuery } from '@/lib/api-swr';
 import type { SubscriptionSnapshot } from './LanggananPanel';
+import { SubscriptionTrialNotice } from './SubscriptionTrialNotice';
 
 // Gerbang langganan panel mitra: langganan yang habis memaksa ke halaman Langganan, kecuali
 // memang sudah di sana (di situlah cara perpanjangan). Gagal membaca status dibiarkan masuk
@@ -27,5 +28,12 @@ export function SubscriptionGate({
     }
   }, [expired, langgananHref, pathname, router]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {pathname !== langgananHref ? (
+        <SubscriptionTrialNotice subscription={data} langgananHref={langgananHref} />
+      ) : null}
+      {children}
+    </>
+  );
 }

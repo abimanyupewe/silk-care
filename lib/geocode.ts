@@ -11,6 +11,7 @@ const CACHE_MAX_ENTRIES = 500;
 // tidak memukul server OSM lagi di jendela TTL. Vercel menjalankan banyak instance;
 // masing-masing tetap patuh 1 request/detik lewat rate limit bersama pada route.
 const geocodeCache = new Map<string, CacheEntry>();
+const searchCache = new Map<string, { expiresAt: number; value: SearchGeocodeResult[] }>();
 
 export function nominatimUserAgent() {
   return process.env.NOMINATIM_USER_AGENT?.trim() || 'SILK/1.0 (dev@silk.local)';
@@ -129,5 +130,64 @@ export async function reverseGeocode(
   } catch (error) {
     logError('nominatim_reverse_error', error, { lat, lng });
     return null;
+  }
+}
+
+export type SearchGeocodeResult = ReverseGeocodeResult & { lat: number; lng: number };
+
+export async function searchGeocode(query: string): Promise<SearchGeocodeResult[]> {
+  const key = query.trim().toLowerCase();
+  const cached = searchCache.get(key);
+
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('q', query.trim());
+    url.searchParams.set('limit', '5');
+    url.searchParams.set('countrycodes', 'id');
+    url.searchParams.set('addressdetails', '1');
+    url.searchParams.set('accept-language', 'id');
+
+    const response = await fetch(url, {
+      headers: { 'User-Agent': nominatimUserAgent() }
+    });
+
+    if (!response.ok) {
+      logError('nominatim_search_failed', new Error(`HTTP ${response.status}`), { query });
+      return [];
+    }
+
+    const data = (await response.json()) as Array<{
+      display_name?: unknown;
+      lat?: unknown;
+      lon?: unknown;
+      address?: Record<string, unknown>;
+    }>;
+    const results = data.flatMap((item) => {
+      const label = readString(item.display_name);
+      const lat = Number(item.lat);
+      const lng = Number(item.lon);
+
+      if (!label || !Number.isFinite(lat) || !Number.isFinite(lng)) return [];
+
+      return [
+        {
+          label,
+          lat,
+          lng,
+          city: pickCity(item.address ?? {}),
+          state: readString(item.address?.state) ?? readString(item.address?.region),
+          country: readString(item.address?.country)
+        }
+      ];
+    });
+
+    searchCache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, value: results });
+    return results;
+  } catch (error) {
+    logError('nominatim_search_error', error, { query });
+    return [];
   }
 }
