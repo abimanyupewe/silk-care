@@ -5,6 +5,7 @@ import {
   type ApiErrorBody,
   type PaginationMeta
 } from '@/lib/api-client';
+import type { AnnouncementToneValue } from '@/lib/announcement';
 import { facilityTypeLabels } from '@/lib/facility-types';
 
 // Nama lama dipertahankan agar kode admin tidak perlu berubah; inti ada di lib/api-client.ts.
@@ -564,4 +565,18 @@ export const adminReviewTargetLabels: Record<AdminReviewTargetType, string> = {
   doctor: 'Dokter',
   facility: 'Fasilitas',
   product: 'Produk'
+};
+
+export type AdminAnnouncement = {
+  id: string;
+  message: string;
+  linkLabel: string | null;
+  linkUrl: string | null;
+  tone: AnnouncementToneValue;
+  active: boolean;
+  dismissible: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };

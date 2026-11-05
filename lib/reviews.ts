@@ -1,6 +1,6 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
-import { publicDoctorWhere, publicFacilityWhere, publicProductWhere } from '@/lib/catalog';
+import { publicDoctorWhereAt, publicFacilityWhereAt, publicProductWhereAt } from '@/lib/catalog';
 
 export const reviewTargetTypes = ['doctor', 'facility', 'product'] as const;
 
@@ -224,7 +224,7 @@ export async function reviewTargetExists(type: ReviewTargetType, targetId: strin
   if (type === 'doctor') {
     const target = await prisma.doctorProfile.findFirst({
       where: {
-        ...publicDoctorWhere,
+        ...publicDoctorWhereAt(new Date()),
         id: targetId
       },
       select: { id: true }
@@ -236,7 +236,7 @@ export async function reviewTargetExists(type: ReviewTargetType, targetId: strin
   if (type === 'facility') {
     const target = await prisma.facility.findFirst({
       where: {
-        ...publicFacilityWhere,
+        ...publicFacilityWhereAt(new Date()),
         id: targetId
       },
       select: { id: true }
@@ -247,7 +247,7 @@ export async function reviewTargetExists(type: ReviewTargetType, targetId: strin
 
   const target = await prisma.product.findFirst({
     where: {
-      ...publicProductWhere,
+      ...publicProductWhereAt(new Date()),
       id: targetId
     },
     select: { id: true }

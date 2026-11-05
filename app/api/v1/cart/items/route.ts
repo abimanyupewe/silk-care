@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { requireTransactions } from '@/lib/transactions-guard';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth-guard';
-import { publicProductWhere } from '@/lib/catalog';
+import { publicProductWhereAt } from '@/lib/catalog';
 import { handleRouteError, jsonError, jsonOk, jsonTooManyRequests, parseJson } from '@/lib/api';
 import { cartSelect, serializeCart } from '@/lib/cart';
 import { rateLimit } from '@/lib/rate-limit';
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
       return auth.error;
     }
 
+    const off = requireTransactions();
+    if (off) return off;
+
     const limit = await rateLimit(`cart:write:${auth.user.id}`, 60, 60 * 1000);
 
     if (!limit.allowed) {
@@ -35,7 +39,7 @@ export async function POST(request: Request) {
 
     const product = await prisma.product.findFirst({
       where: {
-        ...publicProductWhere,
+        ...publicProductWhereAt(new Date()),
         id: productId
       },
       select: {

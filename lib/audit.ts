@@ -23,6 +23,9 @@ export const auditActions = {
   notificationBroadcast: 'NOTIFICATION_BROADCAST',
   emailTemplateUpdate: 'EMAIL_TEMPLATE_UPDATE',
   emailTemplateReset: 'EMAIL_TEMPLATE_RESET',
+  announcementCreate: 'ANNOUNCEMENT_CREATE',
+  announcementUpdate: 'ANNOUNCEMENT_UPDATE',
+  announcementDelete: 'ANNOUNCEMENT_DELETE',
   // Aktivitas yang dilakukan pengguna sendiri.
   userRegister: 'USER_REGISTER',
   userLogin: 'USER_LOGIN',
@@ -31,7 +34,8 @@ export const auditActions = {
   orderCancel: 'ORDER_CANCEL',
   consultationCreate: 'CONSULTATION_CREATE',
   consultationCancel: 'CONSULTATION_CANCEL',
-  reviewCreate: 'REVIEW_CREATE'
+  reviewCreate: 'REVIEW_CREATE',
+  partnerRegister: 'PARTNER_REGISTER'
 } as const;
 
 export const auditTargetTypes = [
@@ -43,7 +47,8 @@ export const auditTargetTypes = [
   'REVIEW',
   'NOTIFICATION',
   'CONSULTATION',
-  'EMAIL_TEMPLATE'
+  'EMAIL_TEMPLATE',
+  'ANNOUNCEMENT'
 ] as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
@@ -94,7 +99,8 @@ const activityAuditActions: AuditAction[] = [
   auditActions.orderCancel,
   auditActions.consultationCreate,
   auditActions.consultationCancel,
-  auditActions.reviewCreate
+  auditActions.reviewCreate,
+  auditActions.partnerRegister
 ];
 
 function activityRetentionDays() {

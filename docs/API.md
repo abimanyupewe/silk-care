@@ -87,6 +87,11 @@ Role: `PATIENT`, `DOCTOR`, `FACILITY`, `PHARMACY`, `ADMIN`.
 - `lat`/`lng`/`radiusKm` mengaktifkan filter Haversine dan `distanceKm`.
 - `minRating`, `sort=rating_desc`, dan `sort=review_desc` memakai agregat ulasan approved.
 - `availableNow` memakai hari dan jam Asia/Jakarta saat request.
+- Harga: `minFee`/`maxFee` di endpoint dokter (fee konsultasi), `minPrice`/`maxPrice` di
+  produk dan `/api/v1/search` (dokter + produk; kategori lain ditolak 422).
+- `/api/v1/geocode` menyapa Nominatim hanya dari server: UA khusus `NOMINATIM_USER_AGENT`,
+  rate limit global 1 request/detik, tanpa autocomplete, dan hasil di-cache 24 jam dengan
+  kunci pembulatan 4 desimal; 429 berarti kuota sesaat sedang dipakai request lain.
 
 ## Idempotency
 
@@ -172,20 +177,22 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 
 ### Katalog publik
 
-| Method | Path                                 | Sukses |
-| ------ | ------------------------------------ | ------ |
-| GET    | `/api/v1/health`                     | 200    |
-| GET    | `/api/v1/openapi`                    | 200    |
-| GET    | `/api/v1/doctors`                    | 200    |
-| GET    | `/api/v1/doctors/{slug}`             | 200    |
-| GET    | `/api/v1/facilities`                 | 200    |
-| GET    | `/api/v1/facilities/{slug}`          | 200    |
-| GET    | `/api/v1/facilities/{slug}/services` | 200    |
-| GET    | `/api/v1/articles`                   | 200    |
-| GET    | `/api/v1/articles/{slug}`            | 200    |
-| GET    | `/api/v1/products`                   | 200    |
-| GET    | `/api/v1/products/{slug}`            | 200    |
-| GET    | `/api/v1/search`                     | 200    |
+| Method | Path                                 | Sukses      |
+| ------ | ------------------------------------ | ----------- |
+| GET    | `/api/v1/health`                     | 200         |
+| GET    | `/api/v1/openapi`                    | 200         |
+| GET    | `/api/v1/doctors`                    | 200         |
+| GET    | `/api/v1/doctors/{slug}`             | 200         |
+| GET    | `/api/v1/facilities`                 | 200         |
+| GET    | `/api/v1/facilities/{slug}`          | 200         |
+| GET    | `/api/v1/announcements/active`       | 200         |
+| GET    | `/api/v1/facilities/{slug}/services` | 200         |
+| GET    | `/api/v1/articles`                   | 200         |
+| GET    | `/api/v1/articles/{slug}`            | 200         |
+| GET    | `/api/v1/products`                   | 200         |
+| GET    | `/api/v1/products/{slug}`            | 200         |
+| GET    | `/api/v1/search`                     | 200         |
+| GET    | `/api/v1/geocode`                    | 200/404/429 |
 
 ### Keranjang dan pesanan
 
@@ -202,6 +209,9 @@ OpenAPI, memastikan setiap `$ref` dapat di-resolve, dan memvalidasi parameter pa
 | POST   | `/api/v1/orders/{id}/cancel`        | 200     |
 | POST   | `/api/v1/orders/{id}/payment`       | 200/201 |
 | POST   | `/api/v1/payments/midtrans/webhook` | 200     |
+| POST   | `/api/v1/payments/duitku/callback`  | 200     |
+| GET    | `/api/v1/subscription`              | 200     |
+| POST   | `/api/v1/subscription/payment`      | 200/201 |
 | GET    | `/api/v1/cron/orders/expire`        | 200     |
 
 ### Konsultasi dan rekam medis
@@ -261,8 +271,7 @@ Untuk fasilitas non-apotek. Apotek mendapat 403 di route `/facility/services*` d
 | GET    | `/api/v1/facility/orders`              | 200    |
 | GET    | `/api/v1/facility/orders/{id}`         | 200    |
 | PATCH  | `/api/v1/facility/orders/{id}/status`  | 200    |
-| POST   | `/api/v1/partner/doctor`               | 201    |
-| POST   | `/api/v1/partner/facility`             | 201    |
+| POST   | `/api/v1/partner/registrations`        | 201    |
 | GET    | `/api/v1/partner/articles`             | 200    |
 | POST   | `/api/v1/partner/articles`             | 201    |
 | GET    | `/api/v1/partner/articles/{id}`        | 200    |
@@ -317,6 +326,11 @@ Untuk fasilitas non-apotek. Apotek mendapat 403 di route `/facility/services*` d
 | GET    | `/api/v1/admin/reviews/{id}`                     | 200    |
 | PATCH  | `/api/v1/admin/reviews/{id}/moderate`            | 200    |
 | GET    | `/api/v1/admin/audit-logs`                       | 200    |
+| GET    | `/api/v1/admin/announcements`                    | 200    |
+| POST   | `/api/v1/admin/announcements`                    | 201    |
+| GET    | `/api/v1/admin/announcements/{id}`               | 200    |
+| PATCH  | `/api/v1/admin/announcements/{id}`               | 200    |
+| DELETE | `/api/v1/admin/announcements/{id}`               | 200    |
 | POST   | `/api/v1/admin/notifications/broadcast`          | 201    |
 | GET    | `/api/v1/admin/stats`                            | 200    |
 | GET    | `/api/v1/admin/system`                           | 200    |
@@ -337,6 +351,24 @@ Kredensial dibaca dari `.env` (`TEST_DOCTOR_*`, `TEST_FACILITY_*`, `TEST_PHARMAC
 dinonaktifkan, menolak jalan di production, dan membuat dokter serta fasilitas berstatus `VERIFIED`
 (muncul di katalog publik). `TEST_FACILITY_*` adalah klinik (role `FACILITY`) dan
 `TEST_PHARMACY_*` adalah apotek (role `PHARMACY`); hanya apotek yang punya menu pesanan dan produk.
+
+## Pendaftaran mitra
+
+`POST /api/v1/partner/registrations` menggantikan `/partner/doctor` dan `/partner/facility`.
+Body: `{ "partnerType": "DOCTOR" | <tipe fasilitas>, "values": { ... } }`. Kunci `values` berasal
+dari registri `lib/partner-requirements/` per tipe (field khusus tipe masih draf).
+
+- `201`: profil dibuat langsung `VERIFIED` (verifikasi admin dimatikan sementara) dan akun
+  mendapat `Subscription` `FREE_TRIAL` 6 bulan. Mitra tampil di katalog publik selama
+  `Subscription.endsAt > now`.
+- `403`: akun `ADMIN`. `409`: akun sudah punya profil dokter/fasilitas, atau slug bentrok.
+  `422`: `partnerType` tidak dikenal atau `values` tidak lolos skema registri.
+- `details` (publik) tampil di respons dokter/fasilitas; `internalDetails` hanya untuk pemilik
+  dan admin.
+
+Selama `transactionsEnabled=false` (`lib/features.ts`), lima endpoint tulis transaksi
+(`POST /orders`, `POST /orders/{id}/payment`, `POST /cart/items`, `POST /appointments`,
+`POST /consultations`) mengembalikan `503`. Baca, pembatalan, webhook, dan cron tidak berubah.
 
 ## Fixtures demo deterministik
 
@@ -384,6 +416,9 @@ tutup.
 
 ID dokter/fasilitas/produk/artikel dibuat acak oleh database. Gunakan slug atau email
 untuk menemukannya; jangan mengandalkan ID hasil seed. Ulasan memakai ID tetap.
+
+Setiap dokter dan fasilitas demo/test punya `Subscription` `YEARLY` yang aktif, sehingga muncul di
+katalog publik.
 
 Seed demo tidak membuat order, konsultasi, notifikasi, atau audit log. Untuk QA yang butuh
 state bersih, gunakan database atau Neon branch terpisah, lalu jalankan `db:seed` dan

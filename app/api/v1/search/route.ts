@@ -1,6 +1,14 @@
 import type { Prisma } from '@/lib/generated/prisma';
 import { prisma } from '@/lib/db';
-import { getEnum, getPagination, getString, handleRouteError, jsonError, jsonOk } from '@/lib/api';
+import {
+  getEnum,
+  getInt,
+  getPagination,
+  getString,
+  handleRouteError,
+  jsonError,
+  jsonOk
+} from '@/lib/api';
 import {
   doctorAvailabilityWhere,
   facilityAvailabilityWhere,
@@ -8,11 +16,12 @@ import {
 } from '@/lib/availability';
 import {
   publicArticleWhere,
-  publicDoctorWhere,
-  publicFacilityWhere,
-  publicProductWhere
+  publicDoctorWhereAt,
+  publicFacilityWhereAt,
+  publicProductWhereAt
 } from '@/lib/catalog';
 import { formatDistanceKm, geoBoundingBox, haversineKm, parseGeoFilter } from '@/lib/geo';
+import { transactionsEnabled } from '@/lib/features';
 import { facilityTypeLabels } from '@/lib/facility-types';
 import { formatRating, parseMinRating } from '@/lib/rating';
 
@@ -34,6 +43,7 @@ function distanceForLocation(
 
 export async function GET(request: Request) {
   try {
+    const now = new Date();
     const searchParams = new URL(request.url).searchParams;
     const q = getString(searchParams, 'q', 100) ?? '';
     const typeParam = getString(searchParams, 'type', 20);
@@ -42,6 +52,29 @@ export async function GET(request: Request) {
     const minRating = parseMinRating(searchParams);
     const geo = parseGeoFilter(searchParams);
     const availability = parseAvailabilityFilter(searchParams);
+    const minPrice = getInt(searchParams, 'minPrice');
+    const maxPrice = getInt(searchParams, 'maxPrice');
+
+    if (minPrice !== undefined && minPrice < 0) {
+      return jsonError('minPrice tidak boleh negatif.', 422);
+    }
+
+    if (maxPrice !== undefined && maxPrice < 0) {
+      return jsonError('maxPrice tidak boleh negatif.', 422);
+    }
+
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      return jsonError('minPrice tidak boleh lebih besar dari maxPrice.', 422);
+    }
+
+    // Harga hanya ada pada dokter (konsultasi) dan produk; filter untuk kategori lain
+    // ditolak supaya tidak diam-diam diabaikan.
+    if (
+      (minPrice !== undefined || maxPrice !== undefined) &&
+      (type === 'FACILITY' || type === 'ARTICLE')
+    ) {
+      return jsonError('Filter harga hanya berlaku untuk dokter atau produk.', 422);
+    }
 
     if (typeParam && !type) {
       return jsonError('type harus salah satu dari: doctor, facility, article, product.', 422);
@@ -70,7 +103,7 @@ export async function GET(request: Request) {
 
     const shouldSearch = (value: (typeof searchTypes)[number]) => !type || type === value;
     const doctorWhere: Prisma.DoctorProfileWhereInput = {
-      ...publicDoctorWhere,
+      ...publicDoctorWhereAt(now),
       OR: [
         { specialty: { contains: q, mode: 'insensitive' } },
         { bio: { contains: q, mode: 'insensitive' } },
@@ -79,7 +112,7 @@ export async function GET(request: Request) {
       ]
     };
     const facilityWhere: Prisma.FacilityWhereInput = {
-      ...publicFacilityWhere,
+      ...publicFacilityWhereAt(now),
       OR: [
         { name: { contains: q, mode: 'insensitive' } },
         { description: { contains: q, mode: 'insensitive' } },
@@ -90,6 +123,10 @@ export async function GET(request: Request) {
     if (minRating.value !== undefined) {
       doctorWhere.ratingAverage = { gte: minRating.value };
       facilityWhere.ratingAverage = { gte: minRating.value };
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      doctorWhere.consultationFee = { gte: minPrice, lte: maxPrice };
     }
 
     if (availability.filter) {
@@ -127,6 +164,7 @@ export async function GET(request: Request) {
               longitude: true,
               ratingAverage: true,
               reviewCount: true,
+              details: true,
               user: {
                 select: {
                   name: true,
@@ -151,6 +189,7 @@ export async function GET(request: Request) {
               longitude: true,
               ratingAverage: true,
               reviewCount: true,
+              details: true,
               user: {
                 select: {
                   image: true
@@ -179,10 +218,13 @@ export async function GET(request: Request) {
             }
           })
         : Promise.resolve([]),
-      shouldSearch('PRODUCT')
+      transactionsEnabled && shouldSearch('PRODUCT')
         ? prisma.product.findMany({
             where: {
-              ...publicProductWhere,
+              ...publicProductWhereAt(now),
+              ...(minPrice !== undefined || maxPrice !== undefined
+                ? { price: { gte: minPrice, lte: maxPrice } }
+                : {}),
               OR: [
                 { name: { contains: q, mode: 'insensitive' } },
                 { description: { contains: q, mode: 'insensitive' } },
@@ -196,6 +238,7 @@ export async function GET(request: Request) {
               slug: true,
               name: true,
               image: true,
+              price: true,
               facility: {
                 select: {
                   name: true
@@ -240,6 +283,7 @@ export async function GET(request: Request) {
         image: doctor.user.image,
         rating: formatRating(doctor.ratingAverage),
         reviewCount: doctor.reviewCount,
+        details: doctor.details,
         ...(geoFilter ? { distanceKm: formatDistanceKm(doctor.distanceKm) } : {})
       })),
       ...facilities.map((facility) => ({
@@ -254,6 +298,7 @@ export async function GET(request: Request) {
         image: facility.user.image,
         rating: formatRating(facility.ratingAverage),
         reviewCount: facility.reviewCount,
+        details: facility.details,
         ...(geoFilter ? { distanceKm: formatDistanceKm(facility.distanceKm) } : {})
       })),
       ...articles.map((article) => ({

@@ -27,9 +27,7 @@ export default async function LoginPage({
       <div className="border border-border bg-white p-6 md:p-8">
         <p className="text-sm font-semibold text-primary-hover">SILK</p>
         <h1 className="mt-2 text-2xl font-bold text-ink">Masuk ke akun Anda</h1>
-        <p className="mt-2 text-ink-muted">
-          Admin, dokter, dan fasilitas masuk di sini dan diarahkan ke panel masing-masing.
-        </p>
+        <p className="mt-2 text-ink-muted">Masukkan email dan password akun Anda.</p>
 
         <div className="mt-6">
           <LoginForm callbackUrl={callbackUrl ?? ''} />

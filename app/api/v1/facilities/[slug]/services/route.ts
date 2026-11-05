@@ -1,13 +1,13 @@
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
-import { publicFacilityServiceWhere, publicFacilityWhere } from '@/lib/catalog';
+import { publicFacilityServiceWhere, publicFacilityWhereAt } from '@/lib/catalog';
 import { publicFacilityServiceSelect } from '@/lib/facility-service';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
     const facility = await prisma.facility.findFirst({
-      where: { ...publicFacilityWhere, slug },
+      where: { ...publicFacilityWhereAt(new Date()), slug },
       select: { id: true }
     });
 

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
-The notes below add to AGENTS.md. Where they disagree, these notes reflect the current
-`panel/admin` work (AGENTS.md still says there is no login UI; `app/login` and `app/admin`
-now exist).
+The notes below add to AGENTS.md, which already describes the three panels and the shared
+route anatomy; here it is the per-file detail, not the summary, that matters.
 
 ## Verification
 
-No tests exist. After changes run `npm run lint && npm run typecheck`; run `npm run build`
+No tests exist. Pure-logic checks run with `npx tsx scripts/checks/<name>.check.ts` (`months`,
+`subscription`, `registry`, `register-steps`). After changes run `npm run lint && npm run typecheck`; run `npm run build`
 only with the dev server stopped (see the `.next` gotcha). Adding, removing, or renaming an
 API route file or an exported HTTP method requires a matching edit to `docs/openapi.yaml`, or
 `npm run openapi:check` (also run by `prebuild`) fails.
@@ -58,3 +58,16 @@ are aliases kept for admin code. `/doctor` and `/apotek` are the public catalog,
 - Reuse the shared admin building blocks for new screens: `AdminPageHeader`,
   `AdminPagination`, `AdminTableSkeleton`/`AdminDetailSkeleton`, `AdminEmptyState`/
   `AdminErrorState`, and the `*Badge` components. The design rules in AGENTS.md apply.
+
+## Partner directory
+
+Phase 1 design: `docs/superpowers/specs/2026-10-31-partner-directory-subscription-design.md`; behavior
+summary in AGENTS.md. Gotchas:
+
+- Catalog visibility uses `publicDoctorWhereAt/publicFacilityWhereAt/publicProductWhereAt(now)`;
+  always call them. Never turn them back into constants (spreading a function yields `{}`).
+- `lib/partner-requirements/` is the only place for per-type fields. No `if (type)` branching in
+  routes or components.
+- `internalDetails` never goes into a public select.
+- `isShopFacility/isServiceFacility` are false while `transactionsEnabled=false`, so
+  `lib/facility-guard.ts` answers 403 for every facility. Known and ledgered.

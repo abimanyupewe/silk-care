@@ -1,4 +1,5 @@
 import { auditActions, writeAuditLog } from '@/lib/audit';
+import { requireTransactions } from '@/lib/transactions-guard';
 import type { Prisma } from '@/lib/generated/prisma';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -98,6 +99,9 @@ export async function POST(request: Request) {
     if (!auth.ok) {
       return auth.error;
     }
+
+    const off = requireTransactions();
+    if (off) return off;
 
     const parsed = await parseJson(request, checkoutSchema);
 

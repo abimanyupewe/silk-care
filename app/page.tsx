@@ -7,20 +7,48 @@ import { RecomendationClinic } from '@/components/features/Homepage/Recomendatio
 import { MarketplaceSections } from '@/components/features/Homepage/MarketplaceSection';
 import { Review } from '@/components/features/Homepage/Review';
 import { Article } from '@/components/features/Homepage/Article';
+import { MapSection } from '@/components/features/Homepage/MapSection';
 import { Footer } from '@/components/shared/Footer';
+import {
+  getFeaturedDoctors,
+  getFeaturedFacilities,
+  getFeaturedProducts,
+  getLatestArticles,
+  getLatestReviews,
+  getReviewSummary,
+  getMapPoints
+} from '@/lib/home/queries';
 
-export default function Home() {
+// Data beranda disegarkan tiap 5 menit; tidak setiap kunjungan menjadi kueri database.
+export const revalidate = 300;
+
+export default async function Home() {
+  // Kueri berjalan paralel; tiap kueri menangani kegagalannya sendiri (bagian itu disembunyikan).
+  const [doctors, facilities, products, articles, reviews, reviewSummary, mapPoints] =
+    await Promise.all([
+      getFeaturedDoctors(),
+      getFeaturedFacilities(),
+      getFeaturedProducts(),
+      getLatestArticles(),
+      getLatestReviews(),
+      getReviewSummary(),
+      getMapPoints()
+    ]);
+
   return (
     <div>
       <Navbar />
       <Hero />
       <Consultation />
-      <DoctorRecommendations />
+      <DoctorRecommendations doctors={doctors} />
       <Promo />
-      <RecomendationClinic />
-      <MarketplaceSections />
-      <Review />
-      <Article />
+      {/* Peta naik ke inti halaman: informasi layanan di sekitar. Muncul hanya bila ada
+          titik mitra berkoordinat, dan dimuat malas (JS Leaflet berat). */}
+      <MapSection points={mapPoints} />
+      <RecomendationClinic facilities={facilities} />
+      <MarketplaceSections products={products} />
+      <Review reviews={reviews} summary={reviewSummary} />
+      <Article articles={articles} />
       <Footer />
     </div>
   );

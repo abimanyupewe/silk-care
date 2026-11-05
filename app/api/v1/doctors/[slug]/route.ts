@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { handleRouteError, jsonError, jsonOk } from '@/lib/api';
-import { doctorDetailSelect, publicDoctorWhere } from '@/lib/catalog';
+import { doctorDetailSelect, publicDoctorWhereAt } from '@/lib/catalog';
 import { formatRating } from '@/lib/rating';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -8,7 +8,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     const { slug } = await params;
     const doctor = await prisma.doctorProfile.findFirst({
       where: {
-        ...publicDoctorWhere,
+        ...publicDoctorWhereAt(new Date()),
         slug
       },
       select: doctorDetailSelect

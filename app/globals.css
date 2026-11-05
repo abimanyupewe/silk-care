@@ -159,6 +159,117 @@
   }
 }
 
+@layer components {
+  .leaflet-container .silk-map-popup-container .leaflet-popup-content-wrapper {
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 0;
+    background: var(--bg);
+    box-shadow: none;
+  }
+
+  .leaflet-container .silk-map-popup-container .leaflet-popup-content {
+    width: auto !important;
+    margin: 0;
+  }
+
+  .leaflet-container .silk-map-popup-container .leaflet-popup-tip {
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+    box-shadow: none;
+  }
+
+  .leaflet-container .silk-map-popup-container .leaflet-popup-close-button {
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 40px;
+    text-align: center;
+  }
+
+  .silk-map-popup {
+    width: min(280px, calc(100vw - 64px));
+    overflow: hidden;
+    color: var(--ink);
+  }
+
+  .silk-map-popup__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-bottom: 1px solid var(--line);
+    object-fit: cover;
+  }
+
+  .silk-map-popup__body {
+    padding: 14px 16px 16px;
+  }
+
+  .silk-map-popup__title {
+    margin: 0;
+    padding-right: 24px;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .silk-map-popup__meta {
+    margin: 4px 0 0;
+    color: var(--ink-muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .silk-map-popup__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .silk-map-popup__status-icon {
+    width: 8px;
+    height: 8px;
+    border: 1px solid currentColor;
+    border-radius: 0;
+    background: currentColor;
+  }
+
+  .silk-map-popup__status.is-open {
+    color: var(--success);
+  }
+
+  .silk-map-popup__status.is-closed {
+    color: var(--ink-muted);
+  }
+
+  .silk-map-popup__link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    margin-top: 12px;
+    border: 1px solid var(--primary);
+    padding: 0 14px;
+    color: var(--primary-hover);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .silk-map-popup__link:hover,
+  .silk-map-popup__link:focus-visible {
+    background: var(--primary-tint);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
 .no-visible-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

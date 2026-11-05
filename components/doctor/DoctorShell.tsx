@@ -3,23 +3,31 @@
 import {
   Bell,
   CalendarClock,
+  CreditCard,
   FileText,
   LayoutDashboard,
   Stethoscope,
   UserRound
 } from 'lucide-react';
 import { PanelShell, type NavGroup } from '@/components/panel/PanelShell';
+import { SubscriptionGate } from '@/components/panel/SubscriptionGate';
 import { useApiQuery } from '@/lib/api-swr';
+import { transactionsEnabled } from '@/lib/features';
+
+const langgananHref = '/dashboard/dokter/langganan';
 
 const navGroups: NavGroup[] = [
   {
     items: [
       { href: '/dashboard/dokter', label: 'Ringkasan', icon: LayoutDashboard },
-      { href: '/dashboard/dokter/konsultasi', label: 'Konsultasi', icon: Stethoscope },
+      ...(transactionsEnabled
+        ? [{ href: '/dashboard/dokter/konsultasi', label: 'Konsultasi', icon: Stethoscope }]
+        : []),
       { href: '/dashboard/dokter/artikel', label: 'Artikel', icon: FileText },
       { href: '/dashboard/dokter/notifikasi', label: 'Notifikasi', icon: Bell },
       { href: '/dashboard/dokter/profil', label: 'Profil', icon: UserRound },
-      { href: '/dashboard/dokter/jadwal', label: 'Jadwal praktik', icon: CalendarClock }
+      { href: '/dashboard/dokter/jadwal', label: 'Jadwal praktik', icon: CalendarClock },
+      { href: langgananHref, label: 'Langganan', icon: CreditCard }
     ]
   }
 ];
@@ -32,7 +40,10 @@ export function DoctorShell({
   children: React.ReactNode;
 }) {
   // URL sama dengan kartu di Ringkasan, jadi SWR memakai satu cache dan satu polling.
-  const requested = useApiQuery<unknown[]>('/doctor/consultations?status=REQUESTED&limit=1', 30000);
+  const requested = useApiQuery<unknown[]>(
+    transactionsEnabled ? '/doctor/consultations?status=REQUESTED&limit=1' : null,
+    30000
+  );
 
   const notifications = useApiQuery<unknown[]>('/notifications?limit=1', 30000);
   const unread = (notifications.meta as { unreadCount?: number } | undefined)?.unreadCount ?? 0;
@@ -50,7 +61,7 @@ export function DoctorShell({
       storageKey="silk-doctor-sidebar-collapsed"
       user={user}
     >
-      {children}
+      <SubscriptionGate langgananHref={langgananHref}>{children}</SubscriptionGate>
     </PanelShell>
   );
 }
