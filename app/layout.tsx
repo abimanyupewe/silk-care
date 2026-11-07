@@ -1,6 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Inter } from 'next/font/google';
+import { ServiceWorkerRegister } from '@/components/shared/ServiceWorkerRegister';
 import './globals.css';
 
 const satoshi = localFont({
@@ -19,7 +20,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'SILK',
-  description: 'Sistem Informasi Layanan Kesehatan'
+  description: 'Sistem Informasi Layanan Kesehatan',
+  appleWebApp: { capable: true, title: 'SILK' },
+  icons: { apple: '/icons/apple-touch-icon.png' }
+};
+
+export const viewport: Viewport = {
+  themeColor: '#007f6e'
 };
 
 export default function RootLayout({
@@ -29,7 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={`${satoshi.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }

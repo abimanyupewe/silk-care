@@ -14,6 +14,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InstallAppButton } from '@/components/shared/InstallAppButton';
 import { PanelTour } from './PanelTour';
 
 export type NavItem = {
@@ -253,6 +254,13 @@ export function PanelShell({
             <p className="truncate text-sm font-semibold">{user.name || 'Pengguna SILK'}</p>
             <p className="truncate text-sm text-white/75">{user.email}</p>
           </div>
+          <InstallAppButton
+            collapsed={collapsed}
+            className={cn(
+              'mt-1 flex min-h-11 w-full items-center gap-3 px-3 text-sm font-medium hover:bg-primary-hover',
+              collapsed && 'md:justify-center md:px-0'
+            )}
+          />
           <button
             id="panel-signout"
             type="button"
