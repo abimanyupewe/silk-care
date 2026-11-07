@@ -373,9 +373,9 @@ export function CurrentLocationStrip() {
     <div className="border-t border-border bg-white px-4 py-2 lg:hidden">
       <p className="flex items-center gap-2 text-sm" aria-live="polite">
         <LocateFixed className="h-4 w-4 shrink-0 text-primary-hover" aria-hidden="true" />
-        <span className="min-w-0">
+        <span className="min-w-0 flex-1 truncate">
           <span className="text-ink-faint">Lokasi: </span>
-          <span className="truncate font-semibold text-ink">{label}</span>
+          <span className="font-semibold text-ink">{label}</span>
         </span>
         <button
           type="button"

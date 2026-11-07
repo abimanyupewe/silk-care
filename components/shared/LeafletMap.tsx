@@ -18,6 +18,8 @@ export type MapPoint = {
   reviewCount?: number;
   distanceKm?: number;
   openNow?: boolean;
+  // Di luar radius jangkauan: pin abu-abu + label di popup.
+  outOfRange?: boolean;
 };
 
 type LeafletMapProps = {
@@ -27,6 +29,8 @@ type LeafletMapProps = {
   points?: MapPoint[];
   activePointId?: string | null;
   onPointSelect?: (point: MapPoint) => void;
+  // Lingkaran radius jangkauan (km) di sekitar posisi pengguna; peta di-fit ke lingkaran ini.
+  radiusKm?: number;
   // Mode geser: pin tunggal yang bisa digeser; perubahan titik dikirim lewat onPointChange.
   draggable?: boolean;
   onPointChange?: (point: MapPoint) => void;
@@ -69,6 +73,13 @@ function createPointPopup(point: MapPoint) {
   facts.textContent = `${rating}${distance}`;
   body.append(facts);
 
+  if (point.outOfRange) {
+    const range = document.createElement('p');
+    range.className = 'silk-map-popup__meta';
+    range.textContent = 'Di luar jangkauan radius';
+    body.append(range);
+  }
+
   const status = document.createElement('p');
   status.className = `silk-map-popup__status ${point.openNow ? 'is-open' : 'is-closed'}`;
   const statusIcon = document.createElement('span');
@@ -100,6 +111,7 @@ export function LeafletMap({
   points = [],
   activePointId = null,
   onPointSelect,
+  radiusKm,
   draggable = false,
   onPointChange,
   height = 320,
@@ -236,11 +248,30 @@ export function LeafletMap({
 
       layerRef.current.clearLayers();
 
+      const radiusCircle =
+        radiusKm && userFix
+          ? L.circle([userFix.lat, userFix.lng], {
+              radius: radiusKm * 1000,
+              color: '#007f6e',
+              weight: 1.5,
+              dashArray: '6 6',
+              fillColor: '#007f6e',
+              fillOpacity: 0.04,
+              interactive: false
+            }).addTo(layerRef.current)
+          : null;
+
       for (const point of points) {
+        const pinColor =
+          point.id === activePointId
+            ? 'bg-primary-deep'
+            : point.outOfRange
+              ? 'bg-ink-faint'
+              : 'bg-primary';
         const marker = L.marker([point.lat, point.lng], {
           icon: L.divIcon({
             className: '',
-            html: `<span aria-hidden="true" class="block h-4 w-4 rounded-full border-2 border-white ${point.id === activePointId ? 'bg-primary-deep' : 'bg-primary'}"></span>`,
+            html: `<span aria-hidden="true" class="block h-4 w-4 rounded-full border-2 border-white ${pinColor}"></span>`,
             iconSize: [16, 16],
             iconAnchor: [8, 8]
           }),
@@ -265,20 +296,25 @@ export function LeafletMap({
         marker.addTo(layerRef.current);
       }
 
-      const pointKey = points.map((point) => point.id ?? `${point.lat},${point.lng}`).join('|');
+      const pointKey =
+        points.map((point) => point.id ?? `${point.lat},${point.lng}`).join('|') +
+        (radiusCircle ? `#r${radiusKm}` : '');
 
       if (pointKey && pointKey !== fittedPointsRef.current && userFix) {
         fittedPointsRef.current = pointKey;
+        // Dengan radius, fokus ke lingkaran jangkauan; titik di luar tetap terlihat bila masuk layar.
         map.fitBounds(
-          L.latLngBounds([
-            [userFix.lat, userFix.lng],
-            ...points.map((point) => [point.lat, point.lng] as [number, number])
-          ]),
-          { padding: [36, 36], maxZoom: 15 }
+          radiusCircle
+            ? radiusCircle.getBounds()
+            : L.latLngBounds([
+                [userFix.lat, userFix.lng],
+                ...points.map((point) => [point.lat, point.lng] as [number, number])
+              ]),
+          { padding: [24, 24], maxZoom: 15 }
         );
       }
     })();
-  }, [ready, draggable, points, activePointId, userFix]);
+  }, [ready, draggable, points, activePointId, userFix, radiusKm]);
 
   useEffect(() => {
     if (!ready || !activePointId || !mapRef.current) return;

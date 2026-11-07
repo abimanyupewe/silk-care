@@ -80,6 +80,7 @@ export function FacilityShell({
       navGroups={navGroups}
       brand={{ name: 'SILK', subtitle: 'Panel fasilitas' }}
       rootHref="/dashboard/fasilitas"
+      bottomNav
       navLabel="Navigasi fasilitas"
       storageKey="silk-facility-sidebar-collapsed"
       user={user}

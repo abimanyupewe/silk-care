@@ -19,6 +19,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:seed:test": "tsx prisma/seed-test.ts",
+    "db:seed:malang": "tsx prisma/seed-malang.ts",
     "postinstall": "prisma generate",
     "prepare": "husky install"
   },

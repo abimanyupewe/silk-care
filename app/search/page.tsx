@@ -3,23 +3,18 @@ import Link from 'next/link';
 import { ArrowRight, Search } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { Navbar } from '@/components/shared/Navbar';
-import { searchItems, type SearchItemType } from '@/lib/search-index';
+import { GET as searchApi } from '@/app/api/v1/search/route';
+import {
+  popularSearchQueries,
+  searchGroupLabels,
+  searchGroupOrder,
+  type SearchItem
+} from '@/lib/search-index';
 
 export const metadata: Metadata = {
   title: 'Hasil pencarian — SILK',
   description: 'Cari dokter, layanan kesehatan, produk apotek, dan artikel di SILK.'
 };
-
-const groupOrder: SearchItemType[] = ['doctor', 'service', 'product', 'article'];
-
-const groupLabels: Record<SearchItemType, string> = {
-  doctor: 'Dokter',
-  service: 'Layanan',
-  product: 'Apotek',
-  article: 'Artikel'
-};
-
-const popularQueries = ['Spesialis anak', 'Vitamin', 'Klinik', 'Kesehatan mental'];
 
 export default async function SearchPage({
   searchParams
@@ -28,9 +23,16 @@ export default async function SearchPage({
 }) {
   const { q = '' } = await searchParams;
   const query = q.trim();
-  const results = searchItems(query);
+  // Memanggil handler API langsung (tanpa HTTP) agar aturan visibilitas katalog tetap satu.
+  const response = await searchApi(
+    new Request(`http://localhost/api/v1/search?q=${encodeURIComponent(query)}&limit=20`)
+  );
+  const failed = !response.ok;
+  const results: SearchItem[] = failed
+    ? []
+    : ((await response.json()) as { data: SearchItem[] }).data;
 
-  const groups = groupOrder
+  const groups = searchGroupOrder
     .map((type) => ({
       type,
       items: results.filter((item) => item.type === type)
@@ -79,7 +81,7 @@ export default async function SearchPage({
           <div className="mt-10">
             <p className="text-sm font-semibold text-ink-muted">Pencarian populer</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {popularQueries.map((popular) => (
+              {popularSearchQueries.map((popular) => (
                 <Link
                   key={popular}
                   href={`/search?q=${encodeURIComponent(popular)}`}
@@ -89,6 +91,11 @@ export default async function SearchPage({
                 </Link>
               ))}
             </div>
+          </div>
+        ) : failed ? (
+          <div role="alert" className="mt-10 border border-border bg-surface p-6">
+            <p className="font-semibold text-ink">Pencarian sedang bermasalah.</p>
+            <p className="mt-2 text-ink-muted">Coba lagi sebentar.</p>
           </div>
         ) : results.length === 0 ? (
           <div className="mt-10 border border-border bg-surface p-6">
@@ -101,11 +108,11 @@ export default async function SearchPage({
           <div className="mt-10 space-y-8">
             {groups.map((group) => (
               <section key={group.type}>
-                <h2 className="text-lg font-semibold text-ink">{groupLabels[group.type]}</h2>
+                <h2 className="text-lg font-semibold text-ink">{searchGroupLabels[group.type]}</h2>
                 <div className="mt-3 divide-y divide-border border-y border-border">
                   {group.items.map((item) => (
                     <Link
-                      key={`${item.type}-${item.title}`}
+                      key={`${item.type}-${item.id}`}
                       href={item.href}
                       className="flex min-h-16 items-center justify-between gap-4 px-1 py-4 hover:bg-surface"
                     >

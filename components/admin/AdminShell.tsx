@@ -18,6 +18,7 @@ import {
 import { AdminStatsProvider, useAdminStats } from '@/components/admin/AdminStatsProvider';
 import { PanelShell, type NavGroup, type NavItem } from '@/components/panel/PanelShell';
 import type { AdminStats } from '@/lib/admin-api';
+import { transactionsEnabled } from '@/lib/features';
 
 const navGroups: Array<
   NavGroup & {
@@ -31,8 +32,12 @@ const navGroups: Array<
     label: 'Operasional',
     items: [
       { href: '/admin/users', label: 'Pengguna', icon: Users },
-      { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
-      { href: '/admin/consultations', label: 'Konsultasi', icon: CalendarClock }
+      ...(transactionsEnabled
+        ? [
+            { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
+            { href: '/admin/consultations', label: 'Konsultasi', icon: CalendarClock }
+          ]
+        : [])
     ]
   },
   {

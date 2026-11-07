@@ -39,6 +39,9 @@ export default async function DoctorPage({ params }: { params: Promise<{ slug: s
         address={doctor.address}
         city={doctor.city}
         photoUrl={doctor.photoUrl ?? doctor.user.image}
+        videoUrl={doctor.videoUrl}
+        reels={doctor.reels}
+        reviews={doctor.reviews}
         rating={formatRating(doctor.ratingAverage)}
         reviewCount={doctor.reviewCount}
         fee={doctor.consultationFee}

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@custom-variant pwa (@media (display-mode: standalone));
 @plugin "daisyui" {
   themes: silk --default;
 }

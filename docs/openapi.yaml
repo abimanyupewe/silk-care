@@ -5106,6 +5106,70 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/admin/email-templates/{key}/{audience}/test:
+    post:
+      tags: [Admin]
+      summary: Kirim email uji dari template
+      description: >-
+        Mengirim template dengan data contoh, subjek diawali "[TES]". Body JSON wajib (boleh `{}`). Tanpa subject/body
+        memakai versi tersimpan; dengan subject/body memakai draf. Tanpa `to`, dikirim ke email
+        admin yang login. Dibatasi 10 kali per 10 menit.
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: audience
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PATIENT, DOCTOR, FACILITY]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                subject:
+                  type: string
+                  maxLength: 200
+                body:
+                  type: string
+                  maxLength: 5000
+      responses:
+        '200':
+          description: Email uji terkirim.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      to:
+                        type: string
+                        format: email
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: Penyedia email menolak atau belum dikonfigurasi.
   /api/v1/payments/midtrans/webhook:
     post:
       tags: [Payments]

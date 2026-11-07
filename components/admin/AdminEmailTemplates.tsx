@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, Pencil } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Pencil, Send } from 'lucide-react';
 import { AdminConfirmDialog } from '@/components/admin/AdminModal';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDetailSkeleton } from '@/components/admin/AdminSkeleton';
@@ -17,6 +17,7 @@ import { formatAdminDateTime } from '@/lib/admin-format';
 import {
   emailAudiences,
   emailAudienceLabels,
+  renderEmailHtml,
   renderEmailSubject,
   renderEmailText,
   validateEmailTemplate,
@@ -38,7 +39,8 @@ export function AdminEmailTemplates() {
   const [selectedKey, setSelectedKey] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [pending, setPending] = useState<'save' | 'reset' | null>(null);
+  const [pending, setPending] = useState<'save' | 'reset' | 'test' | null>(null);
+  const [testTo, setTestTo] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -138,6 +140,40 @@ export function AdminEmailTemplates() {
     } finally {
       setPending(null);
       setConfirmReset(false);
+    }
+  };
+
+  const sendTest = async () => {
+    const invalid = validateEmailTemplate(def, subject, body);
+
+    if (invalid) {
+      setMessage({ type: 'error', text: invalid });
+      return;
+    }
+
+    setPending('test');
+    setMessage(null);
+
+    try {
+      // Mengirim draf yang sedang diketik, jadi tidak perlu disimpan dulu.
+      const response = await fetchAdmin<{ to: string }>(`${endpoint}/test`, {
+        method: 'POST',
+        body: JSON.stringify({ subject, body, ...(testTo.trim() ? { to: testTo.trim() } : {}) })
+      });
+
+      setMessage({ type: 'success', text: `Email uji dikirim ke ${response.data.to}.` });
+    } catch (cause) {
+      if (cause instanceof AdminApiError && cause.status === 401) {
+        window.location.href = '/login?callbackUrl=/admin/email-templates';
+        return;
+      }
+
+      setMessage({
+        type: 'error',
+        text: cause instanceof Error ? cause.message : 'Gagal mengirim email uji.'
+      });
+    } finally {
+      setPending(null);
     }
   };
 
@@ -307,6 +343,37 @@ export function AdminEmailTemplates() {
                 </button>
               ) : null}
             </div>
+
+            <div className="mt-6 border-t border-border pt-4">
+              <h3 className="text-base font-bold text-ink">Kirim email uji</h3>
+              <p className="mt-1 text-sm text-ink-muted">
+                Mengirim draf di atas (tanpa perlu disimpan) dengan data contoh. Subjek diawali
+                [TES].
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <label className="sr-only" htmlFor="email-test-to">
+                  Alamat tujuan
+                </label>
+                <input
+                  id="email-test-to"
+                  type="email"
+                  value={testTo}
+                  onChange={(event) => setTestTo(event.target.value)}
+                  placeholder="Kosongkan untuk mengirim ke email Anda"
+                  className={cn(fieldClass, 'h-11 sm:max-w-sm')}
+                />
+                <button
+                  type="button"
+                  onClick={sendTest}
+                  disabled={pending !== null}
+                  aria-busy={pending === 'test'}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 border border-primary px-4 text-sm font-semibold text-primary-hover hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                  {pending === 'test' ? 'Mengirim...' : 'Kirim email uji'}
+                </button>
+              </div>
+            </div>
           </section>
 
           <section className="border border-border bg-white p-5" aria-label="Pratinjau">
@@ -321,9 +388,15 @@ export function AdminEmailTemplates() {
                   {renderEmailSubject(subject, sampleVars)}
                 </span>
               </p>
-              <pre className="whitespace-pre-wrap break-words px-4 py-4 font-sans text-sm leading-6 text-ink">
-                {renderEmailText(body, sampleVars)}
-              </pre>
+              <iframe
+                title="Pratinjau email"
+                sandbox=""
+                srcDoc={renderEmailHtml(
+                  renderEmailText(body, sampleVars),
+                  renderEmailSubject(subject, sampleVars)
+                )}
+                className="h-[640px] w-full bg-white"
+              />
             </div>
           </section>
         </div>
