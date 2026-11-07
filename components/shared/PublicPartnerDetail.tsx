@@ -1,4 +1,6 @@
 import { MapPin, Phone, Star } from 'lucide-react';
+import { ProfileTabs } from './ProfileTabs';
+import { ReelsGrid, type ReelItem } from './ReelsGrid';
 import { SmartImage } from './SmartImage';
 
 export type PublicPartnerDetailProps = {
@@ -10,6 +12,15 @@ export type PublicPartnerDetailProps = {
   city?: string | null;
   phone?: string | null;
   photoUrl?: string | null;
+  videoUrl?: string | null;
+  reels?: ReelItem[];
+  reviews?: Array<{
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: Date | string;
+    author: { name: string; image: string | null };
+  }>;
   rating?: number | null;
   reviewCount: number;
   fee?: number | null;
@@ -23,6 +34,7 @@ export type PublicPartnerDetailProps = {
 };
 
 const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+const dateFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' });
 const rupiah = new Intl.NumberFormat('id-ID');
 
 function formatPrice(min: number | null, max: number | null) {
@@ -40,12 +52,89 @@ export function PublicPartnerDetail({
   city,
   phone,
   photoUrl,
+  videoUrl,
+  reels = [],
+  reviews = [],
   rating,
   reviewCount,
   fee,
   schedule,
   services = []
 }: PublicPartnerDetailProps) {
+  const detail = (
+    <>
+      {description ? (
+        <p className="mt-6 whitespace-pre-line leading-7 text-ink-muted">{description}</p>
+      ) : null}
+      <div className="mt-8 border-t border-border pt-6">
+        <h2 className="text-xl font-bold text-ink">Lokasi dan kontak</h2>
+        <p className="mt-3 flex gap-2 text-ink-muted">
+          <MapPin className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+          {[address, city].filter(Boolean).join(', ') || 'Alamat belum tersedia'}
+        </p>
+        {phone ? (
+          <p className="mt-3 flex gap-2 text-ink-muted">
+            <Phone className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            {phone}
+          </p>
+        ) : null}
+      </div>
+      {services.length > 0 ? (
+        <div className="mt-8 border-t border-border pt-6">
+          <h2 className="text-xl font-bold text-ink">Layanan</h2>
+          <ul className="mt-4 divide-y divide-border border border-border">
+            {services.map((service) => (
+              <li key={service.name} className="p-4">
+                <p className="font-semibold text-ink">{service.name}</p>
+                <p className="mt-1 text-sm text-ink-muted">{service.description}</p>
+                {formatPrice(service.priceMin, service.priceMax) ? (
+                  <p className="mt-2 text-sm font-semibold text-primary-hover">
+                    {formatPrice(service.priceMin, service.priceMax)}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <div className="mt-8 border-t border-border pt-6">
+        <h2 className="text-xl font-bold text-ink">Ulasan</h2>
+        {reviews.length === 0 ? (
+          <p className="mt-3 text-ink-muted">Belum ada ulasan.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-border border border-border">
+            {reviews.map((review) => (
+              <li key={review.id} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-ink">{review.author.name}</p>
+                  <p
+                    className="flex items-center gap-1 text-sm font-semibold text-ink"
+                    aria-label={`${review.rating} dari 5`}
+                  >
+                    <Star className="h-4 w-4 text-amber-ink" aria-hidden="true" />
+                    {review.rating}/5
+                  </p>
+                </div>
+                {review.comment ? (
+                  <p className="mt-2 whitespace-pre-line text-ink-muted">{review.comment}</p>
+                ) : null}
+                <p className="mt-2 text-sm text-ink-muted">
+                  {dateFormat.format(new Date(review.createdAt))}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  );
+
+  const reelItems = reels.length
+    ? reels
+    : videoUrl
+      ? [{ id: 'profil', videoUrl, thumbnailUrl: null, caption: null, createdAt: new Date() }]
+      : [];
+
   return (
     <main className="container mx-auto max-w-5xl px-4 py-10">
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -76,40 +165,19 @@ export function PublicPartnerDetail({
               </p>
             </div>
           </div>
-          {description ? (
-            <p className="mt-6 whitespace-pre-line leading-7 text-ink-muted">{description}</p>
-          ) : null}
-          <div className="mt-8 border-t border-border pt-6">
-            <h2 className="text-xl font-bold text-ink">Lokasi dan kontak</h2>
-            <p className="mt-3 flex gap-2 text-ink-muted">
-              <MapPin className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-              {[address, city].filter(Boolean).join(', ') || 'Alamat belum tersedia'}
-            </p>
-            {phone ? (
-              <p className="mt-3 flex gap-2 text-ink-muted">
-                <Phone className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-                {phone}
-              </p>
-            ) : null}
+          <div className="mt-6">
+            <ProfileTabs
+              label={`Profil ${name}`}
+              tabs={[
+                { id: 'detail', label: 'Detail', content: detail },
+                {
+                  id: 'reels',
+                  label: 'Reels',
+                  content: <ReelsGrid reels={reelItems} name={name} />
+                }
+              ]}
+            />
           </div>
-          {services.length > 0 ? (
-            <div className="mt-8 border-t border-border pt-6">
-              <h2 className="text-xl font-bold text-ink">Layanan</h2>
-              <ul className="mt-4 divide-y divide-border border border-border">
-                {services.map((service) => (
-                  <li key={service.name} className="p-4">
-                    <p className="font-semibold text-ink">{service.name}</p>
-                    <p className="mt-1 text-sm text-ink-muted">{service.description}</p>
-                    {formatPrice(service.priceMin, service.priceMax) ? (
-                      <p className="mt-2 text-sm font-semibold text-primary-hover">
-                        {formatPrice(service.priceMin, service.priceMax)}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </section>
         <aside className="h-fit border border-border bg-surface p-5">
           <h2 className="text-lg font-bold text-ink">Jadwal</h2>

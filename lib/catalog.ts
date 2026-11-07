@@ -62,6 +62,23 @@ export const doctorListSelect = {
 export const doctorDetailSelect = {
   ...doctorListSelect,
   videoUrl: true,
+  reviews: {
+    where: { status: 'APPROVED' },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+      author: { select: { name: true, image: true } }
+    }
+  },
+  reels: {
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+    select: { id: true, videoUrl: true, thumbnailUrl: true, caption: true, createdAt: true }
+  },
   updatedAt: true,
   schedules: {
     where: {
@@ -112,6 +129,23 @@ export const facilityListSelect = {
 export const facilityDetailSelect = {
   ...facilityListSelect,
   videoUrl: true,
+  reviews: {
+    where: { status: 'APPROVED' },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+      author: { select: { name: true, image: true } }
+    }
+  },
+  reels: {
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+    select: { id: true, videoUrl: true, thumbnailUrl: true, caption: true, createdAt: true }
+  },
   updatedAt: true,
   operatingHours: {
     orderBy: {

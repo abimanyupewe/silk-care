@@ -2,9 +2,10 @@ type EmailInput = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
 };
 
-export async function sendEmail({ to, subject, text }: EmailInput) {
+export async function sendEmail({ to, subject, text, html }: EmailInput) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
 
@@ -39,7 +40,8 @@ export async function sendEmail({ to, subject, text }: EmailInput) {
       from,
       to,
       subject,
-      text
+      text,
+      html
     })
   });
 

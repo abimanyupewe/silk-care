@@ -40,6 +40,9 @@ export default async function FacilityPage({ params }: { params: Promise<{ slug:
         city={facility.city}
         phone={facility.phone}
         photoUrl={facility.photoUrl ?? facility.user.image}
+        videoUrl={facility.videoUrl}
+        reels={facility.reels}
+        reviews={facility.reviews}
         rating={formatRating(facility.ratingAverage)}
         reviewCount={facility.reviewCount}
         schedule={facility.operatingHours.map((item) => ({

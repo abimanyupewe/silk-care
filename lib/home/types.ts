@@ -17,6 +17,8 @@ export type MapPoint = {
   rating?: number | null;
   reviewCount?: number;
   openNow?: boolean;
+  // Di luar radius jangkauan: hanya tampil di peta (pin abu-abu), tidak di daftar.
+  outOfRange?: boolean;
 };
 
 export type HomeDoctor = {

@@ -23,6 +23,7 @@ export const auditActions = {
   notificationBroadcast: 'NOTIFICATION_BROADCAST',
   emailTemplateUpdate: 'EMAIL_TEMPLATE_UPDATE',
   emailTemplateReset: 'EMAIL_TEMPLATE_RESET',
+  emailTemplateTest: 'EMAIL_TEMPLATE_TEST',
   announcementCreate: 'ANNOUNCEMENT_CREATE',
   announcementUpdate: 'ANNOUNCEMENT_UPDATE',
   announcementDelete: 'ANNOUNCEMENT_DELETE',

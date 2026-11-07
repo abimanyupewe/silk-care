@@ -13,25 +13,20 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { searchItems, type SearchItem, type SearchItemType } from '@/lib/search-index';
-
-const groupOrder: SearchItemType[] = ['doctor', 'service', 'product', 'article'];
-
-const groupLabels: Record<SearchItemType, string> = {
-  doctor: 'Dokter',
-  service: 'Layanan',
-  product: 'Apotek',
-  article: 'Artikel'
-};
+import {
+  popularSearchQueries,
+  searchGroupLabels,
+  searchGroupOrder,
+  type SearchItem,
+  type SearchItemType
+} from '@/lib/search-index';
 
 const groupIcons: Record<SearchItemType, LucideIcon> = {
   doctor: Stethoscope,
-  service: Building2,
+  facility: Building2,
   product: Pill,
   article: FileText
 };
-
-const popularQueries = ['Spesialis anak', 'Vitamin', 'Klinik', 'Kesehatan mental'];
 
 export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const router = useRouter();
@@ -40,11 +35,12 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const results = useMemo(() => searchItems(query), [query]);
+  const [results, setResults] = useState<SearchItem[]>([]);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
 
   const groups = useMemo(
     () =>
-      groupOrder
+      searchGroupOrder
         .map((type) => ({
           type,
           items: results.filter((item) => item.type === type).slice(0, 4)
@@ -93,6 +89,43 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
 
   useEffect(() => {
     setActiveIndex(0);
+  }, [query]);
+
+  // Cari ke API setelah jeda 250 ms; permintaan lama dibatalkan saat mengetik lagi.
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (trimmed.length < 2) {
+      setResults([]);
+      setStatus('idle');
+      return;
+    }
+
+    setStatus('loading');
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(trimmed)}&limit=4`, {
+          signal: controller.signal
+        });
+
+        if (!response.ok) throw new Error('search failed');
+
+        const body = (await response.json()) as { data: SearchItem[] };
+
+        setResults(body.data);
+        setStatus('idle');
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') return;
+        setResults([]);
+        setStatus('error');
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
   const openResultsPage = () => {
@@ -189,7 +222,7 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
             <div className="px-3 py-4">
               <p className="px-2 text-sm font-semibold text-ink-muted">Pencarian populer</p>
               <div className="mt-3 flex flex-wrap gap-2 px-2">
-                {popularQueries.map((popular) => (
+                {popularSearchQueries.map((popular) => (
                   <button
                     key={popular}
                     type="button"
@@ -212,7 +245,7 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
                 return (
                   <div key={group.type} className="px-2 pb-2">
                     <p className="px-3 pb-1 pt-3 text-sm font-semibold text-ink-muted">
-                      {groupLabels[group.type]}
+                      {searchGroupLabels[group.type]}
                     </p>
                     {group.items.map((item) => {
                       const index = flatResults.indexOf(item);
@@ -220,7 +253,7 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
 
                       return (
                         <Link
-                          key={`${item.type}-${item.title}`}
+                          key={`${item.type}-${item.id}`}
                           href={item.href}
                           onClick={onClose}
                           onMouseEnter={() => setActiveIndex(index)}
@@ -255,6 +288,14 @@ export const SearchModal = ({ open, onClose }: { open: boolean; onClose: () => v
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </>
+          ) : status === 'loading' ? (
+            <p role="status" className="px-6 py-12 text-center text-sm text-ink-muted">
+              Mencari...
+            </p>
+          ) : status === 'error' ? (
+            <p role="alert" className="px-6 py-12 text-center text-sm text-destructive">
+              Pencarian gagal. Coba lagi sebentar.
+            </p>
           ) : (
             <div className="px-6 py-12 text-center">
               <p className="text-sm font-semibold text-ink">

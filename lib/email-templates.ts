@@ -550,3 +550,112 @@ export function validateEmailTemplate(def: EmailTemplateDef, subject: string, bo
 
   return null;
 }
+
+// --- Tampilan HTML -----------------------------------------------------------
+// Isi template tetap teks biasa; renderer ini membungkusnya jadi email berdesain:
+// header merek, tombol untuk baris berisi satu tautan, dan blok berwarna untuk
+// baris "Label: nilai". Gaya inline + tabel agar aman di klien email. Warna mengikuti
+// token app/globals.css (tanpa bayangan, gradien, atau sudut membulat).
+const mail = {
+  primary: '#007f6e',
+  deep: '#00594d',
+  tint: '#e6f6f3',
+  amber: '#ffa800',
+  ink: '#111114',
+  muted: '#4b4b55',
+  surface: '#f3f7f6',
+  line: '#d8dedd'
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+const urlPattern = /(https?:\/\/[^\s<]+)/g;
+const soleUrlPattern = /^https?:\/\/\S+$/;
+const detailLinePattern = /^[^:\n]{1,40}: .+$/;
+
+function linkify(escaped: string) {
+  return escaped.replace(
+    urlPattern,
+    (url) => `<a href="${url}" style="color:${mail.primary};word-break:break-all;">${url}</a>`
+  );
+}
+
+function renderButton(rawUrl: string) {
+  const url = escapeHtml(rawUrl);
+
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;"><tr><td style="background:${mail.primary};"><a href="${url}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:700;font-size:16px;text-decoration:none;">Buka tautan</a></td></tr></table><p style="margin:-8px 0 20px;font-size:14px;line-height:20px;color:${mail.muted};">Jika tombol tidak berfungsi, salin tautan ini ke peramban:<br><a href="${url}" style="color:${mail.primary};word-break:break-all;">${url}</a></p>`;
+}
+
+function renderDetails(lines: string[]) {
+  const rows = lines
+    .map((line) => {
+      const [label, ...rest] = line.split(': ');
+
+      return `<tr><td style="padding:4px 12px 4px 0;font-size:14px;line-height:20px;color:${mail.muted};white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:4px 0;font-size:16px;line-height:24px;color:${mail.ink};font-weight:600;">${linkify(escapeHtml(rest.join(': ')))}</td></tr>`;
+    })
+    .join('');
+
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;background:${mail.tint};border-left:4px solid ${mail.amber};"><tr><td style="padding:12px 16px;"><table role="presentation" cellpadding="0" cellspacing="0">${rows}</table></td></tr></table>`;
+}
+
+function renderParagraph(lines: string[], bold: boolean) {
+  const html = lines.map((line) => linkify(escapeHtml(line))).join('<br>');
+
+  return `<p style="margin:0 0 20px;font-size:16px;line-height:26px;color:${mail.ink};${bold ? 'font-weight:700;' : ''}">${html}</p>`;
+}
+
+function renderBlock(block: string, first: boolean) {
+  const lines = block.split('\n').map((line) => line.trim());
+
+  if (lines.every((line) => detailLinePattern.test(line))) {
+    return renderDetails(lines);
+  }
+
+  // Baris berisi satu tautan jadi tombol; baris di sekitarnya tetap paragraf.
+  let out = '';
+  let run: string[] = [];
+  const flush = () => {
+    if (run.length > 0) {
+      out += renderParagraph(run, first && out === '' && /^Halo\b/.test(run[0]));
+      run = [];
+    }
+  };
+
+  for (const line of lines) {
+    if (soleUrlPattern.test(line)) {
+      flush();
+      out += renderButton(line);
+    } else {
+      run.push(line);
+    }
+  }
+  flush();
+
+  return out;
+}
+
+export function renderEmailHtml(text: string, title = 'SILK') {
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block, index) => renderBlock(block, index === 0))
+    .join('');
+
+  return `<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
+<body style="margin:0;padding:0;background:${mail.surface};font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:${mail.surface};"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background:#ffffff;border:1px solid ${mail.line};">
+<tr><td style="background:${mail.deep};padding:20px 28px;font-size:24px;font-weight:700;letter-spacing:1px;color:#ffffff;">SILK</td></tr>
+<tr><td style="background:${mail.amber};height:4px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+<tr><td style="padding:28px;">${blocks}</td></tr>
+<tr><td style="background:${mail.surface};border-top:1px solid ${mail.line};padding:16px 28px;font-size:14px;line-height:20px;color:${mail.muted};">Email ini dikirim otomatis oleh SILK. Mohon tidak membalas email ini.</td></tr>
+</table></td></tr></table></body></html>`;
+}

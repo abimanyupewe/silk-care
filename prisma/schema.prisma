@@ -183,6 +183,7 @@ model DoctorProfile {
   updatedAt          DateTime           @updatedAt
 
   reviews        Review[]
+  reels          Reel[]
   schedules      DoctorSchedule[]
   consultations  Consultation[]
   medicalRecords MedicalRecord[]
@@ -237,6 +238,7 @@ model Facility {
 
   products       Product[]
   reviews        Review[]
+  reels          Reel[]
   carts          Cart[]
   orders         Order[]
   operatingHours FacilityOperatingHour[]
@@ -701,4 +703,21 @@ model Announcement {
   updatedAt   DateTime         @updatedAt
 
   @@index([active, startsAt, endsAt])
+}
+
+// Postingan video pendek (reels) milik dokter atau fasilitas; tepat satu pemilik.
+model Reel {
+  id              String         @id @default(cuid())
+  doctorProfileId String?
+  doctorProfile   DoctorProfile? @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  facilityId      String?
+  facility        Facility?      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  videoUrl        String
+  thumbnailUrl    String?
+  caption         String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([doctorProfileId, createdAt])
+  @@index([facilityId, createdAt])
 }

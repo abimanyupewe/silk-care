@@ -8,8 +8,12 @@ import { fetchApi } from '@/lib/api-client';
 import type { MapPoint as HomeMapPoint } from '@/lib/home/types';
 import { selectNearest } from '@/lib/home/nearby';
 
-const RADIUS_KM = 10;
-const NEAREST_LIMIT = 10;
+// Radius jangkauan (garis lurus) = lingkaran di peta = batas daftar.
+const RADIUS_KM = 1.5;
+const RADIUS_LABEL = `${RADIUS_KM.toLocaleString('id-ID')} km`;
+// Mitra di luar lingkaran tetap tampil di peta (abu-abu) sampai jarak ini.
+const MAP_RANGE_KM = RADIUS_KM * 3;
+const MAP_LIMIT = 20;
 const MAP_HEIGHT = 420;
 
 type CatalogItem = {
@@ -99,9 +103,9 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
     const query = new URLSearchParams({
       lat: String(currentFix.lat),
       lng: String(currentFix.lng),
-      radiusKm: String(RADIUS_KM),
+      radiusKm: String(MAP_RANGE_KM),
       sort: 'distance_asc',
-      limit: String(NEAREST_LIMIT)
+      limit: String(MAP_LIMIT)
     });
     let cancelled = false;
 
@@ -131,7 +135,11 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
             })
           : [];
 
-      setNearby(selectNearest([...doctorPoints, ...facilityPoints], NEAREST_LIMIT));
+      setNearby(
+        selectNearest([...doctorPoints, ...facilityPoints], MAP_LIMIT).map((point) =>
+          (point.distanceKm ?? Infinity) <= RADIUS_KM ? point : { ...point, outOfRange: true }
+        )
+      );
       if (doctorResult.status === 'rejected' && facilityResult.status === 'rejected') {
         setError('Layanan terdekat gagal dimuat. Coba lagi dengan tombol lokasi.');
       } else if (doctorResult.status === 'rejected' || facilityResult.status === 'rejected') {
@@ -146,6 +154,9 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
     };
   }, [locationKey]);
 
+  // Daftar = hanya yang di dalam lingkaran; peta = semua (yang di luar berpin abu-abu).
+  const listPoints = useMemo(() => nearby.filter((point) => !point.outOfRange), [nearby]);
+  const outOfRangeCount = nearby.length - listPoints.length;
   const visiblePoints = fix ? nearby : points;
   const selectedPoint = visiblePoints.find((point) => point.id === selectedId) ?? null;
   const center = useMemo<MapPoint>(() => {
@@ -165,7 +176,7 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
           <h2 className="text-2xl font-bold text-ink md:text-[28px]">Layanan di sekitar Anda</h2>
           <p className="mt-1 text-ink-muted">
             {fix
-              ? `Mitra terdekat dalam radius ${RADIUS_KM} km dari posisi Anda.`
+              ? `Layanan dalam radius ${RADIUS_LABEL} dari posisi Anda.`
               : 'Temukan dokter dan fasilitas kesehatan mitra SILK di sekitar Anda.'}
           </p>
         </div>
@@ -174,15 +185,18 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
           <p className="mb-4 text-sm text-ink-muted">Memuat layanan terdekat...</p>
         ) : null}
         {error ? <p className="mb-4 text-sm text-danger">{error}</p> : null}
-        {fix && !loading && nearby.length === 0 && !error ? (
+        {fix && !loading && listPoints.length === 0 && !error ? (
           <p className="mb-4 border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
-            Belum ada layanan mitra aktif dalam radius {RADIUS_KM} km.
+            Belum ada layanan mitra aktif dalam radius {RADIUS_LABEL}
+            {outOfRangeCount > 0
+              ? '; mitra terdekat di luar jangkauan tampil abu-abu di peta.'
+              : '.'}
           </p>
         ) : null}
 
-        {fix && nearby.length > 0 ? (
+        {fix && !loading && listPoints.length > 0 ? (
           <ul className="mb-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {nearby.map((point) => (
+            {listPoints.map((point) => (
               <li key={point.id}>
                 <div
                   className={`flex min-h-11 w-full items-center justify-between gap-3 border px-3 py-2 text-left text-sm ${selectedId === point.id ? 'border-primary bg-primary-tint' : 'border-border bg-white'}`}
@@ -213,6 +227,7 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
             points={visiblePoints as MapPoint[]}
             activePointId={selectedPoint?.id ?? null}
             onPointSelect={(point) => setSelectedId(point.id ?? null)}
+            radiusKm={fix ? RADIUS_KM : undefined}
             height={MAP_HEIGHT}
             className="border border-border"
           />
@@ -220,7 +235,19 @@ export function MapSection({ points }: { points: HomeMapPoint[] }) {
           <div style={{ height: MAP_HEIGHT }} className="border border-border bg-surface" />
         )}
 
-        <p className="mt-3 text-sm text-ink-muted">
+        {fix ? (
+          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-muted">
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="h-3 w-3 rounded-full bg-primary" />
+              Dalam radius {RADIUS_LABEL} ({listPoints.length})
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="h-3 w-3 rounded-full bg-ink-faint" />
+              Di luar jangkauan, hanya di peta ({outOfRangeCount})
+            </li>
+          </ul>
+        ) : null}
+        <p className="mt-2 text-sm text-ink-muted">
           Menampilkan {visiblePoints.length} lokasi mitra. Peta memakai data &copy; OpenStreetMap
           contributors.
         </p>

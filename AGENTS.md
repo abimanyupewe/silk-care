@@ -13,7 +13,7 @@ docs, and code comments are Indonesian; the root layout sets `lang="id"`.
 - `npm run openapi:check` — compare route files and exported methods with `docs/openapi.yaml`
 - `npm run format` — Prettier across the repo
 - `npm run db:generate` / `db:migrate` / `db:deploy` / `db:push` / `db:studio` / `db:seed` /
-  `db:seed:demo` / `db:seed:test` — Prisma
+  `db:seed:demo` / `db:seed:test` / `db:seed:malang` — Prisma
 
 Use npm (`package-lock.json`). There is no test framework, test script, or CI workflow.
 Pure-logic checks run with `npx tsx scripts/checks/<name>.check.ts` (`months`,
@@ -304,7 +304,9 @@ publicProductWhereAt(now)` in `lib/catalog.ts`. The old constants were removed o
   safe (upserts by unique keys, and demo schedules/hours are replaced). Stable identifiers
   and QA notes are in `docs/API.md`. `db:seed:test` is separate and idempotent: it restores
   one test account per panel from `TEST_*` env vars without touching demo data, and refuses
-  to run in production.
+  to run in production. `db:seed:malang` is also demo-only and idempotent: 10 facilities (one per
+  type) and 3 doctors around Jl. Mergan Raya, Sukun, Malang, with dummy photo/video links,
+  services/products, hours, schedules, 6-month `FREE_TRIAL`, and reviews by `pasien.malang@silk.local`.
 
 ## Gotchas
 

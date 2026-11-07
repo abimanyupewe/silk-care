@@ -294,7 +294,7 @@ export async function GET(request: Request) {
         subtitle: [facilityTypeLabels[facility.type] ?? facility.type, facility.city]
           .filter(Boolean)
           .join(' · '),
-        href: '/#cari-layanan',
+        href: `/fasilitas/${facility.slug}`,
         image: facility.user.image,
         rating: formatRating(facility.ratingAverage),
         reviewCount: facility.reviewCount,

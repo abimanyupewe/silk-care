@@ -41,6 +41,8 @@ type PanelShellProps = {
   };
   // Angka penanda per href (mis. antrean moderasi); opsional.
   badges?: Record<string, number>;
+  // Saat terpasang sebagai PWA di layar kecil, menu utama pindah ke bar bawah (admin tidak memakainya).
+  bottomNav?: boolean;
   children: React.ReactNode;
 };
 
@@ -58,6 +60,7 @@ export function PanelShell({
   storageKey,
   user,
   badges = {},
+  bottomNav = false,
   children
 }: PanelShellProps) {
   const pathname = usePathname();
@@ -69,6 +72,8 @@ export function PanelShell({
     group.items.some((item) => isActivePath(pathname, item.href, rootHref))
   );
   const activeItem = activeGroup?.items.find((item) => isActivePath(pathname, item.href, rootHref));
+  // Hanya 3 menu utama agar tidak membingungkan; sisanya lewat "Lainnya" (akses cepat di drawer).
+  const bottomItems = navGroups.flatMap((group) => group.items).slice(0, 3);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -283,7 +288,10 @@ export function PanelShell({
             ref={openButtonRef}
             type="button"
             onClick={() => setMenuOpen(true)}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border-strong md:hidden"
+            className={cn(
+              'inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border-strong md:hidden',
+              bottomNav && 'pwa:hidden'
+            )}
             aria-label="Buka menu"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
@@ -304,10 +312,66 @@ export function PanelShell({
           <PanelTour storageKey={storageKey} />
         </header>
 
-        <main id="panel-main" tabIndex={-1} className="px-4 py-6 outline-none md:px-8 md:py-8">
+        <main
+          id="panel-main"
+          tabIndex={-1}
+          className={cn('px-4 py-6 outline-none md:px-8 md:py-8', bottomNav && 'pwa:max-md:pb-24')}
+        >
           {children}
         </main>
       </div>
+
+      {bottomNav ? (
+        <nav
+          aria-label={`${navLabel} (bawah)`}
+          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-border bg-white pb-[env(safe-area-inset-bottom)] pwa:max-md:block"
+        >
+          <ul className="flex">
+            {bottomItems.map((item) => {
+              const active = isActivePath(pathname, item.href, rootHref);
+              const Icon = item.icon;
+              const pending = badges[item.href] ?? 0;
+
+              return (
+                <li key={item.href} className="min-w-0 flex-1">
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'relative flex min-h-14 flex-col items-center justify-center gap-0.5 border-t-2 px-1 text-sm',
+                      active
+                        ? 'border-amber font-semibold text-primary-hover'
+                        : 'border-transparent text-ink-muted'
+                    )}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <span className="max-w-full truncate">{item.label}</span>
+                    {pending > 0 ? (
+                      <span
+                        aria-label={`${pending} menunggu`}
+                        className="absolute right-2 top-1 min-w-5 bg-amber px-1 text-center text-sm font-semibold tabular-nums text-ink"
+                      >
+                        {pending > 99 ? '99+' : pending}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
+            <li className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Buka menu lengkap"
+                className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-1 text-sm text-ink-muted"
+              >
+                <Menu className="h-5 w-5" aria-hidden="true" />
+                <span>Lainnya</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      ) : null}
     </div>
   );
 }

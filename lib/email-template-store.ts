@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email';
 import { logError } from '@/lib/logger';
 import {
   getEmailTemplateDef,
+  renderEmailHtml,
   renderEmailSubject,
   renderEmailText,
   type EmailAudience
@@ -58,9 +59,13 @@ export async function sendTemplatedEmail(input: {
     logError('email.template_lookup_failed', error, { key: def.key });
   }
 
+  const renderedSubject = renderEmailSubject(subject, input.vars);
+  const text = renderEmailText(body, input.vars);
+
   await sendEmail({
     to: input.to,
-    subject: renderEmailSubject(subject, input.vars),
-    text: renderEmailText(body, input.vars)
+    subject: renderedSubject,
+    text,
+    html: renderEmailHtml(text, renderedSubject)
   });
 }

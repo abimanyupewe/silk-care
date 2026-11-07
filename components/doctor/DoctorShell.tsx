@@ -57,6 +57,7 @@ export function DoctorShell({
       navGroups={navGroups}
       brand={{ name: 'SILK', subtitle: 'Panel dokter' }}
       rootHref="/dashboard/dokter"
+      bottomNav
       navLabel="Navigasi dokter"
       storageKey="silk-doctor-sidebar-collapsed"
       user={user}
